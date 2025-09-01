@@ -282,8 +282,8 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosy
 ## 📧 Destek
 
 - **Plugin Desteği:** mangaruhu@gmail.com
-- **Dokümantasyon:** https://docs.ruhdev.com/ruh-comment
-- **GitHub:** https://github.com/ruhdev/ruh-comment
+- **GitHub:** https://github.com/turanbagtur/ruh-comment
+- **GitHub:** Issues açın
 
 ## ⭐ Değerlendirme
 
