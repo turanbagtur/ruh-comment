@@ -423,84 +423,83 @@ class Ruh_Comment_Ajax_Handlers {
      * Yorum gönderme - geliştirilmiş güvenlik ve doğrulama
      */
     public function submit_comment_callback() {
-        $this->verify_nonce();
-        $this->require_login();
-        
-        // Kullanıcı engelli mi kontrol et
-        $user_id = get_current_user_id();
-        if (function_exists('ruh_is_user_banned') && ruh_is_user_banned($user_id)) {
-            wp_send_json_error(array('message' => 'Yorum gönderme yetkiniz bulunmuyor.'));
-        }
-        
-        // Form verilerini temizle ve doğrula
-        $comment_data = array(
-            'comment_post_ID' => intval($_POST['comment_post_ID']),
-            'comment_content' => trim($_POST['comment']),
-            'comment_parent' => intval($_POST['comment_parent']),
-            'user_id' => $user_id
-        );
-        
-        // Post ID kontrolü
-        $post = get_post($comment_data['comment_post_ID']);
-        if (!$post || !comments_open($post->ID)) {
-            wp_send_json_error(array('message' => 'Bu yazı için yorumlar kapalı.'));
-        }
-        
-        // İçerik kontrolü
-        if (empty($comment_data['comment_content'])) {
-            wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
-        }
-        
-        if (strlen($comment_data['comment_content']) > 5000) {
-            wp_send_json_error(array('message' => 'Yorum çok uzun. Maksimum 5000 karakter.'));
-        }
-        
-        // Kullanıcı bilgilerini ekle
-        $user = wp_get_current_user();
-        $comment_data = array_merge($comment_data, array(
-            'comment_author' => $user->display_name,
-            'comment_author_email' => $user->user_email,
-            'comment_author_url' => $user->user_url,
-            'comment_type' => '',
-            'comment_meta' => array()
-        ));
-        
-        // Parent comment kontrolü
-        if ($comment_data['comment_parent'] > 0) {
-            $parent_comment = get_comment($comment_data['comment_parent']);
-            if (!$parent_comment || $parent_comment->comment_post_ID != $comment_data['comment_post_ID']) {
-                wp_send_json_error(array('message' => 'Geçersiz üst yorum.'));
-            }
-        }
-        
-        // Spam ve güvenlik kontrollerini uygula
-        $comment_data = apply_filters('preprocess_comment', $comment_data);
-        
-        // Yorumu al ve onay durumunu kontrol et
-        $comment = get_comment($comment_id);
-        
-        // Otomatik onay (eğer ayarlar izin veriyorsa)
-        if ($comment->comment_approved == '0' && !get_option('comment_moderation')) {
-            wp_set_comment_status($comment_id, 'approve');
-            $comment = get_comment($comment_id); // Güncel hali
-        }
-        
-        // HTML çıktısını oluştur
-        $html = '';
-        if ($comment->comment_approved == '1') {
-            $html = $this->generate_comment_html($comment);
-        }
-        
-        wp_send_json_success(array(
-            'html' => $html,
-            'comment_id' => $comment_id,
-            'parent_id' => $comment->comment_parent,
-            'approved' => $comment->comment_approved == '1',
-            'message' => $comment->comment_approved == '1' 
-                ? 'Yorumunuz başarıyla gönderildi.'
-                : 'Yorumunuz onay bekliyor.'
-        ));
+    $this->verify_nonce();
+    $this->require_login();
+    
+    // Kullanıcı engelli mi kontrol et
+    $user_id = get_current_user_id();
+    if (function_exists('ruh_is_user_banned') && ruh_is_user_banned($user_id)) {
+        wp_send_json_error(array('message' => 'Yorum gönderme yetkiniz bulunmuyor.'));
     }
+    
+    // Form verilerini temizle ve doğrula
+    $comment_data = array(
+        'comment_post_ID' => intval($_POST['comment_post_ID']),
+        'comment_content' => trim($_POST['comment']),
+        'comment_parent' => intval($_POST['comment_parent']),
+        'user_id' => $user_id,
+        'comment_approved' => 1  // OTOMATIK ONAY
+    );
+    
+    // Post ID kontrolü
+    $post = get_post($comment_data['comment_post_ID']);
+    if (!$post || !comments_open($post->ID)) {
+        wp_send_json_error(array('message' => 'Bu yazı için yorumlar kapalı.'));
+    }
+    
+    // İçerik kontrolü
+    if (empty($comment_data['comment_content'])) {
+        wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
+    }
+    
+    if (strlen($comment_data['comment_content']) > 5000) {
+        wp_send_json_error(array('message' => 'Yorum çok uzun. Maksimum 5000 karakter.'));
+    }
+    
+    // Kullanıcı bilgilerini ekle
+    $user = wp_get_current_user();
+    $comment_data = array_merge($comment_data, array(
+        'comment_author' => $user->display_name,
+        'comment_author_email' => $user->user_email,
+        'comment_author_url' => $user->user_url,
+        'comment_type' => '',
+        'comment_meta' => array()
+    ));
+    
+    // Parent comment kontrolü
+    if ($comment_data['comment_parent'] > 0) {
+        $parent_comment = get_comment($comment_data['comment_parent']);
+        if (!$parent_comment || $parent_comment->comment_post_ID != $comment_data['comment_post_ID']) {
+            wp_send_json_error(array('message' => 'Geçersiz üst yorum.'));
+        }
+    }
+    
+    // WordPress'in kendi filtresini devre dışı bırak
+    add_filter('pre_comment_approved', function($approved, $commentdata) {
+        return 1; // Her zaman onayla
+    }, 10, 2);
+    
+    // Yorumu ekle
+    $comment_id = wp_insert_comment($comment_data);
+    
+    if (is_wp_error($comment_id)) {
+        wp_send_json_error(array('message' => $comment_id->get_error_message()));
+    }
+    
+    // Yorumu al
+    $comment = get_comment($comment_id);
+    
+    // HTML çıktısını oluştur
+    $html = $this->generate_comment_html($comment);
+    
+    wp_send_json_success(array(
+        'html' => $html,
+        'comment_id' => $comment_id,
+        'parent_id' => $comment->comment_parent,
+        'approved' => true,
+        'message' => 'Yorumunuz başarıyla gönderildi.'
+    ));
+}
     
     /**
      * Admin yorum düzenleme

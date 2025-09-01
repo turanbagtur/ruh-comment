@@ -391,26 +391,77 @@ function render_comment_manager_page_content() {
         </style>
         
         <script>
+        // admin-comment-manager.php dosyasının sonuna bu fonksiyonu ekleyin:
+
+// AJAX handler'ı ekle
+add_action('wp_ajax_ruh_admin_edit_comment', 'ruh_admin_edit_comment_ajax');
+function ruh_admin_edit_comment_ajax() {
+    // Admin yetkisi kontrolü
+    if (!current_user_can('moderate_comments')) {
+        wp_send_json_error(array('message' => 'Yetkiniz bulunmuyor.'));
+    }
+    
+    // Nonce kontrolü
+    if (!check_ajax_referer('ruh_admin_edit_comment', '_ajax_nonce', false)) {
+        wp_send_json_error(array('message' => 'Güvenlik kontrolü başarısız.'));
+    }
+    
+    $comment_id = intval($_POST['comment_id']);
+    $content = trim($_POST['content']);
+    
+    if (empty($content)) {
+        wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
+    }
+    
+    // Yorumu güncelle
+    $result = wp_update_comment(array(
+        'comment_ID' => $comment_id,
+        'comment_content' => wp_kses_post($content)
+    ));
+    
+    if (is_wp_error($result)) {
+        wp_send_json_error(array('message' => $result->get_error_message()));
+    }
+    
+    wp_send_json_success(array(
+        'content' => wp_trim_words(esc_html($content), 50),
+        'message' => 'Yorum başarıyla güncellendi.'
+    ));
+}
+
+// JavaScript'i admin paneline ekle
+add_action('admin_footer', 'ruh_admin_comment_scripts');
+function ruh_admin_comment_scripts() {
+    $screen = get_current_screen();
+    if ($screen && $screen->id === 'ruh-comment_page_ruh-comment-manager') {
+        ?>
+        <script>
         jQuery(document).ready(function($) {
             // Hızlı düzenle
-            $('#comments-filter').on('click', '.quick-edit-comment', function(e) {
+            $(document).on('click', '.quick-edit-comment', function(e) {
                 e.preventDefault();
                 var commentId = $(this).data('comment-id');
                 $('#comment-text-' + commentId).hide();
                 $('#edit-comment-' + commentId).show();
+                $('#edit-comment-' + commentId + ' textarea').focus();
             });
 
-            $('#comments-filter').on('click', '.cancel-edit-comment', function() {
+            $(document).on('click', '.cancel-edit-comment', function() {
                 var wrapper = $(this).closest('[id^="edit-comment-"]');
                 var commentId = wrapper.attr('id').replace('edit-comment-', '');
                 wrapper.hide();
                 $('#comment-text-' + commentId).show();
             });
 
-            $('#comments-filter').on('click', '.save-edit-comment', function() {
+            $(document).on('click', '.save-edit-comment', function() {
                 var button = $(this);
                 var commentId = button.data('comment-id');
                 var newContent = button.siblings('textarea').val();
+                
+                if (!newContent.trim()) {
+                    alert('Yorum içeriği boş olamaz.');
+                    return;
+                }
                 
                 button.prop('disabled', true).text('Kaydediliyor...');
 
@@ -424,8 +475,8 @@ function render_comment_manager_page_content() {
                         $('#comment-text-' + commentId).html(response.data.content).show();
                         $('#edit-comment-' + commentId).hide();
                         
-                        // Başarı mesajı göster
-                        $('<div class="notice notice-success is-dismissible"><p>Yorum başarıyla güncellendi.</p></div>')
+                        // Başarı mesajı
+                        $('<div class="notice notice-success is-dismissible"><p>' + response.data.message + '</p></div>')
                             .insertAfter('.wp-header-end')
                             .delay(3000)
                             .fadeOut();
@@ -440,6 +491,5 @@ function render_comment_manager_page_content() {
             });
         });
         </script>
-    </div>
-    <?php
-}
+        <?php
+    }

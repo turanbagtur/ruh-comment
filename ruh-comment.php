@@ -14,6 +14,13 @@ define('RUH_COMMENT_VERSION', '4.0.0');
 define('RUH_COMMENT_PATH', plugin_dir_path(__FILE__));
 define('RUH_COMMENT_URL', plugin_dir_url(__FILE__));
 
+
+// Output buffering başlat
+if (ob_get_level()) {
+    ob_end_clean();
+}
+ob_start();
+
 // Tüm modülleri dahil et - sıralama önemli!
 require_once RUH_COMMENT_PATH . 'includes/activation.php';
 require_once RUH_COMMENT_PATH . 'includes/template-helpers.php';

@@ -327,3 +327,47 @@ function ruh_render_auto_moderate_field() {
     echo '<input type="number" name="ruh_comment_options[auto_moderate_reports]" value="' . esc_attr($value) . '" class="small-text" min="1" max="20" />';
     echo '<p class="description">Kaç şikayet aldığında yorum otomatik olarak moderasyona alınır</p>';
 }
+
+// filters-and-actions.php dosyasına bu filtreyi ekleyin:
+
+// Tüm yorumları otomatik onayla
+add_filter('pre_comment_approved', 'ruh_auto_approve_comments', 10, 2);
+function ruh_auto_approve_comments($approved, $commentdata) {
+    // Sadece giriş yapmış kullanıcılar için otomatik onay
+    if (isset($commentdata['user_id']) && $commentdata['user_id'] > 0) {
+        return 1; // Onayla
+    }
+    
+    // Diğer durumlarda WordPress'in kendi kararını ver
+    return $approved;
+}
+
+// WordPress'in moderasyon ayarlarını geçersiz kıl
+add_action('init', 'ruh_override_comment_moderation');
+function ruh_override_comment_moderation() {
+    // Yorum moderasyonunu kapat
+    update_option('comment_moderation', '0');
+    update_option('moderation_notify', '0');
+    
+    // Email bildirimlerini kapat
+    update_option('comments_notify', '0');
+}
+
+// Yorum durum değişikliğini yakala
+add_action('wp_set_comment_status', 'ruh_comment_status_changed', 10, 2);
+function ruh_comment_status_changed($comment_id, $status) {
+    if ($status === 'approve') {
+        $comment = get_comment($comment_id);
+        if ($comment && $comment->user_id) {
+            // XP ver
+            if (function_exists('ruh_update_user_xp_and_level')) {
+                ruh_update_user_xp_and_level($comment->user_id);
+            }
+            
+            // Rozetleri kontrol et
+            if (function_exists('ruh_check_and_assign_auto_badges')) {
+                ruh_check_and_assign_auto_badges($comment->user_id);
+            }
+        }
+    }
+}
