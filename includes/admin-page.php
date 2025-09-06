@@ -18,13 +18,21 @@ class Ruh_Comment_Admin {
     }
 
     public function add_admin_menu() {
+        // Düzeltilmiş SVG icon - yorum balonu tasarımı
+        $icon_svg = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#005B43">
+            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
+            <circle cx="12" cy="8" r="1.5" fill="white"/>
+        </svg>';
+        
+        $icon_data_uri = 'data:image/svg+xml;base64,' . base64_encode($icon_svg);
+        
         add_menu_page(
             'Ruh Comment', 
             'Ruh Comment', 
             'manage_options', 
             'ruh-comment', 
             array($this, 'render_settings_page'), 
-            'dashicons-comments', 
+            $icon_data_uri,
             25
         );
         

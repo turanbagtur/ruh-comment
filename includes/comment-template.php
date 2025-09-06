@@ -9,40 +9,40 @@ $comment_count = get_comments_number($post_id);
     <?php if (isset($options['enable_reactions']) && $options['enable_reactions']) : ?>
     <div class="ruh-reactions-section">
         <div class="reactions-header">
-            <h3 class="section-title">Bölüm Nasıldı?</h3>
+            <h3 class="section-title">Bu içeriğe tepki ver</h3>
             <div class="total-reactions">
-                <span id="total-reaction-count">0</span> Tepki
+                <span id="total-reaction-count">0</span> tepki
             </div>
         </div>
         <div class="reactions">
-            <button class="reaction" data-reaction="guzel" title="Güzel">
+            <button class="reaction" data-reaction="guzel" title="Beğendim">
                 <span class="emoji">👍</span>
-                <span>Güzel</span>
+                <span>Beğendim</span>
                 <span class="count">0</span>
             </button>
-            <button class="reaction" data-reaction="sevdim" title="Sevdim">
-                <span class="emoji">😂</span>
-                <span>Sevdim</span>
+            <button class="reaction" data-reaction="sevdim" title="Sinir Bozucu">
+                <span class="emoji">😤</span>
+                <span>Sinir Bozucu</span>
                 <span class="count">0</span>
             </button>
-            <button class="reaction" data-reaction="asik_oldum" title="Aşık Oldum">
+            <button class="reaction" data-reaction="asik_oldum" title="Mükemmel">
                 <span class="emoji">😍</span>
-                <span>Aşık Oldum</span>
+                <span>Mükemmel</span>
                 <span class="count">0</span>
             </button>
             <button class="reaction" data-reaction="sasirtici" title="Şaşırtıcı">
-                <span class="emoji">😮</span>
+                <span class="emoji">😱</span>
                 <span>Şaşırtıcı</span>
                 <span class="count">0</span>
             </button>
-            <button class="reaction" data-reaction="gaza_geldim" title="Gaza Geldim">
+            <button class="reaction" data-reaction="gaza_geldim" title="Sakin Olmalıyım">
                 <span class="emoji">🔥</span>
-                <span>Gaza Geldim</span>
+                <span>Sakin Olmalıyım</span>
                 <span class="count">0</span>
             </button>
-            <button class="reaction" data-reaction="uzucu" title="Üzücü">
+            <button class="reaction" data-reaction="uzucu" title="Bölüm Bitti">
                 <span class="emoji">😢</span>
-                <span>Üzücü</span>
+                <span>Bölüm Bitti</span>
                 <span class="count">0</span>
             </button>
         </div>
@@ -53,7 +53,7 @@ $comment_count = get_comments_number($post_id);
         <div class="comments-header">
             <h3 class="comments-title">
                 <span class="comment-count"><?php echo $comment_count; ?></span> 
-                <?php printf(_n('Yorum', '%s Yorum', $comment_count), $comment_count); ?>
+                <?php printf(_n('Yorum', 'Yorum', $comment_count), $comment_count); ?>
             </h3>
             <?php if (isset($options['enable_sorting']) && $options['enable_sorting']) : ?>
             <div class="comment-sorting">
@@ -94,14 +94,15 @@ $comment_count = get_comments_number($post_id);
                                 <button type="button" class="ruh-toolbar-button" data-tag="spoiler" title="Spoiler">
                                     [S]
                                 </button>
-                                <button type="button" class="ruh-toolbar-button" data-tag="link" id="ruh-add-link" title="Link Ekle">
-                                    🔗
+                                <button type="button" class="ruh-toolbar-button image-upload" title="Görsel Yükle">
+                                    🖼️
+                                    <input type="file" accept="image/*" multiple style="position: absolute; left: -9999px; opacity: 0;">
                                 </button>
                             </div>
                             <textarea 
                                 id="comment" 
                                 name="comment" 
-                                placeholder="Tartışma başlat... Düşüncelerinizi paylaşın." 
+                                placeholder="Yorumunuzu yazın..." 
                                 required
                                 maxlength="5000"
                             ></textarea>
@@ -120,7 +121,7 @@ $comment_count = get_comments_number($post_id);
                             </div>
                             
                             <button type="submit" id="submit" class="submit ruh-submit">
-                                Yorum Yap
+                                Yorum Gönder
                             </button>
                         </div>
                     </form>
@@ -131,27 +132,63 @@ $comment_count = get_comments_number($post_id);
                     <p>Yorumlar yapmak, tepki vermek ve diğer kullanıcılarla etkileşime geçmek için hesabınıza giriş yapın.</p>
                     <div class="auth-buttons">
                         <?php 
-                        $login_page = isset($options['login_page_id']) ? $options['login_page_id'] : 0;
-                        $register_page = isset($options['register_page_id']) ? $options['register_page_id'] : 0;
+                        $auth_page_found = false;
                         
-                        if ($login_page && get_post($login_page)) : ?>
-                            <a href="<?php echo get_permalink($login_page); ?>" class="auth-button primary">
-                                Giriş Yap
+                        // Auth sayfasını bul
+                        $auth_pages = get_posts([
+                            'post_type' => 'page',
+                            'meta_query' => [
+                                [
+                                    'key' => '_wp_page_template',
+                                    'value' => 'page-auth.php',
+                                    'compare' => 'LIKE'
+                                ]
+                            ],
+                            'numberposts' => 1
+                        ]);
+                        
+                        if (empty($auth_pages)) {
+                            // Shortcode'a sahip sayfaları ara
+                            $all_pages = get_posts([
+                                'post_type' => 'page',
+                                'numberposts' => -1
+                            ]);
+                            
+                            foreach($all_pages as $page) {
+                                if (has_shortcode($page->post_content, 'ruh_auth') || 
+                                    has_shortcode($page->post_content, 'ruh_login')) {
+                                    $auth_pages = [$page];
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!empty($auth_pages)) {
+                            $auth_page_found = true;
+                            $auth_url = get_permalink($auth_pages[0]->ID);
+                        }
+                        
+                        if (!$auth_page_found) {
+                            $login_page = isset($options['login_page_id']) ? $options['login_page_id'] : 0;
+                            if ($login_page && get_post($login_page)) {
+                                $auth_url = get_permalink($login_page);
+                                $auth_page_found = true;
+                            }
+                        }
+                        
+                        if ($auth_page_found) : ?>
+                            <a href="<?php echo esc_url($auth_url); ?>" class="auth-button primary">
+                                Giriş Yap / Kayıt Ol
                             </a>
                         <?php else : ?>
                             <a href="<?php echo wp_login_url(get_permalink()); ?>" class="auth-button primary">
                                 Giriş Yap
                             </a>
-                        <?php endif; ?>
-                        
-                        <?php if ($register_page && get_post($register_page)) : ?>
-                            <a href="<?php echo get_permalink($register_page); ?>" class="auth-button">
-                                Kayıt Ol
-                            </a>
-                        <?php else : ?>
+                            <?php if (get_option('users_can_register')) : ?>
                             <a href="<?php echo wp_registration_url(); ?>" class="auth-button">
                                 Kayıt Ol
                             </a>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -177,7 +214,7 @@ $comment_count = get_comments_number($post_id);
             
             <?php if ($comment_count == 0) : ?>
                 <div class="no-comments">
-                    <p>İlk yorumu sen yap! 💬</p>
+                    <p>İlk yorumu sen yap!</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -223,12 +260,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const count = this.value.length;
             charCount.textContent = count;
             
+            const counterContainer = charCount.parentElement;
+            counterContainer.classList.remove('warning', 'danger');
+            
             if (count > 4500) {
-                charCount.style.color = '#ef4444';
+                counterContainer.classList.add('danger');
             } else if (count > 4000) {
-                charCount.style.color = '#f59e0b';
-            } else {
-                charCount.style.color = '';
+                counterContainer.classList.add('warning');
             }
         });
         

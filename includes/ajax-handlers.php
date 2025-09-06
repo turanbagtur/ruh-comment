@@ -7,13 +7,18 @@ class Ruh_Comment_Ajax_Handlers {
         $actions = array(
             'get_initial_data', 'handle_reaction', 'get_comments', 
             'handle_like', 'flag_comment', 'submit_comment', 
-            'admin_edit_comment', 'load_more_replies'
+            'admin_edit_comment', 'load_more_replies', 'load_more_profile_comments',
+            'upload_image', 'update_profile', 'change_password',
+            'edit_comment', 'delete_comment'
         );
         
         foreach ($actions as $action) {
-            $is_nopriv = !in_array($action, array('flag_comment', 'submit_comment', 'admin_edit_comment'));
+            // Logged in user actions
             add_action('wp_ajax_ruh_' . $action, array($this, $action . '_callback'));
-            if ($is_nopriv) {
+            
+            // Non-logged in actions (sadece gerekli olanlar)
+            $public_actions = array('get_initial_data', 'get_comments');
+            if (in_array($action, $public_actions)) {
                 add_action('wp_ajax_nopriv_ruh_' . $action, array($this, $action . '_callback'));
             }
         }
@@ -35,6 +40,272 @@ class Ruh_Comment_Ajax_Handlers {
         if (!is_user_logged_in()) {
             wp_send_json_error(array('message' => 'Bu işlem için giriş yapmalısınız.'));
         }
+    }
+
+    /**
+     * Görsel upload handler
+     */
+    public function upload_image_callback() {
+        $this->verify_nonce();
+        $this->require_login();
+        
+        if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error(array('message' => 'Görsel yüklenemedi.'));
+        }
+        
+        $file = $_FILES['image'];
+        
+        // Dosya tipi kontrolü
+        $allowed_types = array('image/jpeg', 'image/png', 'image/gif', 'image/webp');
+        if (!in_array($file['type'], $allowed_types)) {
+            wp_send_json_error(array('message' => 'Sadece JPEG, PNG, GIF ve WebP formatları desteklenir.'));
+        }
+        
+        // Dosya boyutu kontrolü (5MB)
+        if ($file['size'] > 5 * 1024 * 1024) {
+            wp_send_json_error(array('message' => 'Dosya boyutu 5MB\'dan küçük olmalıdır.'));
+        }
+        
+        // WordPress upload fonksiyonunu kullan
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+        
+        // Upload işlemi
+        $uploaded = wp_handle_upload($file, array('test_form' => false));
+        
+        if (isset($uploaded['error'])) {
+            wp_send_json_error(array('message' => $uploaded['error']));
+        }
+        
+        // Attachment oluştur
+        $attachment = array(
+            'post_mime_type' => $uploaded['type'],
+            'post_title' => sanitize_file_name(pathinfo($uploaded['file'], PATHINFO_FILENAME)),
+            'post_content' => '',
+            'post_status' => 'inherit'
+        );
+        
+        $attachment_id = wp_insert_attachment($attachment, $uploaded['file']);
+        
+        if (is_wp_error($attachment_id)) {
+            wp_send_json_error(array('message' => 'Görsel veritabanına kaydedilemedi.'));
+        }
+        
+        // Metadata oluştur
+        $metadata = wp_generate_attachment_metadata($attachment_id, $uploaded['file']);
+        wp_update_attachment_metadata($attachment_id, $metadata);
+        
+        wp_send_json_success(array(
+            'url' => $uploaded['url'],
+            'attachment_id' => $attachment_id,
+            'message' => 'Görsel başarıyla yüklendi.'
+        ));
+    }
+
+    /**
+     * Profil güncelleme handler - DÜZELTİLMİŞ VERSİYON
+     */
+    public function update_profile_callback() {
+        // Özel nonce kontrolü profil işlemleri için
+        if (!check_ajax_referer('ruh_profile_nonce', 'nonce', false)) {
+            wp_send_json_error(array('message' => 'Güvenlik kontrolü başarısız.'));
+        }
+        
+        $this->require_login();
+        
+        $user_id = get_current_user_id();
+        $action_type = sanitize_text_field($_POST['action_type']);
+        
+        switch($action_type) {
+            case 'basic_info':
+                $display_name = sanitize_text_field($_POST['display_name']);
+                $description = sanitize_textarea_field($_POST['description']);
+                
+                if (empty($display_name)) {
+                    wp_send_json_error(array('message' => 'Görünen ad boş olamaz.'));
+                }
+                
+                $result = wp_update_user(array(
+                    'ID' => $user_id,
+                    'display_name' => $display_name,
+                    'description' => $description
+                ));
+                
+                if (is_wp_error($result)) {
+                    wp_send_json_error(array('message' => $result->get_error_message()));
+                }
+                
+                wp_send_json_success(array('message' => 'Profil bilgileri başarıyla güncellendi.'));
+                break;
+                
+            case 'account_info':
+                $user_email = sanitize_email($_POST['user_email']);
+                $user_url = esc_url_raw($_POST['user_url']);
+                
+                if (empty($user_email)) {
+                    wp_send_json_error(array('message' => 'E-posta adresi boş olamaz.'));
+                }
+                
+                if (!is_email($user_email)) {
+                    wp_send_json_error(array('message' => 'Geçerli bir e-posta adresi girin.'));
+                }
+                
+                // E-posta zaten kullanılıyor mu kontrol et
+                $existing_user = get_user_by('email', $user_email);
+                if ($existing_user && $existing_user->ID != $user_id) {
+                    wp_send_json_error(array('message' => 'Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor.'));
+                }
+                
+                $update_data = array(
+                    'ID' => $user_id,
+                    'user_email' => $user_email
+                );
+                
+                if (!empty($user_url)) {
+                    $update_data['user_url'] = $user_url;
+                }
+                
+                $result = wp_update_user($update_data);
+                
+                if (is_wp_error($result)) {
+                    wp_send_json_error(array('message' => $result->get_error_message()));
+                }
+                
+                wp_send_json_success(array('message' => 'Hesap bilgileri başarıyla güncellendi.'));
+                break;
+                
+            case 'change_password':
+                $current_password = $_POST['current_password'];
+                $new_password = $_POST['new_password'];
+                $confirm_password = $_POST['confirm_password'];
+                
+                if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
+                    wp_send_json_error(array('message' => 'Tüm şifre alanlarını doldurunuz.'));
+                }
+                
+                if ($new_password !== $confirm_password) {
+                    wp_send_json_error(array('message' => 'Yeni şifreler eşleşmiyor.'));
+                }
+                
+                if (strlen($new_password) < 6) {
+                    wp_send_json_error(array('message' => 'Şifre en az 6 karakter olmalıdır.'));
+                }
+                
+                $user = get_userdata($user_id);
+                if (!$user) {
+                    wp_send_json_error(array('message' => 'Kullanıcı bulunamadı.'));
+                }
+                
+                if (!wp_check_password($current_password, $user->user_pass, $user_id)) {
+                    wp_send_json_error(array('message' => 'Mevcut şifre yanlış.'));
+                }
+                
+                if (wp_check_password($new_password, $user->user_pass, $user_id)) {
+                    wp_send_json_error(array('message' => 'Yeni şifre mevcut şifre ile aynı olamaz.'));
+                }
+                
+                wp_set_password($new_password, $user_id);
+                
+                // Şifre değiştikten sonra kullanıcının oturumu devam etsin
+                wp_clear_auth_cookie();
+                wp_set_auth_cookie($user_id, true, is_ssl());
+                
+                wp_send_json_success(array('message' => 'Şifre başarıyla değiştirildi.'));
+                break;
+
+                case 'update_avatar':
+    if (!isset($_POST['avatar_url'])) {
+        wp_send_json_error(array('message' => 'Avatar URL gerekli.'));
+    }
+    
+    $avatar_url = esc_url_raw($_POST['avatar_url']);
+    
+    // Avatar URL'ini user meta olarak kaydet
+    update_user_meta($user_id, 'ruh_custom_avatar_url', $avatar_url);
+    
+    wp_send_json_success(array(
+        'message' => 'Profil resmi başarıyla güncellendi.',
+        'avatar_url' => $avatar_url
+    ));
+    break;
+                
+            default:
+                wp_send_json_error(array('message' => 'Geçersiz işlem türü.'));
+        }
+    }
+
+    /**
+     * Kullanıcı yorumunu düzenle
+     */
+    public function edit_comment_callback() {
+        $this->verify_nonce();
+        $this->require_login();
+        
+        $comment_id = intval($_POST['comment_id']);
+        $content = trim($_POST['content']);
+        $user_id = get_current_user_id();
+        
+        if (empty($content)) {
+            wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
+        }
+        
+        // Yorumu al ve yetki kontrolü yap
+        $comment = get_comment($comment_id);
+        if (!$comment) {
+            wp_send_json_error(array('message' => 'Yorum bulunamadı.'));
+        }
+        
+        if ($comment->user_id != $user_id) {
+            wp_send_json_error(array('message' => 'Bu yorumu düzenleme yetkiniz yok.'));
+        }
+        
+        // Yorumu güncelle
+        $result = wp_update_comment(array(
+            'comment_ID' => $comment_id,
+            'comment_content' => wp_kses_post($content)
+        ));
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+        
+        wp_send_json_success(array(
+            'content' => wp_kses_post($content),
+            'message' => 'Yorum başarıyla güncellendi.'
+        ));
+    }
+    
+    /**
+     * Kullanıcı yorumunu sil
+     */
+    public function delete_comment_callback() {
+        $this->verify_nonce();
+        $this->require_login();
+        
+        $comment_id = intval($_POST['comment_id']);
+        $user_id = get_current_user_id();
+        
+        // Yorumu al ve yetki kontrolü yap
+        $comment = get_comment($comment_id);
+        if (!$comment) {
+            wp_send_json_error(array('message' => 'Yorum bulunamadı.'));
+        }
+        
+        if ($comment->user_id != $user_id && !current_user_can('moderate_comments')) {
+            wp_send_json_error(array('message' => 'Bu yorumu silme yetkiniz yok.'));
+        }
+        
+        // Yorumu sil (çöpe at)
+        $result = wp_trash_comment($comment_id);
+        
+        if (!$result) {
+            wp_send_json_error(array('message' => 'Yorum silinemedi.'));
+        }
+        
+        wp_send_json_success(array(
+            'message' => 'Yorum başarıyla silindi.'
+        ));
     }
 
     /**
@@ -423,83 +694,83 @@ class Ruh_Comment_Ajax_Handlers {
      * Yorum gönderme - geliştirilmiş güvenlik ve doğrulama
      */
     public function submit_comment_callback() {
-    $this->verify_nonce();
-    $this->require_login();
-    
-    // Kullanıcı engelli mi kontrol et
-    $user_id = get_current_user_id();
-    if (function_exists('ruh_is_user_banned') && ruh_is_user_banned($user_id)) {
-        wp_send_json_error(array('message' => 'Yorum gönderme yetkiniz bulunmuyor.'));
-    }
-    
-    // Form verilerini temizle ve doğrula
-    $comment_data = array(
-        'comment_post_ID' => intval($_POST['comment_post_ID']),
-        'comment_content' => trim($_POST['comment']),
-        'comment_parent' => intval($_POST['comment_parent']),
-        'user_id' => $user_id,
-        'comment_approved' => 1  // OTOMATIK ONAY
-    );
-    
-    // Post ID kontrolü
-    $post = get_post($comment_data['comment_post_ID']);
-    if (!$post || !comments_open($post->ID)) {
-        wp_send_json_error(array('message' => 'Bu yazı için yorumlar kapalı.'));
-    }
-    
-    // İçerik kontrolü
-    if (empty($comment_data['comment_content'])) {
-        wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
-    }
-    
-    if (strlen($comment_data['comment_content']) > 5000) {
-        wp_send_json_error(array('message' => 'Yorum çok uzun. Maksimum 5000 karakter.'));
-    }
-    
-    // Kullanıcı bilgilerini ekle
-    $user = wp_get_current_user();
-    $comment_data = array_merge($comment_data, array(
-        'comment_author' => $user->display_name,
-        'comment_author_email' => $user->user_email,
-        'comment_author_url' => $user->user_url,
-        'comment_type' => '',
-        'comment_meta' => array()
-    ));
-    
-    // Parent comment kontrolü
-    if ($comment_data['comment_parent'] > 0) {
-        $parent_comment = get_comment($comment_data['comment_parent']);
-        if (!$parent_comment || $parent_comment->comment_post_ID != $comment_data['comment_post_ID']) {
-            wp_send_json_error(array('message' => 'Geçersiz üst yorum.'));
+        $this->verify_nonce();
+        $this->require_login();
+        
+        // Kullanıcı engelli mi kontrol et
+        $user_id = get_current_user_id();
+        if (function_exists('ruh_is_user_banned') && ruh_is_user_banned($user_id)) {
+            wp_send_json_error(array('message' => 'Yorum gönderme yetkiniz bulunmuyor.'));
         }
+        
+        // Form verilerini temizle ve doğrula
+        $comment_data = array(
+            'comment_post_ID' => intval($_POST['comment_post_ID']),
+            'comment_content' => trim($_POST['comment']),
+            'comment_parent' => intval($_POST['comment_parent']),
+            'user_id' => $user_id,
+            'comment_approved' => 1  // OTOMATIK ONAY
+        );
+        
+        // Post ID kontrolü
+        $post = get_post($comment_data['comment_post_ID']);
+        if (!$post || !comments_open($post->ID)) {
+            wp_send_json_error(array('message' => 'Bu yazı için yorumlar kapalı.'));
+        }
+        
+        // İçerik kontrolü
+        if (empty($comment_data['comment_content'])) {
+            wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
+        }
+        
+        if (strlen($comment_data['comment_content']) > 5000) {
+            wp_send_json_error(array('message' => 'Yorum çok uzun. Maksimum 5000 karakter.'));
+        }
+        
+        // Kullanıcı bilgilerini ekle
+        $user = wp_get_current_user();
+        $comment_data = array_merge($comment_data, array(
+            'comment_author' => $user->display_name,
+            'comment_author_email' => $user->user_email,
+            'comment_author_url' => $user->user_url,
+            'comment_type' => '',
+            'comment_meta' => array()
+        ));
+        
+        // Parent comment kontrolü
+        if ($comment_data['comment_parent'] > 0) {
+            $parent_comment = get_comment($comment_data['comment_parent']);
+            if (!$parent_comment || $parent_comment->comment_post_ID != $comment_data['comment_post_ID']) {
+                wp_send_json_error(array('message' => 'Geçersiz üst yorum.'));
+            }
+        }
+        
+        // WordPress'in kendi filtresini devre dışı bırak
+        add_filter('pre_comment_approved', function($approved, $commentdata) {
+            return 1; // Her zaman onayla
+        }, 10, 2);
+        
+        // Yorumu ekle
+        $comment_id = wp_insert_comment($comment_data);
+        
+        if (is_wp_error($comment_id)) {
+            wp_send_json_error(array('message' => $comment_id->get_error_message()));
+        }
+        
+        // Yorumu al
+        $comment = get_comment($comment_id);
+        
+        // HTML çıktısını oluştur
+        $html = $this->generate_comment_html($comment);
+        
+        wp_send_json_success(array(
+            'html' => $html,
+            'comment_id' => $comment_id,
+            'parent_id' => $comment->comment_parent,
+            'approved' => true,
+            'message' => 'Yorumunuz başarıyla gönderildi.'
+        ));
     }
-    
-    // WordPress'in kendi filtresini devre dışı bırak
-    add_filter('pre_comment_approved', function($approved, $commentdata) {
-        return 1; // Her zaman onayla
-    }, 10, 2);
-    
-    // Yorumu ekle
-    $comment_id = wp_insert_comment($comment_data);
-    
-    if (is_wp_error($comment_id)) {
-        wp_send_json_error(array('message' => $comment_id->get_error_message()));
-    }
-    
-    // Yorumu al
-    $comment = get_comment($comment_id);
-    
-    // HTML çıktısını oluştur
-    $html = $this->generate_comment_html($comment);
-    
-    wp_send_json_success(array(
-        'html' => $html,
-        'comment_id' => $comment_id,
-        'parent_id' => $comment->comment_parent,
-        'approved' => true,
-        'message' => 'Yorumunuz başarıyla gönderildi.'
-    ));
-}
     
     /**
      * Admin yorum düzenleme
@@ -536,6 +807,97 @@ class Ruh_Comment_Ajax_Handlers {
         wp_send_json_success(array(
             'content' => wp_trim_words(esc_html($content), 50),
             'message' => 'Yorum başarıyla güncellendi.'
+        ));
+    }
+
+    /**
+     * Profil sayfasında daha fazla yorum yükleme
+     */
+    public function load_more_profile_comments_callback() {
+        $this->verify_nonce();
+        
+        $user_id = intval($_POST['user_id']);
+        $page = intval($_POST['page']);
+        $comments_per_page = 10;
+        
+        if (!$user_id) {
+            wp_send_json_error(array('message' => 'Geçersiz kullanıcı ID.'));
+        }
+        
+        $args = array(
+            'user_id' => $user_id,
+            'number' => $comments_per_page,
+            'offset' => ($page - 1) * $comments_per_page,
+            'status' => 'approve',
+            'orderby' => 'comment_date',
+            'order' => 'DESC'
+        );
+        
+        $comments = get_comments($args);
+        
+        if (empty($comments)) {
+            wp_send_json_success(array(
+                'html' => '',
+                'has_more' => false
+            ));
+        }
+        
+        ob_start();
+        foreach ($comments as $comment) {
+            $post_title = get_the_title($comment->comment_post_ID);
+            $comment_link = get_comment_link($comment);
+            $post_link = get_permalink($comment->comment_post_ID);
+            $likes = get_comment_meta($comment->comment_ID, '_likes', true) ?: 0;
+            $comment_time = get_comment_time('U', true, $comment);
+            ?>
+            <div class="profile-comment-item">
+                <div class="comment-header">
+                    <div class="comment-post-info">
+                        <a href="<?php echo esc_url($post_link); ?>" class="post-title" target="_blank">
+                            <?php echo esc_html($post_title ?: 'Bilinmeyen Yazı'); ?>
+                        </a>
+                    </div>
+                    <div class="comment-meta">
+                        <span class="comment-date">
+                            <a href="<?php echo esc_url($comment_link); ?>" target="_blank">
+                                <?php echo human_time_diff($comment_time, current_time('timestamp')); ?> önce
+                            </a>
+                        </span>
+                        <?php if ($likes > 0) : ?>
+                        <span class="comment-likes">
+                            👍 <?php echo $likes; ?>
+                        </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="comment-excerpt">
+                    <?php 
+                    $excerpt = wp_trim_words(strip_tags($comment->comment_content), 25, '...');
+                    echo esc_html($excerpt); 
+                    ?>
+                </div>
+                <div class="comment-actions">
+                    <a href="<?php echo esc_url($comment_link); ?>" target="_blank" class="view-comment">
+                        Yorumu Görüntüle
+                    </a>
+                    <a href="<?php echo esc_url($post_link); ?>" target="_blank" class="view-post">
+                        Yazıya Git
+                    </a>
+                </div>
+            </div>
+            <?php
+        }
+        $html = ob_get_clean();
+        
+        // Daha fazla yorum var mı kontrol et
+        $next_args = $args;
+        $next_args['offset'] = $page * $comments_per_page;
+        $next_args['number'] = 1;
+        $has_more = !empty(get_comments($next_args));
+        
+        wp_send_json_success(array(
+            'html' => $html,
+            'has_more' => $has_more
         ));
     }
 }

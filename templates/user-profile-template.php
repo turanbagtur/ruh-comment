@@ -11,7 +11,16 @@ $timeout_until = get_user_meta($user_data['info']->ID, 'ruh_timeout_until', true
 
 // Son aktivite
 $last_comment = get_comments(['user_id' => $user_data['info']->ID, 'number' => 1, 'status' => 'approve']);
-$last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_date) : strtotime($user_data['info']->user_registered);
+if (!empty($last_comment)) {
+    $last_activity = strtotime($last_comment[0]->comment_date);
+} else {
+    $last_activity = strtotime($user_data['info']->user_registered);
+}
+
+// Ensure we have valid timestamps
+if (!$last_activity) {
+    $last_activity = current_time('timestamp');
+}
 ?>
 
 <div class="ruh-user-profile">
@@ -61,7 +70,7 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
             </div>
             
             <div class="profile-level-info">
-                <div class="level-badge" style="background-color: <?php echo ruh_get_level_color($user_data['level_info']->level); ?>">
+                <div class="level-badge-oval" style="background: <?php echo ruh_get_level_color($user_data['level_info']->level); ?>">
                     <?php printf(__('Seviye %d', 'ruh-comment'), $user_data['level_info']->level); ?>
                 </div>
                 <div class="xp-bar-container">
@@ -77,7 +86,13 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
                     <?php echo date_i18n(get_option('date_format'), strtotime($user_data['info']->user_registered)); ?>
                 </p>
                 <p><strong><?php _e('Son Aktivite:', 'ruh-comment'); ?></strong> 
-                    <?php echo human_time_diff($last_activity, current_time('timestamp')) . ' ' . __('önce', 'ruh-comment'); ?>
+                    <?php 
+                    if ($last_activity && is_numeric($last_activity)) {
+                        echo human_time_diff($last_activity, current_time('timestamp')) . ' ' . __('önce', 'ruh-comment');
+                    } else {
+                        _e('Bilinmiyor', 'ruh-comment');
+                    }
+                    ?>
                 </p>
             </div>
         </div>
@@ -89,8 +104,8 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
         <div class="profile-badges">
             <?php foreach ($user_data['badges'] as $badge) : ?>
             <div class="profile-badge-item" title="<?php echo esc_attr($badge->badge_name); ?>">
-                <?php echo $badge->badge_svg; ?>
-                <span><?php echo esc_html($badge->badge_name); ?></span>
+                <div class="badge-icon"><?php echo $badge->badge_svg; ?></div>
+                <span class="badge-name"><?php echo esc_html($badge->badge_name); ?></span>
             </div>
             <?php endforeach; ?>
         </div>
@@ -101,30 +116,69 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
         <h3><?php _e('Son Yorumları', 'ruh-comment'); ?></h3>
         <div class="profile-comments-list">
             <?php if (!empty($user_data['comments'])) : ?>
-                <?php foreach ($user_data['comments'] as $comment) : ?>
+                <?php foreach ($user_data['comments'] as $comment) : 
+                    $post_title = get_the_title($comment->comment_post_ID);
+                    $comment_link = get_comment_link($comment);
+                    $post_link = get_permalink($comment->comment_post_ID);
+                    $likes = get_comment_meta($comment->comment_ID, '_likes', true) ?: 0;
+                    
+                    // FIX: Convert to integer timestamp properly
+                    $comment_time = intval(get_comment_time('U', true, $comment));
+                    if (!$comment_time) {
+                        // Fallback if get_comment_time fails
+                        $comment_time = strtotime($comment->comment_date);
+                    }
+                ?>
                 <div class="profile-comment-item">
-                    <div class="comment-excerpt">
-                        <?php echo wp_trim_words($comment->comment_content, 30, '...'); ?>
-                    </div>
-                    <div class="comment-meta">
-                        <span class="comment-post">
-                            <?php printf(__('%s yazısına', 'ruh-comment'), 
-                                '<a href="' . get_permalink($comment->comment_post_ID) . '">' . get_the_title($comment->comment_post_ID) . '</a>'); ?>
-                        </span>
-                        <span class="comment-date">
-                            <a href="<?php echo get_comment_link($comment); ?>">
-                                <?php echo human_time_diff(get_comment_time('U', true, $comment), current_time('timestamp')); ?> 
-                                <?php _e('önce', 'ruh-comment'); ?>
+                    <div class="comment-header">
+                        <div class="comment-post-info">
+                            <a href="<?php echo esc_url($post_link); ?>" class="post-title" target="_blank">
+                                <?php echo esc_html($post_title ?: 'Bilinmeyen Yazı'); ?>
                             </a>
-                        </span>
-                        <span class="comment-likes">
-                            👍 <?php echo get_comment_meta($comment->comment_ID, '_likes', true) ?: 0; ?>
-                        </span>
+                        </div>
+                        <div class="comment-meta">
+                            <span class="comment-date">
+                                <a href="<?php echo esc_url($comment_link); ?>" target="_blank">
+                                    <?php echo human_time_diff($comment_time, current_time('timestamp')); ?> 
+                                    <?php _e('önce', 'ruh-comment'); ?>
+                                </a>
+                            </span>
+                            <?php if ($likes > 0) : ?>
+                            <span class="comment-likes">
+                                👍 <?php echo $likes; ?>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="comment-excerpt">
+                        <?php 
+                        $excerpt = wp_trim_words(strip_tags($comment->comment_content), 25, '...');
+                        echo esc_html($excerpt); 
+                        ?>
+                    </div>
+                    <div class="comment-actions">
+                        <a href="<?php echo esc_url($comment_link); ?>" target="_blank" class="view-comment">
+                            Yorumu Görüntüle
+                        </a>
+                        <a href="<?php echo esc_url($post_link); ?>" target="_blank" class="view-post">
+                            Yazıya Git
+                        </a>
                     </div>
                 </div>
                 <?php endforeach; ?>
+                
+                <?php if (count($user_data['comments']) >= 10) : ?>
+                    <div class="load-more-comments-wrapper">
+                        <button type="button" id="load-more-profile-comments" data-user-id="<?php echo $user_data['info']->ID; ?>" data-page="2">
+                            Daha Fazla Yorum Göster
+                        </button>
+                    </div>
+                <?php endif; ?>
             <?php else: ?>
-                <p class="no-content"><?php _e('Henüz hiç yorum yapmamış.', 'ruh-comment'); ?></p>
+                <div class="no-content">
+                    <div class="no-content-icon">💭</div>
+                    <p><?php _e('Henüz hiç yorum yapmamış.', 'ruh-comment'); ?></p>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -141,6 +195,7 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
             <div class="modal-body">
                 <div class="tab-navigation">
                     <button class="tab-btn active" data-tab="basic"><?php _e('Temel Bilgiler', 'ruh-comment'); ?></button>
+                    <button class="tab-btn" data-tab="account"><?php _e('Hesap', 'ruh-comment'); ?></button>
                     <button class="tab-btn" data-tab="password"><?php _e('Şifre', 'ruh-comment'); ?></button>
                 </div>
                 
@@ -150,7 +205,7 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
                         <form id="profile-basic-form">
                             <?php wp_nonce_field('ruh_profile_nonce', 'nonce'); ?>
                             <input type="hidden" name="action" value="ruh_update_profile">
-                            <input type="hidden" name="action_type" value="update_profile">
+                            <input type="hidden" name="action_type" value="basic_info">
                             
                             <div class="form-group">
                                 <label for="display_name"><?php _e('Görünen Ad', 'ruh-comment'); ?></label>
@@ -159,18 +214,36 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
                             </div>
                             
                             <div class="form-group">
+                                <label for="description"><?php _e('Hakkımda', 'ruh-comment'); ?></label>
+                                <textarea id="description" name="description" rows="4" 
+                                          placeholder="Kendiniz hakkında birkaç kelime..."><?php echo esc_textarea($user_data['info']->description); ?></textarea>
+                            </div>
+                            
+                            <button type="submit" class="ruh-submit"><?php _e('Bilgileri Güncelle', 'ruh-comment'); ?></button>
+                        </form>
+                    </div>
+                    
+                    <!-- Hesap Bilgileri -->
+                    <div class="tab-pane" id="account-tab">
+                        <form id="profile-account-form">
+                            <?php wp_nonce_field('ruh_profile_nonce', 'nonce'); ?>
+                            <input type="hidden" name="action" value="ruh_update_profile">
+                            <input type="hidden" name="action_type" value="account_info">
+                            
+                            <div class="form-group">
                                 <label for="user_email"><?php _e('E-posta Adresi', 'ruh-comment'); ?></label>
-                                <input type="email" id="user_email" name="email" 
+                                <input type="email" id="user_email" name="user_email" 
                                        value="<?php echo esc_attr($user_data['info']->user_email); ?>" required>
                             </div>
                             
                             <div class="form-group">
-                                <label for="description"><?php _e('Hakkında', 'ruh-comment'); ?></label>
-                                <textarea id="description" name="description" rows="4" 
-                                          placeholder="<?php _e('Kendinizden bahsedin...', 'ruh-comment'); ?>"><?php echo esc_textarea($user_data['info']->description); ?></textarea>
+                                <label for="user_url"><?php _e('Web Sitesi', 'ruh-comment'); ?></label>
+                                <input type="url" id="user_url" name="user_url" 
+                                       value="<?php echo esc_attr($user_data['info']->user_url); ?>" 
+                                       placeholder="https://example.com">
                             </div>
                             
-                            <button type="submit" class="ruh-submit"><?php _e('Bilgileri Güncelle', 'ruh-comment'); ?></button>
+                            <button type="submit" class="ruh-submit"><?php _e('Hesap Bilgilerini Güncelle', 'ruh-comment'); ?></button>
                         </form>
                     </div>
                     
@@ -218,8 +291,8 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     max-width: 1000px;
     margin: 0 auto;
     padding: 2rem 1rem;
-    background: var(--bg-primary, #0d1421);
-    color: var(--text-primary, #ffffff);
+    background: #1C1C1C;
+    color: #ffffff;
 }
 
 .profile-header {
@@ -227,10 +300,10 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     gap: 2rem;
     align-items: flex-start;
     margin-bottom: 3rem;
-    background: var(--bg-secondary, #1a2332);
+    background: #2a2a2a;
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid var(--border-color, #334155);
+    border: 1px solid #404040;
 }
 
 .profile-avatar {
@@ -241,7 +314,7 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    border: 4px solid var(--primary-color, #005B43);
+    border: 4px solid #005B43;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
@@ -252,7 +325,7 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--primary-color, #005B43);
+    background: #005B43;
     border: none;
     color: white;
     cursor: pointer;
@@ -276,11 +349,11 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
 .profile-name-section h2 {
     margin: 0;
     font-size: 2rem;
-    color: var(--text-primary, #ffffff);
+    color: #ffffff;
 }
 
 .edit-profile-btn {
-    background: var(--primary-color, #005B43);
+    background: #005B43;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -322,12 +395,12 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
 .stat-item strong {
     display: block;
     font-size: 1.5rem;
-    color: var(--primary-color, #005B43);
+    color: #005B43;
     font-weight: 700;
 }
 
 .stat-item span {
-    color: var(--text-secondary, #e2e8f0);
+    color: #e2e8f0;
     font-size: 0.875rem;
 }
 
@@ -335,13 +408,19 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     margin-bottom: 1rem;
 }
 
-.level-badge {
+.level-badge-oval, .user-level-oval {
     display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 8px 16px;
     border-radius: 20px;
     color: white;
     font-weight: 700;
+    font-size: 0.875rem;
     margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 2px solid rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .xp-bar-container {
@@ -353,26 +432,26 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
 .xp-bar {
     flex: 1;
     height: 10px;
-    background: var(--bg-card, #2d3e52);
+    background: #404040;
     border-radius: 5px;
     overflow: hidden;
 }
 
 .xp-bar-progress {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary-color, #005B43), #00b894);
+    background: linear-gradient(90deg, #005B43, #00b894);
     transition: width 0.3s ease;
 }
 
 .xp-text {
     font-size: 0.875rem;
-    color: var(--text-muted, #94a3b8);
+    color: #94a3b8;
     white-space: nowrap;
 }
 
 .profile-meta p {
     margin: 0.5rem 0;
-    color: var(--text-secondary, #e2e8f0);
+    color: #e2e8f0;
     font-size: 0.875rem;
 }
 
@@ -383,14 +462,14 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
 .profile-section h3 {
     margin: 0 0 1.5rem;
     font-size: 1.5rem;
-    color: var(--text-primary, #ffffff);
-    border-bottom: 2px solid var(--primary-color, #005B43);
+    color: #ffffff;
+    border-bottom: 2px solid #005B43;
     padding-bottom: 0.5rem;
 }
 
 .profile-badges {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
 }
 
@@ -398,70 +477,173 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: var(--bg-card, #2d3e52);
+    background: #2a2a2a;
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid var(--border-color, #334155);
+    border: 1px solid #404040;
     transition: all 0.2s ease;
 }
 
 .profile-badge-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border-color: var(--primary-color, #005B43);
+    border-color: #005B43;
 }
 
-.profile-badge-item svg {
+.profile-badge-item .badge-icon {
     width: 32px;
     height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.profile-badge-item span {
+.profile-badge-item .badge-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.profile-badge-item .badge-name {
     font-weight: 600;
-    color: var(--text-primary, #ffffff);
+    color: #ffffff;
+    font-size: 0.9rem;
 }
 
 .profile-comments-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .profile-comment-item {
     padding: 1.5rem;
-    background: var(--bg-secondary, #1a2332);
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-color, #005B43);
+    background: #2a2a2a;
+    border-radius: 12px;
+    border-left: 4px solid #005B43;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
 }
 
-.comment-excerpt {
-    color: var(--text-secondary, #e2e8f0);
+.profile-comment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 1rem;
-    line-height: 1.6;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.comment-post-info {
+    flex: 1;
+}
+
+.post-title {
+    color: #005B43;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    display: block;
+}
+
+.post-title:hover {
+    text-decoration: underline;
+    color: #007a5a;
 }
 
 .comment-meta {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 1rem;
     font-size: 0.875rem;
-    color: var(--text-muted, #94a3b8);
+    color: #94a3b8;
 }
 
-.comment-meta a {
-    color: var(--primary-color, #005B43);
+.comment-date a {
+    color: #94a3b8;
     text-decoration: none;
 }
 
-.comment-meta a:hover {
-    text-decoration: underline;
+.comment-date a:hover {
+    color: #e2e8f0;
+}
+
+.comment-likes {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.comment-excerpt {
+    color: #e2e8f0;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.comment-actions a {
+    color: #005B43;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.comment-actions a:hover {
+    background: rgba(0, 91, 67, 0.1);
+    border-color: #005B43;
+    text-decoration: none;
+}
+
+.load-more-comments-wrapper {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #404040;
+}
+
+#load-more-profile-comments {
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 2px solid #404040;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+#load-more-profile-comments:hover {
+    border-color: #005B43;
+    background: rgba(0, 91, 67, 0.1);
 }
 
 .no-content {
     text-align: center;
-    color: var(--text-muted, #94a3b8);
-    font-style: italic;
-    padding: 2rem;
+    padding: 3rem;
+    color: #94a3b8;
+    background: #2a2a2a;
+    border-radius: 12px;
+    border: 2px dashed #404040;
+}
+
+.no-content-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
 /* Modal Styles */
@@ -473,18 +655,34 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     height: 100%;
     background: rgba(0,0,0,0.8);
     z-index: 1000;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
 }
 
+.modal.show {
+    display: flex;
+}
+
 .modal-content {
-    background: var(--bg-secondary, #1a2332);
+    background: #2a2a2a;
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .modal-header {
@@ -492,20 +690,25 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color, #334155);
+    border-bottom: 1px solid #404040;
 }
 
 .modal-header h3 {
     margin: 0;
-    color: var(--text-primary, #ffffff);
+    color: #ffffff;
 }
 
 .modal-close {
     background: none;
     border: none;
-    color: var(--text-muted, #94a3b8);
+    color: #94a3b8;
     font-size: 1.5rem;
     cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: #ffffff;
 }
 
 .modal-body {
@@ -515,22 +718,27 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
 .tab-navigation {
     display: flex;
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color, #334155);
+    border-bottom: 1px solid #404040;
 }
 
 .tab-btn {
     background: none;
     border: none;
     padding: 0.75rem 1.5rem;
-    color: var(--text-muted, #94a3b8);
+    color: #94a3b8;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: all 0.2s ease;
+    font-weight: 600;
 }
 
 .tab-btn.active {
-    color: var(--primary-color, #005B43);
-    border-bottom-color: var(--primary-color, #005B43);
+    color: #005B43;
+    border-bottom-color: #005B43;
+}
+
+.tab-btn:hover:not(.active) {
+    color: #e2e8f0;
 }
 
 .tab-pane {
@@ -549,35 +757,61 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: var(--text-secondary, #e2e8f0);
+    color: #e2e8f0;
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--border-color, #334155);
+    border: 1px solid #404040;
     border-radius: 6px;
-    background: var(--bg-card, #2d3e52);
-    color: var(--text-primary, #ffffff);
+    background: #404040;
+    color: #ffffff;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--primary-color, #005B43);
+    border-color: #005B43;
     box-shadow: 0 0 0 3px rgba(0, 91, 67, 0.1);
+}
+
+.ruh-submit {
+    background: linear-gradient(135deg, #005B43, #007a5a);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.ruh-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 91, 67, 0.3);
+}
+
+.ruh-submit:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .profile-actions {
     text-align: center;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 1px solid var(--border-color, #334155);
+    border-top: 1px solid #404040;
 }
 
 .logout-btn {
-    background: var(--error-color, #ef4444);
+    background: #ef4444;
     color: white;
     padding: 0.75rem 2rem;
     border-radius: 6px;
@@ -591,6 +825,33 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     transform: translateY(-1px);
     text-decoration: none;
     color: white;
+}
+
+.avatar-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-loading .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid #005B43;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive */
@@ -613,6 +874,16 @@ $last_activity = !empty($last_comment) ? strtotime($last_comment[0]->comment_dat
     .profile-badges {
         grid-template-columns: 1fr;
     }
+    
+    .comment-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .modal-content {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
 }
 </style>
 
@@ -624,20 +895,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeBtn = document.querySelector('.modal-close');
     
     if (editBtn && modal) {
-        editBtn.addEventListener('click', () => modal.style.display = 'flex');
-        closeBtn?.addEventListener('click', () => modal.style.display = 'none');
+        editBtn.addEventListener('click', () => {
+            modal.classList.add('show');
+            modal.style.display = 'flex';
+        });
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('show');
+                setTimeout(() => modal.style.display = 'none', 300);
+            });
+        }
+        
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.style.display = 'none';
+            if (e.target === modal) {
+                modal.classList.remove('show');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
         });
     }
     
     // Tab navigation
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
+            const tabName = this.getAttribute('data-tab');
             
             // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
             
             // Update tab content
@@ -646,75 +930,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Avatar upload
-    const avatarUpload = document.getElementById('avatar-upload');
-    if (avatarUpload) {
-        avatarUpload.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const formData = new FormData();
-                formData.append('action', 'ruh_update_profile');
-                formData.append('action_type', 'upload_avatar');
-                formData.append('nonce', document.querySelector('[name="nonce"]').value);
-                formData.append('avatar', this.files[0]);
-                
-                fetch(ruh_comment_ajax.ajax_url, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.showNotification(data.data.message, 'success');
-                        if (data.data.avatar_url) {
-                            document.querySelector('.profile-avatar img').src = data.data.avatar_url;
-                        }
-                    } else {
-                        window.showNotification(data.data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    window.showNotification('Avatar yükleme hatası.', 'error');
-                });
-            }
-        });
-    }
-    
     // Form submissions
     const basicForm = document.getElementById('profile-basic-form');
+    const accountForm = document.getElementById('profile-account-form');
     const passwordForm = document.getElementById('profile-password-form');
     
     if (basicForm) {
         basicForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('.ruh-submit');
-            const originalText = submitBtn.textContent;
-            
-            submitBtn.textContent = 'Güncelleniyor...';
-            submitBtn.disabled = true;
-            
-            fetch(ruh_comment_ajax.ajax_url, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.showNotification(data.data.message, 'success');
-                    // Sayfayı yenile
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    window.showNotification(data.data.message, 'error');
-                }
-            })
-            .catch(error => {
-                window.showNotification('Güncelleme hatası.', 'error');
-            })
-            .finally(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            });
+            submitProfileForm(this, 'Bilgiler güncelleniyor...');
+        });
+    }
+
+    if (accountForm) {
+        accountForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitProfileForm(this, 'Hesap bilgileri güncelleniyor...');
         });
     }
     
@@ -726,38 +957,216 @@ document.addEventListener('DOMContentLoaded', function() {
             const confirmPassword = this.querySelector('[name="confirm_password"]').value;
             
             if (newPassword !== confirmPassword) {
-                window.showNotification('Yeni şifreler eşleşmiyor.', 'error');
+                showNotification('Şifreler eşleşmiyor.', 'error');
                 return;
             }
             
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('.ruh-submit');
-            const originalText = submitBtn.textContent;
+            submitProfileForm(this, 'Şifre güncelleniyor...');
+        });
+    }
+    
+    function submitProfileForm(form, loadingText) {
+        const submitBtn = form.querySelector('.ruh-submit');
+        const originalText = submitBtn.textContent;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = loadingText;
+        
+        const formData = new FormData(form);
+        
+        fetch(ajaxurl || '<?php echo admin_url('admin-ajax.php'); ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.data.message, 'success');
+                
+                // Eğer şifre değiştirildiyse formu temizle
+                if (form.id === 'profile-password-form') {
+                    form.reset();
+                }
+                
+                // Modal'ı kapat
+                setTimeout(() => {
+                    modal.classList.remove('show');
+                    setTimeout(() => modal.style.display = 'none', 300);
+                    location.reload(); // Sayfayı yenile
+                }, 1500);
+            } else {
+                showNotification(data.data.message || 'Bir hata oluştu.', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        });
+    }
+    
+    function showNotification(message, type) {
+        // Mevcut bildirimleri kaldır
+        document.querySelectorAll('.ruh-notification').forEach(n => n.remove());
+        
+        const notification = document.createElement('div');
+        notification.className = `ruh-notification ${type}`;
+        notification.innerHTML = `
+            <span class="notification-text">${message}</span>
+            <button class="notification-close">&times;</button>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#005B43'};
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            font-size: 14px;
+            max-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideInRight 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            notification.remove();
+        });
+        
+        setTimeout(() => notification.remove(), 5000);
+    }
+    
+    // Daha fazla yorum yükleme
+    const loadMoreBtn = document.getElementById('load-more-profile-comments');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const page = parseInt(this.dataset.page);
             
-            submitBtn.textContent = 'Güncelleniyor...';
-            submitBtn.disabled = true;
+            this.textContent = 'Yükleniyor...';
+            this.disabled = true;
             
-            fetch(ruh_comment_ajax.ajax_url, {
+            const formData = new FormData();
+            formData.append('action', 'ruh_load_more_profile_comments');
+            formData.append('nonce', '<?php echo wp_create_nonce('ruh-comment-nonce'); ?>');
+            formData.append('user_id', userId);
+            formData.append('page', page);
+            
+            fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    window.showNotification(data.data.message, 'success');
-                    this.reset();
+                if (data.success && data.data.html) {
+                    const commentsContainer = document.querySelector('.profile-comments-list');
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.data.html;
+                    
+                    while (tempDiv.firstChild) {
+                        commentsContainer.insertBefore(tempDiv.firstChild, this.parentElement);
+                    }
+                    
+                    if (data.data.has_more) {
+                        this.dataset.page = (page + 1).toString();
+                        this.textContent = 'Daha Fazla Yorum Göster';
+                        this.disabled = false;
+                    } else {
+                        this.parentElement.remove();
+                    }
                 } else {
-                    window.showNotification(data.data.message, 'error');
+                    this.parentElement.remove();
                 }
             })
-            .catch(error => {
-                window.showNotification('Şifre güncelleme hatası.', 'error');
-            })
-            .finally(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+            .catch(() => {
+                this.textContent = 'Hata! Tekrar deneyin';
+                this.disabled = false;
             });
         });
     }
+// Avatar upload
+const avatarUpload = document.getElementById('avatar-upload');
+if (avatarUpload) {
+    avatarUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            showNotification('Sadece görsel dosyaları yükleyebilirsiniz.', 'error');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('Görsel dosyası 5MB\'dan küçük olmalıdır.', 'error');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'ruh_upload_image');
+        formData.append('nonce', '<?php echo wp_create_nonce('ruh-comment-nonce'); ?>');
+        formData.append('image', file);
+        
+        // Loading göster
+        const avatarContainer = document.querySelector('.profile-avatar');
+        const loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'avatar-loading';
+        loadingSpinner.innerHTML = '<div class="spinner"></div>';
+        avatarContainer.appendChild(loadingSpinner);
+        
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Avatar URL'ini kaydet
+                const updateFormData = new FormData();
+                updateFormData.append('action', 'ruh_update_profile');
+                updateFormData.append('nonce', '<?php echo wp_create_nonce('ruh_profile_nonce'); ?>');
+                updateFormData.append('action_type', 'update_avatar');
+                updateFormData.append('avatar_url', data.data.url);
+                
+                return fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    body: updateFormData
+                });
+            } else {
+                throw new Error(data.data.message || 'Avatar yüklenemedi.');
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Avatar resmini güncelle
+                const avatarImg = document.querySelector('.profile-avatar img');
+                if (avatarImg) {
+                    avatarImg.src = data.data.avatar_url + '?t=' + Date.now();
+                }
+                showNotification('Profil resmi başarıyla güncellendi!', 'success');
+            } else {
+                showNotification(data.data.message || 'Profil resmi kaydedilemedi.', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification(error.message || 'Bir hata oluştu.', 'error');
+        })
+        .finally(() => {
+            if (loadingSpinner) {
+                loadingSpinner.remove();
+            }
+        });
+    });
+}
+
 });
 </script>

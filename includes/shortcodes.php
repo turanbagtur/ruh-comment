@@ -47,9 +47,11 @@ function ruh_user_profile_shortcode_handler($atts) {
     return ob_get_clean();
 }
 
-// Giriş formu
-add_shortcode('ruh_login', 'ruh_login_shortcode_handler');
-function ruh_login_shortcode_handler($atts) {
+// Kombine Giriş/Kayıt formu
+add_shortcode('ruh_auth', 'ruh_auth_shortcode_handler');
+add_shortcode('ruh_login', 'ruh_auth_shortcode_handler'); // Eski uyumluluk için
+add_shortcode('ruh_register', 'ruh_auth_shortcode_handler'); // Eski uyumluluk için
+function ruh_auth_shortcode_handler($atts) {
     if (is_user_logged_in()) {
         $user = wp_get_current_user();
         $profile_url = ruh_get_user_profile_url($user->ID);
@@ -63,235 +65,182 @@ function ruh_login_shortcode_handler($atts) {
                 </div>';
     }
     
-    $atts = shortcode_atts(array('redirect_to' => ''), $atts, 'ruh_login');
+    $atts = shortcode_atts(array('redirect_to' => ''), $atts, 'ruh_auth');
     
     ob_start();
     ?>
-    <div class="ruh-auth-form ruh-login-form">
-        <div class="auth-form-header">
-            <h2>Giriş Yap</h2>
-            <p>Hesabınıza giriş yaparak yorumlarınızı paylaşabilir, tepkilerinizi gösterebilir ve topluluğa katılabilirsiniz.</p>
+    <div class="ruh-auth-container">
+        <!-- Tab Navigation -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Giriş Yap</button>
+            <button class="auth-tab" data-tab="register">Kayıt Ol</button>
         </div>
         
-        <form id="ruh-login-form" method="post" class="auth-form">
-            <?php wp_nonce_field('ruh_auth_nonce', 'nonce'); ?>
-            <input type="hidden" name="action" value="ruh_login">
-            <input type="hidden" name="redirect_to" value="<?php echo esc_url($atts['redirect_to'] ? $atts['redirect_to'] : get_permalink()); ?>">
-            
-            <div class="form-group">
-                <label for="login_username">Kullanıcı Adı veya E-posta</label>
-                <input type="text" id="login_username" name="username" required placeholder="kullaniciadi@example.com">
-                <div class="field-icon">👤</div>
+        <!-- Giriş Formu -->
+        <div class="ruh-auth-form ruh-login-form tab-content active" id="login-tab">
+            <div class="auth-form-header">
+                <h2>Hoş Geldiniz</h2>
+                <p>Hesabınıza giriş yaparak yorumlarınızı paylaşabilir, tepkilerinizi gösterebilir ve topluluğa katılabilirsiniz.</p>
             </div>
             
-            <div class="form-group">
-                <label for="login_password">Şifre</label>
-                <input type="password" id="login_password" name="password" required placeholder="••••••••">
-                <div class="field-icon">🔒</div>
-                <button type="button" class="password-toggle" onclick="togglePassword('login_password')">👁️</button>
+            <form id="ruh-login-form" method="post" class="auth-form">
+                <?php wp_nonce_field('ruh_auth_nonce', 'nonce'); ?>
+                <input type="hidden" name="action" value="ruh_login">
+                <input type="hidden" name="redirect_to" value="<?php echo esc_url($atts['redirect_to'] ? $atts['redirect_to'] : get_permalink()); ?>">
+                
+                <div class="form-group">
+                    <label for="login_username">Kullanıcı Adı veya E-posta</label>
+                    <input type="text" id="login_username" name="username" required placeholder="kullaniciadi@example.com">
+                    <div class="field-icon">👤</div>
+                </div>
+                
+                <div class="form-group password-group">
+                    <label for="login_password">Şifre</label>
+                    <input type="password" id="login_password" name="password" required placeholder="••••••••">
+                    <div class="field-icon">🔒</div>
+                    <button type="button" class="password-toggle" data-target="login_password">
+                        <span class="show-icon">👁️</span>
+                        <span class="hide-icon" style="display:none">🙈</span>
+                    </button>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember" value="1">
+                        <span class="checkmark"></span>
+                        Beni hatırla
+                    </label>
+                </div>
+                
+                <button type="submit" class="ruh-submit">
+                    <span class="button-text">Giriş Yap</span>
+                    <span class="button-loader" style="display:none;">⏳ Giriş yapılıyor...</span>
+                </button>
+                
+                <div class="form-links">
+                    <a href="<?php echo wp_lostpassword_url(); ?>" class="auth-link">Şifremi unuttum</a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Kayıt Formu -->
+        <div class="ruh-auth-form ruh-register-form tab-content" id="register-tab">
+            <div class="auth-form-header">
+                <h2>Aramıza Katılın</h2>
+                <p>Topluluğumuza katılın! Yorumlarınızı paylaşın, tepkilerinizi gösterin ve seviye atlayarak rozet kazanın.</p>
             </div>
             
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="remember" value="1">
-                    <span class="checkmark"></span>
-                    Beni hatırla
-                </label>
-            </div>
-            
-            <button type="submit" class="ruh-submit">
-                <span class="button-text">Giriş Yap</span>
-                <span class="button-loader" style="display:none;">⏳ Giriş yapılıyor...</span>
-            </button>
-            
-            <div class="form-links">
-                <?php 
-                $options = get_option('ruh_comment_options', array());
-                $register_page = isset($options['register_page_id']) ? $options['register_page_id'] : 0;
-                if ($register_page && get_post($register_page)) : ?>
-                    <a href="<?php echo get_permalink($register_page); ?>" class="auth-link">Hesabınız yok mu? Kayıt olun</a>
-                <?php endif; ?>
-                <a href="<?php echo wp_lostpassword_url(); ?>" class="auth-link">Şifremi unuttum</a>
-            </div>
-        </form>
+            <?php if (!get_option('users_can_register')) : ?>
+                <div class="form-message error">
+                    <p>Şu anda yeni kullanıcı kaydı kabul edilmemektedir.</p>
+                </div>
+            <?php else : ?>
+                <form id="ruh-register-form" method="post" class="auth-form">
+                    <?php wp_nonce_field('ruh_auth_nonce', 'nonce'); ?>
+                    <input type="hidden" name="action" value="ruh_register">
+                    <input type="hidden" name="redirect_to" value="<?php echo esc_url($atts['redirect_to'] ? $atts['redirect_to'] : get_permalink()); ?>">
+                    
+                    <div class="form-group">
+                        <label for="register_username">Kullanıcı Adı</label>
+                        <input type="text" id="register_username" name="username" required placeholder="kullaniciadi" pattern="[a-zA-Z0-9_]+" title="Sadece harf, rakam ve alt çizgi kullanabilirsiniz">
+                        <div class="field-icon">👤</div>
+                        <small>Sadece harf, rakam ve alt çizgi (_) kullanabilirsiniz.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="register_email">E-posta Adresi</label>
+                        <input type="email" id="register_email" name="email" required placeholder="email@example.com">
+                        <div class="field-icon">📧</div>
+                        <small>Geçerli bir e-posta adresi girin.</small>
+                    </div>
+                    
+                    <div class="form-group password-group">
+                        <label for="register_password">Şifre</label>
+                        <input type="password" id="register_password" name="password" required minlength="6" placeholder="••••••••">
+                        <div class="field-icon">🔒</div>
+                        <button type="button" class="password-toggle" data-target="register_password">
+                            <span class="show-icon">👁️</span>
+                            <span class="hide-icon" style="display:none">🙈</span>
+                        </button>
+                        <small>En az 6 karakter olmalıdır.</small>
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                            <span class="strength-text"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group password-group">
+                        <label for="register_password_confirm">Şifre Tekrar</label>
+                        <input type="password" id="register_password_confirm" name="password_confirm" required placeholder="••••••••">
+                        <div class="field-icon">🔒</div>
+                        <button type="button" class="password-toggle" data-target="register_password_confirm">
+                            <span class="show-icon">👁️</span>
+                            <span class="hide-icon" style="display:none">🙈</span>
+                        </button>
+                        <small>Şifrenizi tekrar girin.</small>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="terms_accepted" required>
+                            <span class="checkmark"></span>
+                            <span class="terms-link">Kullanım koşullarını</span> okudum ve kabul ediyorum
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="ruh-submit">
+                        <span class="button-text">Kayıt Ol</span>
+                        <span class="button-loader" style="display:none;">⏳ Hesap oluşturuluyor...</span>
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
     </div>
     
     <script>
-    function togglePassword(inputId) {
-        const input = document.getElementById(inputId);
-        const toggle = input.nextElementSibling.nextElementSibling;
-        if (input.type === 'password') {
-            input.type = 'text';
-            toggle.textContent = '🙈';
-        } else {
-            input.type = 'password';
-            toggle.textContent = '👁️';
-        }
-    }
-    
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('ruh-login-form');
-        if (!form) return;
-        
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('.ruh-submit');
-            const buttonText = submitBtn.querySelector('.button-text');
-            const buttonLoader = submitBtn.querySelector('.button-loader');
-            
-            buttonText.style.display = 'none';
-            buttonLoader.style.display = 'inline';
-            submitBtn.disabled = true;
-            
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (window.showNotification) {
-                        window.showNotification(data.data.message, 'success');
-                    }
-                    setTimeout(() => {
-                        window.location.href = data.data.redirect;
-                    }, 1500);
-                } else {
-                    if (window.showNotification) {
-                        window.showNotification(data.data.message, 'error');
-                    } else {
-                        alert(data.data.message);
-                    }
-                }
-            })
-            .catch(error => {
-                if (window.showNotification) {
-                    window.showNotification('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                } else {
-                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-                }
-            })
-            .finally(() => {
-                buttonText.style.display = 'inline';
-                buttonLoader.style.display = 'none';
-                submitBtn.disabled = false;
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                
+                // Update tab buttons
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(targetTab + '-tab').classList.add('active');
             });
         });
-    });
-    </script>
-    <?php
-    return ob_get_clean();
-}
-
-// Kayıt formu
-add_shortcode('ruh_register', 'ruh_register_shortcode_handler');
-function ruh_register_shortcode_handler($atts) {
-    if (is_user_logged_in()) {
-        $user = wp_get_current_user();
-        $profile_url = ruh_get_user_profile_url($user->ID);
-        return '<div class="ruh-info-message">
-                    <h3>Zaten giriş yapmışsınız!</h3>
-                    <p>Merhaba <strong>' . esc_html($user->display_name) . '</strong>, zaten giriş yapmışsınız.</p>
-                    <div class="ruh-action-buttons">
-                        <a href="' . esc_url($profile_url) . '" class="ruh-button primary">Profilim</a>
-                        <a href="' . esc_url(ruh_logout_url()) . '" class="ruh-button secondary">Çıkış Yap</a>
-                    </div>
-                </div>';
-    }
-    
-    if (!get_option('users_can_register')) {
-        return '<div class="ruh-error-message">
-                    <h3>Kayıt Kapalı</h3>
-                    <p>Şu anda yeni kullanıcı kaydı kabul edilmemektedir.</p>
-                </div>';
-    }
-    
-    $atts = shortcode_atts(array('redirect_to' => ''), $atts, 'ruh_register');
-    
-    ob_start();
-    ?>
-    <div class="ruh-auth-form ruh-register-form">
-        <div class="auth-form-header">
-            <h2>Kayıt Ol</h2>
-            <p>Topluluğumuza katılın! Yorumlarınızı paylaşın, tepkilerinizi gösterin ve seviye atlayarak rozet kazanın.</p>
-        </div>
         
-        <form id="ruh-register-form" method="post" class="auth-form">
-            <?php wp_nonce_field('ruh_auth_nonce', 'nonce'); ?>
-            <input type="hidden" name="action" value="ruh_register">
-            <input type="hidden" name="redirect_to" value="<?php echo esc_url($atts['redirect_to'] ? $atts['redirect_to'] : get_permalink()); ?>">
-            
-            <div class="form-group">
-                <label for="register_username">Kullanıcı Adı</label>
-                <input type="text" id="register_username" name="username" required placeholder="kullaniciadi" pattern="[a-zA-Z0-9_]+" title="Sadece harf, rakam ve alt çizgi kullanabilirsiniz">
-                <div class="field-icon">👤</div>
-                <small>Sadece harf, rakam ve alt çizgi (_) kullanabilirsiniz.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="register_email">E-posta Adresi</label>
-                <input type="email" id="register_email" name="email" required placeholder="email@example.com">
-                <div class="field-icon">📧</div>
-                <small>Geçerli bir e-posta adresi girin.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="register_password">Şifre</label>
-                <input type="password" id="register_password" name="password" required minlength="6" placeholder="••••••••">
-                <div class="field-icon">🔒</div>
-                <button type="button" class="password-toggle" onclick="togglePassword('register_password')">👁️</button>
-                <small>En az 6 karakter olmalıdır.</small>
-                <div class="password-strength">
-                    <div class="strength-bar"></div>
-                    <span class="strength-text"></span>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="register_password_confirm">Şifre Tekrar</label>
-                <input type="password" id="register_password_confirm" name="password_confirm" required placeholder="••••••••">
-                <div class="field-icon">🔒</div>
-                <button type="button" class="password-toggle" onclick="togglePassword('register_password_confirm')">👁️</button>
-                <small>Şifrenizi tekrar girin.</small>
-            </div>
-            
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="terms_accepted" required>
-                    <span class="checkmark"></span>
-                    <a href="#" class="terms-link">Kullanım koşullarını</a> okudum ve kabul ediyorum
-                </label>
-            </div>
-            
-            <button type="submit" class="ruh-submit">
-                <span class="button-text">Kayıt Ol</span>
-                <span class="button-loader" style="display:none;">⏳ Hesap oluşturuluyor...</span>
-            </button>
-            
-            <div class="form-links">
-                <?php 
-                $options = get_option('ruh_comment_options', array());
-                $login_page = isset($options['login_page_id']) ? $options['login_page_id'] : 0;
-                if ($login_page && get_post($login_page)) : ?>
-                    <a href="<?php echo get_permalink($login_page); ?>" class="auth-link">Zaten hesabınız var mı? Giriş yapın</a>
-                <?php endif; ?>
-            </div>
-        </form>
-    </div>
-    
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('ruh-register-form');
-        if (!form) return;
+        // Password toggle functionality
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const showIcon = this.querySelector('.show-icon');
+                const hideIcon = this.querySelector('.hide-icon');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    showIcon.style.display = 'none';
+                    hideIcon.style.display = 'inline';
+                } else {
+                    input.type = 'password';
+                    showIcon.style.display = 'inline';
+                    hideIcon.style.display = 'none';
+                }
+            });
+        });
         
+        // Password strength checker
         const passwordInput = document.getElementById('register_password');
-        const confirmInput = document.getElementById('register_password_confirm');
         const strengthBar = document.querySelector('.strength-bar');
         const strengthText = document.querySelector('.strength-text');
         
-        // Şifre gücü kontrolü
         if (passwordInput && strengthBar) {
             passwordInput.addEventListener('input', function() {
                 const password = this.value;
@@ -325,178 +274,123 @@ function ruh_register_shortcode_handler($atts) {
             });
         }
         
-        // Form gönderimi
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const password = this.querySelector('[name="password"]').value;
-            const passwordConfirm = this.querySelector('[name="password_confirm"]').value;
-            
-            if (password !== passwordConfirm) {
-                if (window.showNotification) {
-                    window.showNotification('Şifreler eşleşmiyor.', 'error');
-                } else {
-                    alert('Şifreler eşleşmiyor.');
-                }
-                return;
-            }
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('.ruh-submit');
-            const buttonText = submitBtn.querySelector('.button-text');
-            const buttonLoader = submitBtn.querySelector('.button-loader');
-            
-            buttonText.style.display = 'none';
-            buttonLoader.style.display = 'inline';
-            submitBtn.disabled = true;
-            
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (window.showNotification) {
-                        window.showNotification(data.data.message, 'success');
-                    }
-                    setTimeout(() => {
-                        window.location.href = data.data.redirect;
-                    }, 1500);
-                } else {
-                    if (window.showNotification) {
-                        window.showNotification(data.data.message, 'error');
+        // Login form submission
+        const loginForm = document.getElementById('ruh-login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('.ruh-submit');
+                const buttonText = submitBtn.querySelector('.button-text');
+                const buttonLoader = submitBtn.querySelector('.button-loader');
+                
+                buttonText.style.display = 'none';
+                buttonLoader.style.display = 'inline';
+                submitBtn.disabled = true;
+                
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.showNotification) {
+                            window.showNotification(data.data.message, 'success');
+                        }
+                        setTimeout(() => {
+                            window.location.href = data.data.redirect;
+                        }, 1500);
                     } else {
-                        alert(data.data.message);
+                        if (window.showNotification) {
+                            window.showNotification(data.data.message, 'error');
+                        } else {
+                            alert(data.data.message);
+                        }
                     }
-                }
-            })
-            .catch(error => {
-                if (window.showNotification) {
-                    window.showNotification('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                } else {
-                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-                }
-            })
-            .finally(() => {
-                buttonText.style.display = 'inline';
-                buttonLoader.style.display = 'none';
-                submitBtn.disabled = false;
+                })
+                .catch(error => {
+                    if (window.showNotification) {
+                        window.showNotification('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                    } else {
+                        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                })
+                .finally(() => {
+                    buttonText.style.display = 'inline';
+                    buttonLoader.style.display = 'none';
+                    submitBtn.disabled = false;
+                });
             });
-        });
+        }
+        
+        // Register form submission
+        const registerForm = document.getElementById('ruh-register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const password = this.querySelector('[name="password"]').value;
+                const passwordConfirm = this.querySelector('[name="password_confirm"]').value;
+                
+                if (password !== passwordConfirm) {
+                    if (window.showNotification) {
+                        window.showNotification('Şifreler eşleşmiyor.', 'error');
+                    } else {
+                        alert('Şifreler eşleşmiyor.');
+                    }
+                    return;
+                }
+                
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('.ruh-submit');
+                const buttonText = submitBtn.querySelector('.button-text');
+                const buttonLoader = submitBtn.querySelector('.button-loader');
+                
+                buttonText.style.display = 'none';
+                buttonLoader.style.display = 'inline';
+                submitBtn.disabled = true;
+                
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.showNotification) {
+                            window.showNotification(data.data.message, 'success');
+                        }
+                        setTimeout(() => {
+                            window.location.href = data.data.redirect;
+                        }, 1500);
+                    } else {
+                        if (window.showNotification) {
+                            window.showNotification(data.data.message, 'error');
+                        } else {
+                            alert(data.data.message);
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (window.showNotification) {
+                        window.showNotification('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                    } else {
+                        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                })
+                .finally(() => {
+                    buttonText.style.display = 'inline';
+                    buttonLoader.style.display = 'none';
+                    submitBtn.disabled = false;
+                });
+            });
+        }
     });
     </script>
     <?php
     return ob_get_clean();
-}
-
-// Auth handler için profil güncelleme AJAX
-add_action('wp_ajax_ruh_update_profile', 'ruh_handle_profile_update');
-function ruh_handle_profile_update() {
-    if (!wp_verify_nonce($_POST['nonce'], 'ruh_profile_nonce')) {
-        wp_send_json_error(['message' => 'Güvenlik kontrolü başarısız.']);
-    }
-    
-    if (!is_user_logged_in()) {
-        wp_send_json_error(['message' => 'Bu işlem için giriş yapmalısınız.']);
-    }
-    
-    $user_id = get_current_user_id();
-    $action_type = sanitize_key($_POST['action_type']);
-    
-    switch ($action_type) {
-        case 'update_profile':
-            $display_name = sanitize_text_field($_POST['display_name']);
-            $email = sanitize_email($_POST['email']);
-            $description = sanitize_textarea_field($_POST['description']);
-            
-            if (empty($display_name) || !is_email($email)) {
-                wp_send_json_error(['message' => 'Lütfen tüm gerekli alanları doğru şekilde doldurun.']);
-            }
-            
-            // E-posta adresi başka kullanıcıda var mı kontrol et
-            $existing_user = get_user_by('email', $email);
-            if ($existing_user && $existing_user->ID !== $user_id) {
-                wp_send_json_error(['message' => 'Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor.']);
-            }
-            
-            $result = wp_update_user([
-                'ID' => $user_id,
-                'display_name' => $display_name,
-                'user_email' => $email,
-                'description' => $description
-            ]);
-            
-            if (is_wp_error($result)) {
-                wp_send_json_error(['message' => $result->get_error_message()]);
-            }
-            
-            wp_send_json_success(['message' => 'Profil bilgileri başarıyla güncellendi.']);
-            break;
-            
-        case 'change_password':
-            $current_password = $_POST['current_password'];
-            $new_password = $_POST['new_password'];
-            
-            if (empty($current_password) || empty($new_password)) {
-                wp_send_json_error(['message' => 'Lütfen tüm şifre alanlarını doldurun.']);
-            }
-            
-            if (strlen($new_password) < 6) {
-                wp_send_json_error(['message' => 'Yeni şifre en az 6 karakter olmalıdır.']);
-            }
-            
-            $user = wp_get_current_user();
-            if (!wp_check_password($current_password, $user->user_pass, $user_id)) {
-                wp_send_json_error(['message' => 'Mevcut şifre yanlış.']);
-            }
-            
-            wp_set_password($new_password, $user_id);
-            
-            // Kullanıcıyı tekrar giriş yaptır
-            wp_set_auth_cookie($user_id, true, is_ssl());
-            
-            wp_send_json_success(['message' => 'Şifre başarıyla güncellendi.']);
-            break;
-            
-        case 'upload_avatar':
-            if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
-                wp_send_json_error(['message' => 'Avatar yükleme hatası.']);
-            }
-            
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!in_array($_FILES['avatar']['type'], $allowed_types)) {
-                wp_send_json_error(['message' => 'Sadece JPG, PNG ve GIF dosyaları desteklenir.']);
-            }
-            
-            if ($_FILES['avatar']['size'] > 2 * 1024 * 1024) { // 2MB
-                wp_send_json_error(['message' => 'Dosya boyutu 2MB\'dan büyük olamaz.']);
-            }
-            
-            require_once(ABSPATH . 'wp-admin/includes/file.php');
-            $upload = wp_handle_upload($_FILES['avatar'], ['test_form' => false]);
-            
-            if (isset($upload['error'])) {
-                wp_send_json_error(['message' => $upload['error']]);
-            }
-            
-            // Eski avatar'ı sil
-            $old_avatar = get_user_meta($user_id, 'ruh_custom_avatar', true);
-            if ($old_avatar) {
-                wp_delete_file($old_avatar);
-            }
-            
-            update_user_meta($user_id, 'ruh_custom_avatar', $upload['file']);
-            
-            wp_send_json_success([
-                'message' => 'Avatar başarıyla güncellendi.',
-                'avatar_url' => $upload['url']
-            ]);
-            break;
-            
-        default:
-            wp_send_json_error(['message' => 'Geçersiz işlem.']);
-    }
 }
 
 // CSS stilleri ekle
@@ -505,7 +399,8 @@ add_action('wp_head', function() {
     if (!$current_post) return;
     
     $content = $current_post->post_content;
-    if (has_shortcode($content, 'ruh_login') || 
+    if (has_shortcode($content, 'ruh_auth') || 
+        has_shortcode($content, 'ruh_login') || 
         has_shortcode($content, 'ruh_register') || 
         has_shortcode($content, 'ruh_user_profile')) {
         ?>
@@ -525,10 +420,9 @@ add_action('wp_head', function() {
             --ruh-transition: all 0.2s ease;
         }
         
-        .ruh-auth-form, .ruh-info-message, .ruh-error-message {
+        .ruh-auth-container {
             max-width: 450px;
             margin: 2rem auto;
-            padding: 2.5rem;
             background: var(--ruh-bg-card);
             border-radius: var(--ruh-border-radius);
             border: 1px solid var(--ruh-border);
@@ -538,7 +432,7 @@ add_action('wp_head', function() {
             overflow: hidden;
         }
         
-        .ruh-auth-form::before, .ruh-info-message::before, .ruh-error-message::before {
+        .ruh-auth-container::before {
             content: '';
             position: absolute;
             top: 0;
@@ -546,6 +440,46 @@ add_action('wp_head', function() {
             right: 0;
             height: 4px;
             background: linear-gradient(90deg, var(--ruh-primary), #00b894);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--ruh-border);
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            color: var(--ruh-text-muted);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--ruh-transition);
+            border-bottom: 2px solid transparent;
+        }
+        
+        .auth-tab.active {
+            color: var(--ruh-primary);
+            border-bottom-color: var(--ruh-primary);
+            background: var(--ruh-primary-light);
+        }
+        
+        .auth-tab:hover:not(.active) {
+            color: var(--ruh-text-secondary);
+            background: var(--ruh-bg-secondary);
+        }
+        
+        .ruh-auth-form {
+            padding: 2.5rem;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
         }
         
         .auth-form-header {
@@ -589,6 +523,11 @@ add_action('wp_head', function() {
             color: var(--ruh-text-primary);
             font-size: 1rem;
             transition: var(--ruh-transition);
+            box-sizing: border-box;
+        }
+        
+        .password-group input {
+            padding-right: 4.5rem;
         }
         
         .form-group input:focus {
@@ -599,7 +538,7 @@ add_action('wp_head', function() {
         
         .field-icon {
             position: absolute;
-            right: 1rem;
+            right: 3.5rem;
             top: 2.2rem;
             font-size: 1.2rem;
             opacity: 0.6;
@@ -613,9 +552,10 @@ add_action('wp_head', function() {
             border: none;
             font-size: 1.1rem;
             cursor: pointer;
-            padding: 0.2rem;
+            padding: 0.5rem;
             border-radius: 4px;
             transition: var(--ruh-transition);
+            z-index: 2;
         }
         
         .password-toggle:hover {
@@ -761,10 +701,6 @@ add_action('wp_head', function() {
             text-decoration: underline;
         }
         
-        .ruh-info-message, .ruh-error-message {
-            text-align: center;
-        }
-        
         .ruh-info-message h3, .ruh-error-message h3 {
             color: var(--ruh-primary);
             margin: 0 0 1rem;
@@ -815,9 +751,26 @@ add_action('wp_head', function() {
             text-decoration: none;
         }
         
+        .form-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .form-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        
         @media (max-width: 480px) {
-            .ruh-auth-form, .ruh-info-message, .ruh-error-message {
+            .ruh-auth-container, .ruh-info-message, .ruh-error-message {
                 margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+            
+            .ruh-auth-form {
                 padding: 2rem 1.5rem;
             }
             

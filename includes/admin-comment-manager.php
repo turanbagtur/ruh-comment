@@ -20,14 +20,28 @@ class Ruh_Comments_List_Table extends WP_List_Table {
     }
 
     function get_bulk_actions() {
-        return [
-            'approve' => __('Onayla', 'ruh-comment'),
-            'unapprove' => __('Onayı Kaldır', 'ruh-comment'),
-            'spam' => __('Spam İşaretle', 'ruh-comment'),
-            'unspam' => __('Spam İşaretini Kaldır', 'ruh-comment'),
-            'trash' => __('Çöpe At', 'ruh-comment'),
-            'delete' => __('Kalıcı Sil', 'ruh-comment')
-        ];
+        $current_status = isset($_GET['comment_status']) ? $_GET['comment_status'] : 'all';
+        
+        $actions = [];
+        
+        if ($current_status !== 'trash') {
+            $actions['approve'] = __('Onayla', 'ruh-comment');
+            $actions['unapprove'] = __('Onayı Kaldır', 'ruh-comment');
+            $actions['spam'] = __('Spam İşaretle', 'ruh-comment');
+            $actions['trash'] = __('Çöpe At', 'ruh-comment');
+        }
+        
+        if ($current_status === 'spam') {
+            $actions['unspam'] = __('Spam İşaretini Kaldır', 'ruh-comment');
+            $actions['delete'] = __('Kalıcı Sil', 'ruh-comment');
+        }
+        
+        if ($current_status === 'trash') {
+            $actions['restore'] = __('Geri Yükle', 'ruh-comment');
+            $actions['delete'] = __('Kalıcı Sil', 'ruh-comment');
+        }
+        
+        return $actions;
     }
 
     function process_bulk_action() {
@@ -41,6 +55,8 @@ class Ruh_Comments_List_Table extends WP_List_Table {
         }
 
         $message = '';
+        $redirect_status = isset($_GET['comment_status']) ? $_GET['comment_status'] : 'all';
+        
         switch ($action) {
             case 'approve':
                 foreach ($comment_ids as $comment_id) {
@@ -68,6 +84,7 @@ class Ruh_Comments_List_Table extends WP_List_Table {
                     wp_unspam_comment($comment_id);
                 }
                 $message = sprintf(__('%d yorumun spam işareti kaldırıldı.', 'ruh-comment'), count($comment_ids));
+                $redirect_status = 'all'; // Spam'dan çıkan yorumlar all'a gitsin
                 break;
                 
             case 'trash':
@@ -77,18 +94,49 @@ class Ruh_Comments_List_Table extends WP_List_Table {
                 $message = sprintf(__('%d yorum çöpe atıldı.', 'ruh-comment'), count($comment_ids));
                 break;
                 
-            case 'delete':
+            case 'restore':
                 foreach ($comment_ids as $comment_id) {
-                    wp_delete_comment($comment_id, true);
+                    wp_untrash_comment($comment_id);
                 }
-                $message = sprintf(__('%d yorum kalıcı olarak silindi.', 'ruh-comment'), count($comment_ids));
+                $message = sprintf(__('%d yorum geri yüklendi.', 'ruh-comment'), count($comment_ids));
+                $redirect_status = 'all'; // Restore edilen yorumlar all'a gitsin
+                break;
+                
+            case 'delete':
+                $deleted_count = 0;
+                foreach ($comment_ids as $comment_id) {
+                    // Kalıcı silme işlemi
+                    $result = wp_delete_comment($comment_id, true);
+                    if ($result) {
+                        $deleted_count++;
+                        
+                        // Ruh Comment meta verilerini de temizle
+                        global $wpdb;
+                        $wpdb->delete($wpdb->prefix . 'ruh_reports', ['comment_id' => $comment_id]);
+                    }
+                }
+                
+                if ($deleted_count > 0) {
+                    $message = sprintf(__('%d yorum kalıcı olarak silindi.', 'ruh-comment'), $deleted_count);
+                    // Kalıcı silme sonrası aynı sayfada kal
+                } else {
+                    $message = __('Yorumlar silinemedi.', 'ruh-comment');
+                }
                 break;
         }
         
         if (!empty($message)) {
-            add_action('admin_notices', function() use ($message) {
-                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
-            });
+            // Session kullanarak mesajı sakla
+            set_transient('ruh_admin_message_' . get_current_user_id(), $message, 30);
+            
+            // Yönlendirme URL'ini oluştur
+            $redirect_url = admin_url('admin.php?page=ruh-comment-manager');
+            if ($redirect_status !== 'all') {
+                $redirect_url = add_query_arg('comment_status', $redirect_status, $redirect_url);
+            }
+            
+            wp_redirect($redirect_url);
+            exit;
         }
     }
 
@@ -100,10 +148,15 @@ class Ruh_Comments_List_Table extends WP_List_Table {
         $per_page = 20;
 
         $args = ['number' => $per_page, 'offset' => ($paged - 1) * $per_page, 'orderby' => 'comment_date', 'order' => 'DESC'];
+        
         if (isset($_GET['comment_status'])) { 
             $status = sanitize_key($_GET['comment_status']);
             if ($status !== 'all') {
-                $args['status'] = $status === 'moderated' ? 'hold' : $status;
+                if ($status === 'moderated') {
+                    $args['status'] = 'hold';
+                } else {
+                    $args['status'] = $status;
+                }
             }
         }
         
@@ -151,49 +204,63 @@ class Ruh_Comments_List_Table extends WP_List_Table {
     
     function column_comment($item) {
         $actions = [];
+        $current_status = $item->comment_approved;
+        $current_page_status = isset($_GET['comment_status']) ? $_GET['comment_status'] : 'all';
+        
+        // Nonce oluştur
         $approve_nonce = wp_create_nonce("approve-comment_{$item->comment_ID}");
+        $delete_nonce = wp_create_nonce("delete-comment_{$item->comment_ID}");
+        $trash_nonce = wp_create_nonce("trash-comment_{$item->comment_ID}");
+        $spam_nonce = wp_create_nonce("spam-comment_{$item->comment_ID}");
         
-        // Onay durumu butonları
-        if ($item->comment_approved == '0') { 
-            $actions['approve'] = "<a href='?page=ruh-comment-manager&action=approve&c={$item->comment_ID}&_wpnonce=$approve_nonce' class='button button-small'>Onayla</a>"; 
-        } else { 
-            $actions['unapprove'] = "<a href='?page=ruh-comment-manager&action=unapprove&c={$item->comment_ID}&_wpnonce=$approve_nonce' class='button button-small'>Onayı Kaldır</a>"; 
-        }
-        
-        // Diğer eylemler
-        $actions['view'] = "<a href='" . esc_url(get_comment_link($item)) . "' target='_blank' class='button button-small'>Görüntüle</a>";
-        $actions['edit'] = "<a href='" . admin_url('comment.php?action=editcomment&c=' . $item->comment_ID) . "' class='button button-small'>Düzenle</a>";
-        $actions['quick-edit'] = "<a href='#' class='quick-edit-comment button button-small' data-comment-id='{$item->comment_ID}'>Hızlı Düzenle</a>";
-        
-        if ($item->comment_approved !== 'spam') {
-            $actions['spam'] = "<a href='" . wp_nonce_url("?page=ruh-comment-manager&action=spam&c={$item->comment_ID}", "spam-comment_{$item->comment_ID}") . "' class='button button-small' style='color:#d63638;'>Spam</a>";
+        // Durum bazında eylemler
+        if ($current_status === 'trash') {
+            // Çöp durumu - sadece geri yükle ve kalıcı sil
+            $actions['restore'] = "<a href='?page=ruh-comment-manager&action=restore&c={$item->comment_ID}&_wpnonce=$approve_nonce&comment_status=$current_page_status' class='button button-small' style='color:#00a32a;'>Geri Yükle</a>";
+            $actions['delete'] = "<a href='?page=ruh-comment-manager&action=delete&c={$item->comment_ID}&_wpnonce=$delete_nonce&comment_status=$current_page_status' onclick='return confirm(\"Bu yorumu kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!\")' class='button button-small' style='color:#d63638;'>Kalıcı Sil</a>";
+        } elseif ($current_status === 'spam') {
+            // Spam durumu
+            $actions['unspam'] = "<a href='?page=ruh-comment-manager&action=unspam&c={$item->comment_ID}&_wpnonce=$spam_nonce&comment_status=$current_page_status' class='button button-small'>Spam Değil</a>";
+            $actions['delete'] = "<a href='?page=ruh-comment-manager&action=delete&c={$item->comment_ID}&_wpnonce=$delete_nonce&comment_status=$current_page_status' onclick='return confirm(\"Bu yorumu kalıcı olarak silmek istediğinizden emin misiniz?\")' class='button button-small' style='color:#d63638;'>Kalıcı Sil</a>";
         } else {
-            $actions['unspam'] = "<a href='" . wp_nonce_url("?page=ruh-comment-manager&action=unspam&c={$item->comment_ID}", "unspam-comment_{$item->comment_ID}") . "' class='button button-small'>Spam Değil</a>";
+            // Normal durumlar için eylemler
+            if ($current_status == '0') { 
+                $actions['approve'] = "<a href='?page=ruh-comment-manager&action=approve&c={$item->comment_ID}&_wpnonce=$approve_nonce&comment_status=$current_page_status' class='button button-small' style='color:#00a32a;'>Onayla</a>"; 
+            } else { 
+                $actions['unapprove'] = "<a href='?page=ruh-comment-manager&action=unapprove&c={$item->comment_ID}&_wpnonce=$approve_nonce&comment_status=$current_page_status' class='button button-small' style='color:#dba617;'>Onayı Kaldır</a>"; 
+            }
+            
+            $actions['view'] = "<a href='" . esc_url(get_comment_link($item)) . "' target='_blank' class='button button-small'>Görüntüle</a>";
+            $actions['edit'] = "<a href='" . admin_url('comment.php?action=editcomment&c=' . $item->comment_ID) . "' class='button button-small'>Düzenle</a>";
+            $actions['quick-edit'] = "<a href='#' class='quick-edit-comment button button-small' data-comment-id='{$item->comment_ID}'>Hızlı Düzenle</a>";
+            
+            $actions['spam'] = "<a href='?page=ruh-comment-manager&action=spam&c={$item->comment_ID}&_wpnonce=$spam_nonce&comment_status=$current_page_status' class='button button-small' style='color:#d63638;'>Spam</a>";
+            $actions['trash'] = "<a href='?page=ruh-comment-manager&action=trash&c={$item->comment_ID}&_wpnonce=$trash_nonce&comment_status=$current_page_status' onclick='return confirm(\"Bu yorumu çöpe atmak istediğinizden emin misiniz?\")' class='button button-small' style='color:#d63638;'>Çöpe At</a>";
         }
-        
-        $actions['trash'] = "<a href='" . wp_nonce_url("?page=ruh-comment-manager&action=trash&c={$item->comment_ID}", "trash-comment_{$item->comment_ID}") . "' class='button button-small' style='color:#d63638;'>Çöpe At</a>";
 
-        // Kullanıcı yönetimi eylemleri
-        $ban_nonce = wp_create_nonce("ban-user_{$item->user_id}");
-        if ($item->user_id && $item->user_id != get_current_user_id()) {
-            $user = get_userdata($item->user_id);
-            if ($user) {
-                $ban_status = get_user_meta($item->user_id, 'ruh_ban_status', true);
-                $timeout_until = get_user_meta($item->user_id, 'ruh_timeout_until', true);
-                
-                if ($ban_status !== 'banned') {
-                    $actions['ban'] = "<a href='?page=ruh-comment-manager&action=ban&user_id={$item->user_id}&_wpnonce=$ban_nonce' onclick='return confirm(\"Bu kullanıcıyı kalıcı olarak engellemek istediğinizden emin misiniz?\")' class='button button-small' style='background:#d63638;color:white;'>Engelle</a>";
-                }
-                
-                if (!$timeout_until || $timeout_until < time()) {
-                    $actions['timeout'] = "<a href='?page=ruh-comment-manager&action=timeout&user_id={$item->user_id}&_wpnonce=$ban_nonce' onclick='return confirm(\"Bu kullanıcıya 24 saat zaman aşımı uygulamak istediğinizden emin misiniz?\")' class='button button-small' style='background:#e67e22;color:white;'>24 Saat Sustur</a>";
+        // Kullanıcı yönetimi eylemleri (çöp ve spam durumunda gösterme)
+        if ($current_status !== 'trash' && $current_status !== 'spam') {
+            $ban_nonce = wp_create_nonce("ban-user_{$item->user_id}");
+            if ($item->user_id && $item->user_id != get_current_user_id()) {
+                $user = get_userdata($item->user_id);
+                if ($user) {
+                    $ban_status = get_user_meta($item->user_id, 'ruh_ban_status', true);
+                    $timeout_until = get_user_meta($item->user_id, 'ruh_timeout_until', true);
+                    
+                    if ($ban_status !== 'banned') {
+                        $actions['ban'] = "<a href='?page=ruh-comment-manager&action=ban&user_id={$item->user_id}&_wpnonce=$ban_nonce&comment_status=$current_page_status' onclick='return confirm(\"Bu kullanıcıyı kalıcı olarak engellemek istediğinizden emin misiniz?\")' class='button button-small' style='background:#d63638;color:white;'>Engelle</a>";
+                    }
+                    
+                    if (!$timeout_until || $timeout_until < time()) {
+                        $actions['timeout'] = "<a href='?page=ruh-comment-manager&action=timeout&user_id={$item->user_id}&_wpnonce=$ban_nonce&comment_status=$current_page_status' onclick='return confirm(\"Bu kullanıcıya 24 saat zaman aşımı uygulamak istediğinizden emin misiniz?\")' class='button button-small' style='background:#e67e22;color:white;'>24 Saat Sustur</a>";
+                    }
                 }
             }
         }
         
         // Yorum metni ve durum göstergesi
         $status_indicator = '';
-        switch ($item->comment_approved) {
+        switch ($current_status) {
             case '1':
                 $status_indicator = '<span class="status-indicator approved" title="Onaylı"></span>';
                 break;
@@ -228,6 +295,15 @@ class Ruh_Comments_List_Table extends WP_List_Table {
         return $comment_text;
     }
     
+    function get_sortable_columns() {
+        return array(
+            'author' => array('comment_author', true),
+            'date' => array('comment_date', true),
+            'likes' => array('likes', false),
+            'reports' => array('reports', false)
+        );
+    }
+    
     function get_views() {
         $status_links = [];
         $num_comments = wp_count_comments();
@@ -253,10 +329,19 @@ class Ruh_Comments_List_Table extends WP_List_Table {
 }
 
 function render_comment_manager_page_content() {
+    // Admin mesajlarını göster
+    $user_id = get_current_user_id();
+    $admin_message = get_transient('ruh_admin_message_' . $user_id);
+    if ($admin_message) {
+        delete_transient('ruh_admin_message_' . $user_id);
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($admin_message) . '</p></div>';
+    }
+    
     // Tekli aksiyonları işle (URL'den gelen)
     if (isset($_GET['action']) && isset($_GET['c'])) {
         $action = sanitize_key($_GET['action']);
         $comment_id = intval($_GET['c']);
+        $current_status = isset($_GET['comment_status']) ? sanitize_key($_GET['comment_status']) : 'all';
         
         switch ($action) {
             case 'approve':
@@ -272,6 +357,13 @@ function render_comment_manager_page_content() {
                 $message = 'Yorum çöpe atıldı.';
                 break;
                 
+            case 'restore':
+                check_admin_referer("approve-comment_$comment_id");
+                wp_untrash_comment($comment_id);
+                $message = 'Yorum geri yüklendi.';
+                $current_status = 'all'; // Restore sonrası all'a git
+                break;
+                
             case 'spam':
                 check_admin_referer("spam-comment_$comment_id");
                 wp_spam_comment($comment_id);
@@ -279,16 +371,37 @@ function render_comment_manager_page_content() {
                 break;
                 
             case 'unspam':
-                check_admin_referer("unspam-comment_$comment_id");
+                check_admin_referer("spam-comment_$comment_id");
                 wp_unspam_comment($comment_id);
                 $message = 'Yorumun spam işareti kaldırıldı.';
+                $current_status = 'all'; // Unspam sonrası all'a git
+                break;
+                
+            case 'delete':
+                check_admin_referer("delete-comment_$comment_id");
+                $result = wp_delete_comment($comment_id, true);
+                if ($result) {
+                    // Ruh Comment meta verilerini de temizle
+                    global $wpdb;
+                    $wpdb->delete($wpdb->prefix . 'ruh_reports', ['comment_id' => $comment_id]);
+                    $message = 'Yorum kalıcı olarak silindi.';
+                } else {
+                    $message = 'Yorum silinemedi.';
+                }
                 break;
         }
         
         if (isset($message)) {
-            add_action('admin_notices', function() use ($message) {
-                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
-            });
+            set_transient('ruh_admin_message_' . get_current_user_id(), $message, 30);
+            
+            // Yönlendirme URL'ini oluştur
+            $redirect_url = admin_url('admin.php?page=ruh-comment-manager');
+            if ($current_status !== 'all') {
+                $redirect_url = add_query_arg('comment_status', $current_status, $redirect_url);
+            }
+            
+            wp_redirect($redirect_url);
+            exit;
         }
     }
     
@@ -296,6 +409,7 @@ function render_comment_manager_page_content() {
     if (isset($_GET['action']) && isset($_GET['user_id']) && isset($_GET['_wpnonce'])) {
         $action = sanitize_key($_GET['action']);
         $user_id = intval($_GET['user_id']);
+        $current_status = isset($_GET['comment_status']) ? sanitize_key($_GET['comment_status']) : 'all';
         
         if (wp_verify_nonce($_GET['_wpnonce'], "ban-user_$user_id")) {
             switch ($action) {
@@ -311,17 +425,18 @@ function render_comment_manager_page_content() {
             }
             
             if (isset($message)) {
-                add_action('admin_notices', function() use ($message) {
-                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
-                });
+                set_transient('ruh_admin_message_' . get_current_user_id(), $message, 30);
+                
+                // Yönlendirme URL'ini oluştur
+                $redirect_url = admin_url('admin.php?page=ruh-comment-manager');
+                if ($current_status !== 'all') {
+                    $redirect_url = add_query_arg('comment_status', $current_status, $redirect_url);
+                }
+                
+                wp_redirect($redirect_url);
+                exit;
             }
         }
-    }
-
-    // Yönlendirme yap
-    if (isset($_GET['action'])) {
-        wp_redirect(admin_url('admin.php?page=ruh-comment-manager'));
-        exit;
     }
 
     $list_table = new Ruh_Comments_List_Table();
@@ -391,51 +506,6 @@ function render_comment_manager_page_content() {
         </style>
         
         <script>
-        // admin-comment-manager.php dosyasının sonuna bu fonksiyonu ekleyin:
-
-// AJAX handler'ı ekle
-add_action('wp_ajax_ruh_admin_edit_comment', 'ruh_admin_edit_comment_ajax');
-function ruh_admin_edit_comment_ajax() {
-    // Admin yetkisi kontrolü
-    if (!current_user_can('moderate_comments')) {
-        wp_send_json_error(array('message' => 'Yetkiniz bulunmuyor.'));
-    }
-    
-    // Nonce kontrolü
-    if (!check_ajax_referer('ruh_admin_edit_comment', '_ajax_nonce', false)) {
-        wp_send_json_error(array('message' => 'Güvenlik kontrolü başarısız.'));
-    }
-    
-    $comment_id = intval($_POST['comment_id']);
-    $content = trim($_POST['content']);
-    
-    if (empty($content)) {
-        wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
-    }
-    
-    // Yorumu güncelle
-    $result = wp_update_comment(array(
-        'comment_ID' => $comment_id,
-        'comment_content' => wp_kses_post($content)
-    ));
-    
-    if (is_wp_error($result)) {
-        wp_send_json_error(array('message' => $result->get_error_message()));
-    }
-    
-    wp_send_json_success(array(
-        'content' => wp_trim_words(esc_html($content), 50),
-        'message' => 'Yorum başarıyla güncellendi.'
-    ));
-}
-
-// JavaScript'i admin paneline ekle
-add_action('admin_footer', 'ruh_admin_comment_scripts');
-function ruh_admin_comment_scripts() {
-    $screen = get_current_screen();
-    if ($screen && $screen->id === 'ruh-comment_page_ruh-comment-manager') {
-        ?>
-        <script>
         jQuery(document).ready(function($) {
             // Hızlı düzenle
             $(document).on('click', '.quick-edit-comment', function(e) {
@@ -493,3 +563,40 @@ function ruh_admin_comment_scripts() {
         </script>
         <?php
     }
+
+
+// AJAX handler'ı ekle
+add_action('wp_ajax_ruh_admin_edit_comment', 'ruh_admin_edit_comment_ajax');
+function ruh_admin_edit_comment_ajax() {
+    // Admin yetkisi kontrolü
+    if (!current_user_can('moderate_comments')) {
+        wp_send_json_error(array('message' => 'Yetkiniz bulunmuyor.'));
+    }
+    
+    // Nonce kontrolü
+    if (!check_ajax_referer('ruh_admin_edit_comment', '_ajax_nonce', false)) {
+        wp_send_json_error(array('message' => 'Güvenlik kontrolü başarısız.'));
+    }
+    
+    $comment_id = intval($_POST['comment_id']);
+    $content = trim($_POST['content']);
+    
+    if (empty($content)) {
+        wp_send_json_error(array('message' => 'Yorum içeriği boş olamaz.'));
+    }
+    
+    // Yorumu güncelle
+    $result = wp_update_comment(array(
+        'comment_ID' => $comment_id,
+        'comment_content' => wp_kses_post($content)
+    ));
+    
+    if (is_wp_error($result)) {
+        wp_send_json_error(array('message' => $result->get_error_message()));
+    }
+    
+    wp_send_json_success(array(
+        'content' => wp_trim_words(esc_html($content), 50),
+        'message' => 'Yorum başarıyla güncellendi.'
+    ));
+}
