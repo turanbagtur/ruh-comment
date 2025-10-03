@@ -2,7 +2,8 @@
 if (post_password_required()) return;
 
 $options = get_option('ruh_comment_options', array());
-$post_id = get_the_ID();
+// DÜZELTME: Dinamik post ID kullan
+$post_id = ruh_get_dynamic_post_id();
 $comment_count = get_comments_number($post_id);
 ?>
 <div id="ruh-comments" class="comments-area">
@@ -15,19 +16,19 @@ $comment_count = get_comments_number($post_id);
             </div>
         </div>
         <div class="reactions">
-            <button class="reaction" data-reaction="guzel" title="Beğendim">
-                <span class="emoji">👍</span>
-                <span>Beğendim</span>
-                <span class="count">0</span>
-            </button>
-            <button class="reaction" data-reaction="sevdim" title="Sinir Bozucu">
-                <span class="emoji">😤</span>
-                <span>Sinir Bozucu</span>
-                <span class="count">0</span>
-            </button>
-            <button class="reaction" data-reaction="asik_oldum" title="Mükemmel">
+            <button class="reaction" data-reaction="guzel" title="Mükemmel">
                 <span class="emoji">😍</span>
                 <span>Mükemmel</span>
+                <span class="count">0</span>
+            </button>
+            <button class="reaction" data-reaction="sevdim" title="Sevdim">
+                <span class="emoji">❤️</span>
+                <span>Sevdim</span>
+                <span class="count">0</span>
+            </button>
+            <button class="reaction" data-reaction="asik_oldum" title="Harika">
+                <span class="emoji">🔥</span>
+                <span>Harika</span>
                 <span class="count">0</span>
             </button>
             <button class="reaction" data-reaction="sasirtici" title="Şaşırtıcı">
@@ -35,14 +36,14 @@ $comment_count = get_comments_number($post_id);
                 <span>Şaşırtıcı</span>
                 <span class="count">0</span>
             </button>
-            <button class="reaction" data-reaction="gaza_geldim" title="Sakin Olmalıyım">
-                <span class="emoji">🔥</span>
-                <span>Sakin Olmalıyım</span>
+            <button class="reaction" data-reaction="gaza_geldim" title="Heyecanlı">
+                <span class="emoji">🎉</span>
+                <span>Heyecanlı</span>
                 <span class="count">0</span>
             </button>
-            <button class="reaction" data-reaction="uzucu" title="Bölüm Bitti">
+            <button class="reaction" data-reaction="uzucu" title="Üzücü">
                 <span class="emoji">😢</span>
-                <span>Bölüm Bitti</span>
+                <span>Üzücü</span>
                 <span class="count">0</span>
             </button>
         </div>
@@ -94,9 +95,8 @@ $comment_count = get_comments_number($post_id);
                                 <button type="button" class="ruh-toolbar-button" data-tag="spoiler" title="Spoiler">
                                     [S]
                                 </button>
-                                <button type="button" class="ruh-toolbar-button image-upload" title="Görsel Yükle">
-                                    🖼️
-                                    <input type="file" accept="image/*" multiple style="position: absolute; left: -9999px; opacity: 0;">
+                                <button type="button" class="ruh-toolbar-button gif-search-btn" title="GIF Ekle">
+                                    🎬
                                 </button>
                             </div>
                             <textarea 

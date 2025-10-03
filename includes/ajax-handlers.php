@@ -9,7 +9,7 @@ class Ruh_Comment_Ajax_Handlers {
             'handle_like', 'flag_comment', 'submit_comment', 
             'admin_edit_comment', 'load_more_replies', 'load_more_profile_comments',
             'upload_image', 'update_profile', 'change_password',
-            'edit_comment', 'delete_comment'
+            'edit_comment', 'delete_comment', 'load_replies'
         );
         
         foreach ($actions as $action) {
@@ -107,15 +107,21 @@ class Ruh_Comment_Ajax_Handlers {
      * Profil güncelleme handler - DÜZELTİLMİŞ VERSİYON
      */
     public function update_profile_callback() {
-        // Özel nonce kontrolü profil işlemleri için
-        if (!check_ajax_referer('ruh_profile_nonce', 'nonce', false)) {
-            wp_send_json_error(array('message' => 'Güvenlik kontrolü başarısız.'));
+        // DÜZELTME: Standart nonce kontrolü kullan
+        $nonce_value = isset($_POST['nonce']) ? $_POST['nonce'] : '';
+        if (!wp_verify_nonce($nonce_value, 'ruh-comment-nonce')) {
+            wp_send_json_error(array('message' => 'Güvenlik kontrolü başarısız. Sayfayı yenileyin ve tekrar deneyin.'));
         }
         
         $this->require_login();
         
         $user_id = get_current_user_id();
         $action_type = sanitize_text_field($_POST['action_type']);
+        
+        // Debug için action type kontrolü
+        if (empty($action_type)) {
+            wp_send_json_error(array('message' => 'İşlem türü belirtilmedi.'));
+        }
         
         switch($action_type) {
             case 'basic_info':
@@ -341,7 +347,10 @@ class Ruh_Comment_Ajax_Handlers {
      * Yorumları getir - geliştirilmiş sıralama ve sayfalama ile
      */
     public function get_comments_callback() {
-        $this->verify_nonce();
+        // Public endpoint olduğu için nonce kontrolü sadece giriş yapmış kullanıcılar için
+        if (is_user_logged_in()) {
+            $this->verify_nonce();
+        }
         
         $post_id = intval($_POST['post_id']);
         $page = intval($_POST['page']);
@@ -387,11 +396,20 @@ class Ruh_Comment_Ajax_Handlers {
 
         $comments = get_comments($args);
         
+        // Toplam yorum sayısını al
+        $total_comment_count = get_comments(array(
+            'post_id' => $post_id,
+            'status' => 'approve',
+            'count' => true,
+            'parent' => 0 // Sadana ana yorumlar
+        ));
+        
         if (empty($comments)) {
             wp_send_json_success(array(
                 'html' => '',
                 'has_more' => false,
-                'total' => 0
+                'total' => 0,
+                'comment_count' => $total_comment_count
             ));
         }
 
@@ -409,7 +427,8 @@ class Ruh_Comment_Ajax_Handlers {
         wp_send_json_success(array(
             'html' => $html,
             'has_more' => $has_more,
-            'total' => count($comments)
+            'total' => count($comments),
+            'comment_count' => $total_comment_count
         ));
     }
     
@@ -455,7 +474,10 @@ class Ruh_Comment_Ajax_Handlers {
      * İlk veri yükleme - tepkiler ve istatistikler
      */
     public function get_initial_data_callback() {
-        $this->verify_nonce();
+        // Public endpoint olduğu için nonce kontrolü sadece giriş yapmış kullanıcılar için
+        if (is_user_logged_in()) {
+            $this->verify_nonce();
+        }
         
         global $wpdb;
         $post_id = intval($_POST['post_id']);
@@ -703,19 +725,59 @@ class Ruh_Comment_Ajax_Handlers {
             wp_send_json_error(array('message' => 'Yorum gönderme yetkiniz bulunmuyor.'));
         }
         
+        // DÜZELTME: Dinamik post ID sistemi
+        $raw_post_id = isset($_POST['comment_post_ID']) ? intval($_POST['comment_post_ID']) : 0;
+        $current_post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : $raw_post_id;
+        $current_url = isset($_POST['current_url']) ? $_POST['current_url'] : '';
+        
+        // Dinamik post ID belirle
+        $final_post_id = ruh_get_dynamic_post_id_from_url($current_url);
+        
+        // Eğer dinamik sistem başarısız olursa, form verilerini kullan
+        if (!$final_post_id) {
+            $final_post_id = $current_post_id ?: $raw_post_id;
+        }
+        
+        if (!$final_post_id) {
+            wp_send_json_error(array('message' => 'Geçersiz sayfa ID\'si. Debug: ' .
+                json_encode([
+                    'raw_post_id' => $raw_post_id,
+                    'current_post_id' => $current_post_id,
+                    'current_url' => $current_url,
+                    'final_post_id' => $final_post_id
+                ])
+            ));
+        }
+        
         // Form verilerini temizle ve doğrula
         $comment_data = array(
-            'comment_post_ID' => intval($_POST['comment_post_ID']),
+            'comment_post_ID' => $final_post_id,
             'comment_content' => trim($_POST['comment']),
             'comment_parent' => intval($_POST['comment_parent']),
             'user_id' => $user_id,
             'comment_approved' => 1  // OTOMATIK ONAY
         );
         
-        // Post ID kontrolü
+        // Post ID kontrolü - daha esnek yaklaşım
         $post = get_post($comment_data['comment_post_ID']);
-        if (!$post || !comments_open($post->ID)) {
-            wp_send_json_error(array('message' => 'Bu yazı için yorumlar kapalı.'));
+        
+        // Eğer post bulunamadıysa, dinamik ID sistemi kullanılıyor demektir
+        if (!$post) {
+            // Dinamik ID için yorumları etkinleştir (manga sayfalar için)
+            $current_url = isset($_POST['current_url']) ? $_POST['current_url'] : '';
+            $url_path = parse_url($current_url, PHP_URL_PATH);
+            
+            // Manga URL'leri için özel kontrol
+            if (preg_match('/\/manga\/([^\/]+)/', $url_path)) {
+                // Manga sayfası - yorumları kabul et
+            } else {
+                wp_send_json_error(array('message' => "Sayfa bulunamadı. Lütfen sayfayı yenileyin."));
+            }
+        } else {
+            // Normal WordPress post - yorum durumunu kontrol et
+            if (!comments_open($post->ID)) {
+                wp_send_json_error(array('message' => 'Bu yazı için yorumlar kapalı.'));
+            }
         }
         
         // İçerik kontrolü
@@ -898,6 +960,45 @@ class Ruh_Comment_Ajax_Handlers {
         wp_send_json_success(array(
             'html' => $html,
             'has_more' => $has_more
+        ));
+    }
+
+    /**
+     * Yanıtları yükle - Toggle sistemi için
+     */
+    public function load_replies_callback() {
+        $this->verify_nonce();
+        
+        $parent_id = intval($_POST['parent_id']);
+        
+        if (!$parent_id) {
+            wp_send_json_error(array('message' => 'Geçersiz parent ID.'));
+        }
+        
+        $args = array(
+            'parent' => $parent_id,
+            'status' => 'approve',
+            'orderby' => 'comment_date_gmt',
+            'order' => 'ASC'
+        );
+        
+        $replies = get_comments($args);
+        
+        if (empty($replies)) {
+            wp_send_json_success(array(
+                'html' => '',
+                'count' => 0
+            ));
+        }
+        
+        $html = '';
+        foreach($replies as $reply) {
+            $html .= $this->generate_comment_html($reply);
+        }
+        
+        wp_send_json_success(array(
+            'html' => $html,
+            'count' => count($replies)
         ));
     }
 }

@@ -30,8 +30,13 @@ jQuery(function ($) {
             this.loadInitialData();
             this.setupEventListeners();
             this.initDropdownFilter();
-            this.setupImageUpload();
+            this.setupGifSearch();
             this.setupCharCounter();
+            
+            // Sayfa yüklendiğinde mevcut yorumlardaki GIF'leri render et
+            setTimeout(() => {
+                this.renderGifsInComments();
+            }, 500);
         },
 
         showNotification: function(message, type = 'info') {
@@ -75,136 +80,98 @@ jQuery(function ($) {
             }
         },
 
-        setupImageUpload: function() {
-    // Önce mevcut butonları temizle
-    this.elements.toolbar.find('.image-upload').remove();
-    
-    const imageUploadButton = `
-        <button type="button" class="ruh-toolbar-button image-upload" title="Görsel Yükle">
-            🖼️
-            <input type="file" accept="image/*" multiple style="position: absolute; left: -9999px; opacity: 0;">
-        </button>
-    `;
-    
-    this.elements.toolbar.append(imageUploadButton);
-    
-    // Event delegation kullanarak tek bir handler ekle
-    this.elements.toolbar.off('change.imageUpload').on('change.imageUpload', '.image-upload input[type="file"]', (e) => {
-        this.handleImageUpload(e.target.files);
-        // Input'u temizle
-        e.target.value = '';
-    });
-    
-    this.elements.toolbar.off('click.imageUpload').on('click.imageUpload', '.image-upload', (e) => {
-        e.preventDefault();
-        $(e.currentTarget).find('input[type="file"]').click();
-    });
-},
-
-       handleImageUpload: function(files) {
-    if (!files || files.length === 0) return;
-    
-    if (!ruh_comment_ajax.logged_in) {
-        this.showNotification('Görsel yüklemek için giriş yapmalısınız.', 'warning');
-        return;
-    }
-    
-    Array.from(files).forEach(file => {
-        if (!file.type.startsWith('image/')) {
-            this.showNotification('Sadece görsel dosyalarını yükleyebilirsiniz.', 'error');
-            return;
-        }
-        
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            this.showNotification('Görsel dosyası 5MB\'dan küçük olmalıdır.', 'error');
-            return;
-        }
-        
-        this.uploadImage(file);
-    });
-},
-
-uploadImage: function(file) {
-    const formData = new FormData();
-    formData.append('action', 'ruh_upload_image');
-    formData.append('nonce', ruh_comment_ajax.nonce);
-    formData.append('image', file);
-    
-    // Loading indicator
-    const loadingId = 'upload-' + Date.now() + Math.random();
-    this.showImagePreview(file, loadingId, true);
-    
-    $.ajax({
-        url: ruh_comment_ajax.ajax_url,
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        timeout: 30000, // 30 saniye timeout
-        success: (response) => {
-            if (response.success) {
-                this.state.uploadedImages.push(response.data.url);
-                this.updateImagePreview(loadingId, response.data.url);
-                
-                // Textarea'ya görsel linkini ekle
-                const currentText = this.elements.commentTextarea.val();
-                const imageMarkdown = `\n![${file.name}](${response.data.url})\n`;
-                this.elements.commentTextarea.val(currentText + imageMarkdown);
-                this.elements.commentTextarea.trigger('input'); // Char counter update
-                
-                this.showNotification('Görsel başarıyla yüklendi!', 'success');
-            } else {
-                this.removeImagePreview(loadingId);
-                this.showNotification(response.data.message || 'Görsel yüklenirken hata oluştu.', 'error');
-            }
-        },
-        error: (xhr, status, error) => {
-            this.removeImagePreview(loadingId);
-            if (status === 'timeout') {
-                this.showNotification('Görsel yükleme zaman aşımına uğradı. Daha küçük bir dosya deneyin.', 'error');
-            } else {
-                this.showNotification('Görsel yüklenirken hata oluştu.', 'error');
-            }
-            console.error('Upload error:', error);
-        }
-    });
-},
-
-        showImagePreview: function(file, id, isLoading = false) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const preview = $(`
-                    <div class="image-preview" data-id="${id}">
-                        <img src="${e.target.result}" alt="Preview">
-                        ${isLoading ? '<div class="upload-loading">Yükleniyor...</div>' : ''}
-                        <button type="button" class="remove-image" data-id="${id}">×</button>
+        setupGifSearch: function() {
+            // GIF arama modalı HTML'ini oluştur
+            const gifModalHtml = `
+                <div id="gif-search-modal" class="gif-modal" style="display: none;">
+                    <div class="gif-modal-content">
+                        <div class="gif-modal-header">
+                            <h3>GIF Ara</h3>
+                            <button class="gif-modal-close" type="button">&times;</button>
+                        </div>
+                        <div class="gif-modal-body">
+                            <input type="text" id="gif-search-input" placeholder="GIF ara..." />
+                            <div class="gif-search-results" id="gif-search-results">
+                                <div class="gif-placeholder">🎬 Arama yapın ve GIF'leri keşfedin</div>
+                            </div>
+                        </div>
                     </div>
-                `);
-                
-                let previewContainer = $('.image-previews');
-                if (!previewContainer.length) {
-                    previewContainer = $('<div class="image-previews"></div>');
-                    this.elements.commentForm.find('.form-submit').before(previewContainer);
-                }
-                
-                previewContainer.append(preview);
-            };
-            reader.readAsDataURL(file);
-        },
-
-        updateImagePreview: function(id, url) {
-            $(`.image-preview[data-id="${id}"] .upload-loading`).remove();
-            $(`.image-preview[data-id="${id}"]`).attr('data-url', url);
-        },
-
-        removeImagePreview: function(id) {
-            $(`.image-preview[data-id="${id}"]`).remove();
+                </div>
+            `;
             
-            // Remove from uploaded images array
-            const urlToRemove = $(`.image-preview[data-id="${id}"]`).attr('data-url');
-            if (urlToRemove) {
-                this.state.uploadedImages = this.state.uploadedImages.filter(url => url !== urlToRemove);
+            // Modal'ı body'ye ekle
+            if (!$('#gif-search-modal').length) {
+                $('body').append(gifModalHtml);
             }
+        },
+
+        searchGifs: function(query) {
+            if (!query.trim()) return;
+            
+            const apiKey = 'GlVGYHkr3WSBnllca54iNt0yFbjz7L65'; // Giphy public API key
+            const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=20&rating=g`;
+            
+            $('#gif-search-results').html('<div class="gif-loading">🔍 GIF\'ler aranıyor...</div>');
+            
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: (response) => {
+                    this.displayGifs(response.data);
+                },
+                error: () => {
+                    $('#gif-search-results').html('<div class="gif-error">❌ GIF\'ler yüklenirken hata oluştu</div>');
+                }
+            });
+        },
+
+        displayGifs: function(gifs) {
+            const resultsContainer = $('#gif-search-results');
+            
+            if (gifs.length === 0) {
+                resultsContainer.html('<div class="gif-no-results">😔 Hiç GIF bulunamadı</div>');
+                return;
+            }
+            
+            let html = '<div class="gif-grid">';
+            gifs.forEach(gif => {
+                const previewUrl = gif.images.fixed_height_small.webp;
+                const fullUrl = gif.images.original.webp;
+                html += `
+                    <div class="gif-item" data-url="${fullUrl}" data-preview="${previewUrl}">
+                        <img src="${previewUrl}" alt="${gif.title}" loading="lazy">
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            resultsContainer.html(html);
+        },
+
+        insertGif: function(gifUrl) {
+            const currentText = this.elements.commentTextarea.val();
+            const gifMarkdown = `\n![GIF](${gifUrl})\n`;
+            this.elements.commentTextarea.val(currentText + gifMarkdown);
+            this.elements.commentTextarea.trigger('input');
+            
+            // Modal'ı kapat
+            $('#gif-search-modal').hide();
+            this.showNotification('GIF başarıyla eklendi!', 'success');
+        },
+
+        // GIF'ler artık server-side render ediliyor, sadece yeni eklenen yorumlar için gerekli
+        renderGifsInComments: function() {
+            $('.comment-text').each(function() {
+                let content = $(this).html();
+                
+                // Sadece henüz render edilmemiş GIF markdown'larını çevir
+                if (content.includes('![GIF](')) {
+                    content = content.replace(/!\[GIF\]\((https?:\/\/[^\)]+)\)/g,
+                        '<div class="gif-container"><img src="$1" alt="GIF" loading="lazy" class="comment-gif"></div>');
+                    
+                    $(this).html(content);
+                }
+            });
         },
 
         loadInitialData: function () {
@@ -255,6 +222,7 @@ uploadImage: function(file) {
                 action: 'ruh_get_comments',
                 nonce: ruh_comment_ajax.nonce,
                 post_id: ruh_comment_ajax.post_id,
+                current_url: window.location.href,
                 page: this.state.currentPage,
                 sort: this.state.currentSort
             })
@@ -265,6 +233,16 @@ uploadImage: function(file) {
                     this.state.currentPage++;
                     
                     $newComments.hide().fadeIn(400);
+                    
+                    // GIF'leri render et
+                    setTimeout(() => {
+                        this.renderGifsInComments();
+                    }, 100);
+                    
+                    // Yorum sayısını güncelle
+                    if (response.data.comment_count) {
+                        this.elements.commentCountSpan.text(response.data.comment_count);
+                    }
                     
                     if (!response.data.has_more) {
                         this.state.allCommentsLoaded = true;
@@ -277,6 +255,8 @@ uploadImage: function(file) {
                     this.elements.loadMoreBtn.hide();
                     if (this.state.currentPage === 1) {
                         $('.no-comments').show();
+                        // Yorum sayısını 0 yap
+                        this.elements.commentCountSpan.text(0);
                     }
                 }
             })
@@ -294,11 +274,16 @@ uploadImage: function(file) {
             $.post(ruh_comment_ajax.ajax_url, {
                 action: 'ruh_get_initial_data',
                 nonce: ruh_comment_ajax.nonce,
-                post_id: ruh_comment_ajax.post_id
+                post_id: ruh_comment_ajax.post_id,
+                current_url: window.location.href
             })
             .done(response => {
                 if (response.success) {
                     this.updateReactionUI(response.data);
+                    // Yorum sayısını güncelle
+                    if (response.data.comment_count) {
+                        this.elements.commentCountSpan.text(response.data.comment_count);
+                    }
                 }
             });
         },
@@ -348,6 +333,7 @@ uploadImage: function(file) {
                         </div>
                         <div class="inline-reply-actions">
                             <input type="hidden" name="comment_post_ID" value="${ruh_comment_ajax.post_id}">
+                            <input type="hidden" name="post_id" value="${ruh_comment_ajax.post_id}">
                             <input type="hidden" name="comment_parent" value="${commentId}">
                             <div></div>
                             <div>
@@ -388,16 +374,100 @@ uploadImage: function(file) {
         },
 
         setupEventListeners: function () {
-            // Görsel önizleme silme
-            $(document).on('click', '.remove-image', (e) => {
-                const id = $(e.target).data('id');
-                this.removeImagePreview(id);
+            // GIF arama butonu
+            this.elements.toolbar.on('click', '.gif-search-btn', (e) => {
+                e.preventDefault();
+                if (!ruh_comment_ajax.logged_in) {
+                    this.showNotification(ruh_comment_ajax.text.login_required, 'warning');
+                    return;
+                }
+                $('#gif-search-modal').show();
+                $('#gif-search-input').focus();
             });
 
-            // Spoiler açma/kapama
-            $('body').on('click', '.spoiler-header', function() {
-                $(this).next('.spoiler-content').slideToggle(200);
-                $(this).toggleClass('open');
+            // GIF arama modal event'leri
+            $(document).on('click', '.gif-modal-close', () => {
+                $('#gif-search-modal').hide();
+            });
+
+            $(document).on('click', '#gif-search-modal', (e) => {
+                if (e.target === document.getElementById('gif-search-modal')) {
+                    $('#gif-search-modal').hide();
+                }
+            });
+
+            $(document).on('input', '#gif-search-input', (e) => {
+                const query = e.target.value.trim();
+                if (query.length > 2) {
+                    clearTimeout(this.gifSearchTimeout);
+                    this.gifSearchTimeout = setTimeout(() => {
+                        this.searchGifs(query);
+                    }, 500);
+                }
+            });
+
+            $(document).on('click', '.gif-item', (e) => {
+                const gifUrl = $(e.currentTarget).data('url');
+                this.insertGif(gifUrl);
+            });
+
+            // Modern Spoiler - Click to Reveal (Siyah Kutu)
+            $('body').on('click', '.spoiler-content:not(.revealed)', function() {
+                $(this).addClass('revealed');
+            });
+
+            // Yanıtları Göster/Gizle Toggle - DÜZELTİLMİŞ
+            $(document).on('click', '.replies-toggle-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $btn = $(this);
+                const $container = $btn.closest('.ruh-comment-item');
+                const parentId = $btn.data('comment-id');
+                const repliesCount = $btn.data('replies-count');
+                const $text = $btn.find('.toggle-text');
+                
+                let $repliesContainer = $container.find('> .replies-container');
+                
+                const isExpanded = $btn.hasClass('expanded');
+                
+                if (isExpanded) {
+                    // Yanıtları gizle
+                    $repliesContainer.slideUp(300);
+                    $btn.removeClass('expanded');
+                    $text.text(repliesCount + ' yanıtı göster');
+                } else {
+                    // Yanıtları göster
+                    if ($repliesContainer.children().length === 0) {
+                        // İlk kez yükleniyor - AJAX ile yanıtları getir
+                        $.post(ruh_comment_ajax.ajax_url, {
+                            action: 'ruh_load_replies',
+                            nonce: ruh_comment_ajax.nonce,
+                            parent_id: parentId
+                        })
+                        .done(response => {
+                            if (response.success && response.data.html) {
+                                $repliesContainer.html(response.data.html);
+                                $repliesContainer.slideDown(300);
+                                $btn.addClass('expanded');
+                                $text.text('Yanıtları gizle');
+                                
+                                // Yeni yüklenen yanıtlardaki GIF'leri render et
+                                setTimeout(() => {
+                                    RuhComments.renderGifsInComments();
+                                }, 100);
+                            }
+                        })
+                        .fail(() => {
+                            RuhComments.showNotification('Yanıtlar yüklenirken hata oluştu.', 'error');
+                        });
+                    } else {
+                        // Zaten yüklenmiş - sadece göster
+                        $repliesContainer.slideDown(300);
+                        $btn.addClass('expanded');
+                        $text.text('Yanıtları gizle');
+                    }
+                }
             });
 
             // Dropdown toggle
@@ -435,6 +505,7 @@ uploadImage: function(file) {
             $(document).on('keydown', e => {
                 if (e.keyCode === 27) {
                     $('.sort-dropdown').removeClass('open');
+                    $('#gif-search-modal').hide();
                 }
             });
 
@@ -460,6 +531,7 @@ uploadImage: function(file) {
                     action: 'ruh_handle_reaction',
                     nonce: ruh_comment_ajax.nonce,
                     post_id: ruh_comment_ajax.post_id,
+                    current_url: window.location.href,
                     reaction: reaction
                 })
                 .done(response => {
@@ -478,7 +550,66 @@ uploadImage: function(file) {
                 });
             });
 
-            // Beğeni/beğenmeme
+            // MODERN TEK KALP BEĞENİ SİSTEMİ - DÜZELTİLMİŞ
+            $(document).on('click', '.heart-like-btn', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Heart button clicked!');
+                
+                if (!ruh_comment_ajax.logged_in) {
+                    RuhComments.showNotification('Beğeni yapmak için giriş yapmalısınız.', 'warning');
+                    return;
+                }
+
+                const $btn = $(e.currentTarget);
+                const commentId = $btn.data('comment-id');
+                const $heartIcon = $btn.find('.heart-icon path');
+                const $likeCount = $btn.find('.like-count');
+                const wasActive = $btn.hasClass('active');
+
+                console.log('Processing like for comment:', commentId, 'Active:', wasActive);
+
+                if ($btn.prop('disabled')) return;
+                
+                $btn.prop('disabled', true).addClass('loading');
+
+                $.post(ruh_comment_ajax.ajax_url, {
+                    action: 'ruh_handle_like',
+                    nonce: ruh_comment_ajax.nonce,
+                    comment_id: commentId,
+                    type: 'like'
+                })
+                .done(response => {
+                    console.log('Like response:', response);
+                    if (response.success) {
+                        // Net skoru hesapla (likes - dislikes)
+                        const netScore = Math.max(0, response.data.likes - response.data.dislikes);
+                        $likeCount.text(netScore);
+                        
+                        if (response.data.user_vote === 'liked') {
+                            $btn.addClass('active');
+                            console.log('Heart filled');
+                        } else {
+                            $btn.removeClass('active');
+                            console.log('Heart emptied');
+                        }
+                        
+                        RuhComments.showNotification('İşlem tamamlandı.', 'success');
+                    } else {
+                        RuhComments.showNotification(response.data?.message || 'Bir hata oluştu.', 'error');
+                    }
+                })
+                .fail((xhr) => {
+                    console.error('Heart like failed:', xhr);
+                    RuhComments.showNotification('Beğeni işlemi başarısız oldu.', 'error');
+                })
+                .always(() => {
+                    $btn.prop('disabled', false).removeClass('loading');
+                });
+            });
+
+            // ESKİ SİSTEM İLE GERİYE UYUMLULUK
             this.elements.commentList.on('click', '.like-btn, .dislike-btn', e => {
                 if (!ruh_comment_ajax.logged_in) {
                     this.showNotification(ruh_comment_ajax.text.login_required, 'warning');
@@ -514,6 +645,175 @@ uploadImage: function(file) {
                 .always(() => {
                     $btn.prop('disabled', false);
                 });
+            });
+
+            // MODERN YANITLAMA SİSTEMİ
+            this.elements.commentList.on('click', '.reply-btn-modern', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!ruh_comment_ajax.logged_in) {
+                    this.showNotification(ruh_comment_ajax.text.login_required, 'warning');
+                    return;
+                }
+
+                const $btn = $(e.currentTarget);
+                const $commentItem = $btn.closest('.ruh-comment-item');
+                const commentId = $commentItem.data('comment-id');
+                const $replyContainer = $commentItem.find('.reply-form-container');
+                
+                console.log('Reply button clicked, comment ID:', commentId); // Debug
+                
+                // Eğer zaten yanıt formu açıksa, kapat
+                if ($replyContainer.is(':visible')) {
+                    $replyContainer.slideUp(300);
+                    return;
+                }
+                
+                // Yanıt formu HTML'i
+                const replyFormHtml = `
+                    <div class="reply-form">
+                        <textarea placeholder="Yanıtınızı yazın..." required></textarea>
+                        <div class="reply-form-actions">
+                            <button type="button" class="reply-cancel">İptal</button>
+                            <button type="button" class="reply-submit" data-comment-id="${commentId}">Yanıtla</button>
+                        </div>
+                    </div>
+                `;
+                
+                $replyContainer.html(replyFormHtml).slideDown(300);
+                $replyContainer.find('textarea').focus();
+            });
+
+            // Yanıt formu - İptal
+            this.elements.commentList.on('click', '.reply-cancel', e => {
+                const $container = $(e.currentTarget).closest('.reply-form-container');
+                $container.slideUp(300);
+            });
+
+            // Yanıt formu - Gönder
+            this.elements.commentList.on('click', '.reply-submit', e => {
+                const $btn = $(e.currentTarget);
+                const $form = $btn.closest('.reply-form');
+                const $textarea = $form.find('textarea');
+                const commentId = $btn.data('comment-id');
+                const replyText = $textarea.val().trim();
+                
+                console.log('Reply submit clicked, comment ID:', commentId, 'Text:', replyText); // Debug
+                
+                if (!replyText) {
+                    this.showNotification('Yanıt içeriği boş olamaz.', 'warning');
+                    return;
+                }
+                
+                const originalText = $btn.text();
+                $btn.text('Gönderiliyor...').prop('disabled', true);
+                
+                $.post(ruh_comment_ajax.ajax_url, {
+                    action: 'ruh_submit_comment',
+                    nonce: ruh_comment_ajax.nonce,
+                    comment: replyText,
+                    comment_post_ID: ruh_comment_ajax.post_id,
+                    post_id: ruh_comment_ajax.post_id,
+                    comment_parent: commentId,
+                    current_url: window.location.href
+                })
+                .done(response => {
+                    console.log('Reply response:', response); // Debug
+                    if (response.success) {
+                        // Sayfayı yenile veya dinamik olarak yanıtı ekle
+                        location.reload();
+                    } else {
+                        this.showNotification(response.data?.message || 'Yanıt gönderilemedi.', 'error');
+                    }
+                })
+                .fail(xhr => {
+                    console.error('Reply failed:', xhr); // Debug
+                    this.showNotification('Ağ hatası. Lütfen tekrar deneyin.', 'error');
+                })
+                .always(() => {
+                    $btn.text(originalText).prop('disabled', false);
+                });
+            });
+
+            // 3 NOKTA DROPDOWN MENÜ - DEBUG İLE DÜZELTİLMİŞ
+            $(document).on('click', '.menu-trigger', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Dropdown trigger clicked!'); // Debug
+                
+                const $trigger = $(this);
+                const $dropdown = $trigger.next('.dropdown-menu');
+                
+                console.log('Dropdown found:', $dropdown.length); // Debug
+                
+                // Diğer açık dropdown'ları kapat
+                $('.dropdown-menu').not($dropdown).removeClass('show');
+                
+                // Bu dropdown'ı aç/kapat
+                $dropdown.toggleClass('show');
+                
+                console.log('Dropdown show class:', $dropdown.hasClass('show')); // Debug
+            });
+
+            // Dropdown dışına tıklama ile kapat
+            $(document).on('click', e => {
+                if (!$(e.target).closest('.comment-menu-dropdown').length) {
+                    $('.dropdown-menu').removeClass('show');
+                }
+            });
+
+            // Dropdown menü item'leri - DÜZELTİLMİŞ
+            this.elements.commentList.on('click', '.edit-comment-btn', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                const commentId = $(e.currentTarget).data('comment-id');
+                console.log('Edit button clicked for comment:', commentId);
+                
+                // Dropdown'ı kapat
+                $('.dropdown-menu').removeClass('show');
+                
+                // Yorum düzenleme fonksiyonunu direkt çağır
+                this.editComment(commentId);
+            });
+
+            this.elements.commentList.on('click', '.delete-comment-btn', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                const commentId = $(e.currentTarget).data('comment-id');
+                console.log('Delete button clicked for comment:', commentId);
+                
+                // Dropdown'ı kapat
+                $('.dropdown-menu').removeClass('show');
+                
+                // Silme onayı
+                if (!confirm('Bu yorumu silmek istediğinizden emin misiniz?')) {
+                    return;
+                }
+                
+                this.deleteComment(commentId);
+            });
+
+            this.elements.commentList.on('click', '.report-comment-btn', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                const commentId = $(e.currentTarget).data('comment-id');
+                console.log('Report button clicked for comment:', commentId);
+                
+                // Dropdown'ı kapat
+                $('.dropdown-menu').removeClass('show');
+                
+                if (!ruh_comment_ajax.logged_in) {
+                    this.showNotification(ruh_comment_ajax.text.login_required, 'warning');
+                    return;
+                }
+                
+                if (!confirm('Bu yorumu gerçekten şikayet etmek istiyor musunuz?')) {
+                    return;
+                }
+                
+                this.reportComment(commentId);
             });
 
             // Şikayet et
@@ -699,17 +999,35 @@ uploadImage: function(file) {
                 const originalBtnText = this.elements.submitBtn.text();
                 this.elements.submitBtn.text(ruh_comment_ajax.text.commenting).prop('disabled', true);
 
+                // DÜZELTME: Post ID'yi dinamik olarak kontrol et
+                const formData = this.elements.commentForm.serializeObject();
+                
+                // Eğer form data'sında comment_post_ID yoksa veya yanlışsa, mevcut post ID'yi kullan
+                if (!formData.comment_post_ID || formData.comment_post_ID == '0') {
+                    formData.comment_post_ID = ruh_comment_ajax.post_id;
+                }
+                
+                // Ekstra güvenlik için post_id'yi de gönder
+                formData.post_id = ruh_comment_ajax.post_id;
+
                 $.post(ruh_comment_ajax.ajax_url, {
                     action: 'ruh_submit_comment',
                     nonce: ruh_comment_ajax.nonce,
-                    ...this.elements.commentForm.serializeObject()
+                    current_url: window.location.href,
+                    ...formData
                 })
                 .done(response => {
                     if (response.success) {
                         if (response.data.html) {
                             const $newComment = $(response.data.html).hide();
                             this.elements.commentList.prepend($newComment);
-                            $newComment.fadeIn(400);
+                            
+                            $newComment.fadeIn(400, () => {
+                                // Animasyon tamamlandıktan sonra GIF'leri render et
+                                setTimeout(() => {
+                                    this.renderGifsInComments();
+                                }, 50);
+                            });
                         }
                         
                         this.elements.commentTextarea.val('');
@@ -798,10 +1116,22 @@ uploadImage: function(file) {
                 const originalBtnText = $submitBtn.text();
                 $submitBtn.text(ruh_comment_ajax.text.commenting).prop('disabled', true);
 
+                // DÜZELTME: Inline reply için de post ID kontrolü
+                const replyFormData = $form.serializeObject();
+                
+                // Post ID kontrolü ve düzeltmesi
+                if (!replyFormData.comment_post_ID || replyFormData.comment_post_ID == '0') {
+                    replyFormData.comment_post_ID = ruh_comment_ajax.post_id;
+                }
+                
+                // Ekstra güvenlik için post_id'yi de gönder
+                replyFormData.post_id = ruh_comment_ajax.post_id;
+
                 $.post(ruh_comment_ajax.ajax_url, {
                     action: 'ruh_submit_comment',
                     nonce: ruh_comment_ajax.nonce,
-                    ...$form.serializeObject()
+                    current_url: window.location.href,
+                    ...replyFormData
                 })
                 .done(response => {
                     if (response.success) {
@@ -822,7 +1152,12 @@ uploadImage: function(file) {
                                 this.elements.commentList.prepend($newReply);
                             }
                             
-                            $newReply.fadeIn(400);
+                            $newReply.fadeIn(400, () => {
+                                // Yanıt animasyonu tamamlandıktan sonra GIF'leri render et
+                                setTimeout(() => {
+                                    this.renderGifsInComments();
+                                }, 50);
+                            });
                         }
                         
                         const commentId = $container.data('comment-id');
@@ -865,6 +1200,85 @@ uploadImage: function(file) {
             this.elements.commentList.on('click', '.inline-reply-toolbar .image-upload', e => {
                 e.preventDefault();
                 $(e.currentTarget).find('input[type="file"]').click();
+            });
+        },
+
+        // Yorum düzenleme fonksiyonu
+        editComment: function(commentId) {
+            const $commentItem = $(`#comment-${commentId}`);
+            const $commentText = $commentItem.find('.comment-text');
+            
+            if ($commentItem.find('.comment-edit-form').length > 0) {
+                return;
+            }
+            
+            const currentText = $commentText.text().trim();
+            
+            const $editForm = $(`
+                <div class="comment-edit-form">
+                    <div class="comment-edit-toolbar">
+                        <button type="button" class="ruh-toolbar-button" data-tag="b"><b>B</b></button>
+                        <button type="button" class="ruh-toolbar-button" data-tag="i"><i>I</i></button>
+                        <button type="button" class="ruh-toolbar-button" data-tag="spoiler">[S]</button>
+                    </div>
+                    <textarea name="comment_content" required>${currentText}</textarea>
+                    <div class="comment-edit-actions">
+                        <div></div>
+                        <div>
+                            <button type="button" class="comment-edit-cancel">İptal</button>
+                            <button type="button" class="comment-edit-save" data-comment-id="${commentId}">Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            $commentText.hide();
+            $commentText.after($editForm);
+            $editForm.find('textarea').focus();
+        },
+
+        // Yorum silme fonksiyonu
+        deleteComment: function(commentId) {
+            const $commentItem = $(`#comment-${commentId}`);
+            
+            $.post(ruh_comment_ajax.ajax_url, {
+                action: 'ruh_delete_comment',
+                nonce: ruh_comment_ajax.nonce,
+                comment_id: commentId
+            })
+            .done(response => {
+                if (response.success) {
+                    $commentItem.fadeOut(400, () => {
+                        $commentItem.remove();
+                        const currentCount = parseInt(this.elements.commentCountSpan.text(), 10);
+                        this.elements.commentCountSpan.text(Math.max(0, currentCount - 1));
+                    });
+                    this.showNotification(response.data.message || 'Yorum başarıyla silindi.', 'success');
+                } else {
+                    this.showNotification(response.data.message || 'Yorum silinemedi.', 'error');
+                }
+            })
+            .fail(() => {
+                this.showNotification('Bir hata oluştu.', 'error');
+            });
+        },
+
+        // Yorum şikayet fonksiyonu
+        reportComment: function(commentId) {
+            $.post(ruh_comment_ajax.ajax_url, {
+                action: 'ruh_flag_comment',
+                nonce: ruh_comment_ajax.nonce,
+                comment_id: commentId
+            })
+            .done(response => {
+                if (response.success) {
+                    this.showNotification('Şikayetiniz alındı. Teşekkür ederiz.', 'success');
+                } else {
+                    this.showNotification(response.data?.message || 'Bir hata oluştu.', 'error');
+                }
+            })
+            .fail(() => {
+                this.showNotification('Şikayet gönderilemedi.', 'error');
             });
         }
     };

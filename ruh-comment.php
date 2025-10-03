@@ -1,16 +1,24 @@
 <?php
 /**
  * Plugin Name:       Ruh Comment
- * Description:       Disqus benzeri, tepki, seviye ve tam teşekkülü topluluk sistemine sahip gelişmiş bir yorum eklentisi.
- * Version:           4.0.2
+ * Plugin URI:        https://github.com/ruh-development/ruh-comment
+ * Description:       Disqus benzeri, tepki, seviye ve tam teşekkülü topluluk sistemine sahip gelişmiş bir yorum eklentisi. Modern tasarım, yanıt sistemi, GIF desteği, spoiler sistemi ve kullanıcı seviyeleri ile manga siteleri için optimize edilmiş.
+ * Version:           5.0
  * Author:            Ruh Development
+ * Author URI:        https://ruh.dev
  * Text Domain:       ruh-comment
  * Domain Path:       /languages
+ * Requires at least: 5.0
+ * Tested up to:      6.4
+ * Requires PHP:      7.4
+ * Network:           false
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('RUH_COMMENT_VERSION', '4.0.2');
+define('RUH_COMMENT_VERSION', '5.0');
 define('RUH_COMMENT_PATH', plugin_dir_path(__FILE__));
 define('RUH_COMMENT_URL', plugin_dir_url(__FILE__));
 
@@ -44,14 +52,18 @@ function ruh_comment_enqueue_scripts() {
         wp_deregister_script('comment-reply');
         wp_enqueue_script('ruh-comment-script', RUH_COMMENT_URL . 'assets/js/ruh-comment-script.js', ['jquery'], RUH_COMMENT_VERSION, true);
 
+        // DÜZELTME: Dinamik post ID belirleme
+        $dynamic_post_id = ruh_get_dynamic_post_id();
+        
         wp_localize_script('ruh-comment-script', 'ruh_comment_ajax', [
             'ajax_url'    => admin_url('admin-ajax.php'),
             'nonce'       => wp_create_nonce('ruh-comment-nonce'),
-            'post_id'     => get_the_ID(),
+            'post_id'     => $dynamic_post_id,
             'logged_in'   => is_user_logged_in(),
-            'total_comments' => get_comments_number(),
+            'total_comments' => get_comments_number($dynamic_post_id),
             'comments_per_page' => get_option('comments_per_page', 10),
             'user_id'     => get_current_user_id(),
+            'current_url' => ruh_get_current_page_url(),
             'text'        => [
                 'error'           => __('Bir hata oluştu. Lütfen tekrar deneyin.', 'ruh-comment'),
                 'login_required'  => __('Bu işlemi yapmak için giriş yapmalısınız.', 'ruh-comment'),

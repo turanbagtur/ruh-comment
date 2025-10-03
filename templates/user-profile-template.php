@@ -29,7 +29,10 @@ if (!$last_activity) {
             <?php echo ruh_get_avatar($user_data['info']->ID, 120); ?>
             <?php if ($user_data['is_own_profile']) : ?>
                 <button class="change-avatar-btn" type="button" onclick="document.getElementById('avatar-upload').click();">
-                    📷
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
                 </button>
                 <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
             <?php endif; ?>
@@ -39,17 +42,31 @@ if (!$last_activity) {
             <div class="profile-name-section">
                 <h2><?php echo esc_html($user_data['info']->display_name); ?></h2>
                 <?php if ($user_data['is_own_profile']) : ?>
-                    <button class="edit-profile-btn" type="button">✏️ <?php _e('Düzenle', 'ruh-comment'); ?></button>
+                    <button class="edit-profile-btn" type="button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <?php _e('Düzenle', 'ruh-comment'); ?>
+                    </button>
                 <?php endif; ?>
             </div>
             
             <?php if ($ban_status === 'banned') : ?>
                 <div class="user-status banned">
-                    🚫 <?php _e('Bu kullanıcı kalıcı olarak engellenmiştir.', 'ruh-comment'); ?>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="m4.9 4.9 14.2 14.2"></path>
+                    </svg>
+                    <?php _e('Bu kullanıcı kalıcı olarak engellenmiştir.', 'ruh-comment'); ?>
                 </div>
             <?php elseif ($timeout_until && current_time('timestamp') < $timeout_until) : ?>
                 <div class="user-status timeout">
-                    ⏰ <?php printf(__('Bu kullanıcı %s tarihine kadar askıya alınmıştır.', 'ruh-comment'), 
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12,6 12,12 16,14"></polyline>
+                    </svg>
+                    <?php printf(__('Bu kullanıcı %s tarihine kadar askıya alınmıştır.', 'ruh-comment'),
                         date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $timeout_until)); ?>
                 </div>
             <?php endif; ?>
@@ -145,7 +162,10 @@ if (!$last_activity) {
                             </span>
                             <?php if ($likes > 0) : ?>
                             <span class="comment-likes">
-                                👍 <?php echo $likes; ?>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                <?php echo $likes; ?>
                             </span>
                             <?php endif; ?>
                         </div>
@@ -176,7 +196,11 @@ if (!$last_activity) {
                 <?php endif; ?>
             <?php else: ?>
                 <div class="no-content">
-                    <div class="no-content-icon">💭</div>
+                    <div class="no-content-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
                     <p><?php _e('Henüz hiç yorum yapmamış.', 'ruh-comment'); ?></p>
                 </div>
             <?php endif; ?>
@@ -654,14 +678,19 @@ if (!$last_activity) {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.8);
-    z-index: 1000;
+    z-index: 10000;
     display: none;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
 }
 
 .modal.show {
-    display: flex;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .modal-content {
@@ -895,24 +924,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeBtn = document.querySelector('.modal-close');
     
     if (editBtn && modal) {
-        editBtn.addEventListener('click', () => {
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Edit profile button clicked'); // Debug
             modal.classList.add('show');
             modal.style.display = 'flex';
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            
+            // İlk tab'ı aktif yap
+            const firstTab = modal.querySelector('.tab-btn');
+            const firstPane = modal.querySelector('.tab-pane');
+            if (firstTab && firstPane) {
+                firstTab.classList.add('active');
+                firstPane.classList.add('active');
+            }
         });
         
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
+                console.log('Modal close button clicked'); // Debug
                 modal.classList.remove('show');
-                setTimeout(() => modal.style.display = 'none', 300);
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                }, 300);
             });
         }
         
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                console.log('Modal overlay clicked'); // Debug
                 modal.classList.remove('show');
-                setTimeout(() => modal.style.display = 'none', 300);
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                }, 300);
             }
         });
+    } else {
+        console.log('Modal elements not found:', {editBtn, modal, closeBtn}); // Debug
     }
     
     // Tab navigation
@@ -974,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const formData = new FormData(form);
         
-        fetch(ajaxurl || '<?php echo admin_url('admin-ajax.php'); ?>', {
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
             method: 'POST',
             body: formData
         })
@@ -1100,6 +1153,7 @@ if (avatarUpload) {
         const file = e.target.files[0];
         if (!file) return;
         
+        // Validasyonlar
         if (!file.type.startsWith('image/')) {
             showNotification('Sadece görsel dosyaları yükleyebilirsiniz.', 'error');
             return;
@@ -1114,6 +1168,7 @@ if (avatarUpload) {
         formData.append('action', 'ruh_upload_image');
         formData.append('nonce', '<?php echo wp_create_nonce('ruh-comment-nonce'); ?>');
         formData.append('image', file);
+        formData.append('upload_type', 'avatar');
         
         // Loading göster
         const avatarContainer = document.querySelector('.profile-avatar');
@@ -1129,10 +1184,10 @@ if (avatarUpload) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Avatar URL'ini kaydet
+                // Avatar URL'ini direkt user meta olarak kaydet
                 const updateFormData = new FormData();
                 updateFormData.append('action', 'ruh_update_profile');
-                updateFormData.append('nonce', '<?php echo wp_create_nonce('ruh_profile_nonce'); ?>');
+                updateFormData.append('nonce', '<?php echo wp_create_nonce('ruh-comment-nonce'); ?>');
                 updateFormData.append('action_type', 'update_avatar');
                 updateFormData.append('avatar_url', data.data.url);
                 
@@ -1141,7 +1196,7 @@ if (avatarUpload) {
                     body: updateFormData
                 });
             } else {
-                throw new Error(data.data.message || 'Avatar yüklenemedi.');
+                throw new Error(data.data?.message || 'Avatar yüklenemedi.');
             }
         })
         .then(response => response.json())
@@ -1154,14 +1209,15 @@ if (avatarUpload) {
                 }
                 showNotification('Profil resmi başarıyla güncellendi!', 'success');
             } else {
-                showNotification(data.data.message || 'Profil resmi kaydedilemedi.', 'error');
+                showNotification(data.data?.message || 'Profil resmi kaydedilemedi.', 'error');
             }
         })
         .catch(error => {
-            showNotification(error.message || 'Bir hata oluştu.', 'error');
+            console.error('Avatar upload error:', error);
+            showNotification(error.message || 'Profil resmi yüklenirken hata oluştu.', 'error');
         })
         .finally(() => {
-            if (loadingSpinner) {
+            if (loadingSpinner && loadingSpinner.parentNode) {
                 loadingSpinner.remove();
             }
         });

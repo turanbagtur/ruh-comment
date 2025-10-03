@@ -2,6 +2,125 @@
 if (!defined('ABSPATH')) exit;
 
 /**
+ * Yorum içeriğini render eder - GIF markdown'ını HTML'ye çevirir
+ */
+function ruh_render_comment_content($content) {
+    if (empty($content)) return '';
+    
+    // GIF markdown'ını HTML'ye çevir: ![GIF](url) -> <div class="gif-container"><img src="url" alt="GIF" loading="lazy"></div>
+    $content = preg_replace_callback(
+        '/!\[GIF\]\((https?:\/\/[^\)]+)\)/',
+        function($matches) {
+            $gif_url = esc_url($matches[1]);
+            return '<div class="gif-container"><img src="' . $gif_url . '" alt="GIF" loading="lazy" class="comment-gif"></div>';
+        },
+        $content
+    );
+    
+    // Spoiler desteği: [spoiler]content[/spoiler] - Siyah kutu stili
+    $content = preg_replace_callback(
+        '/\[spoiler\](.*?)\[\/spoiler\]/s',
+        function($matches) {
+            $spoiler_content = trim($matches[1]);
+            return '<span class="ruh-spoiler"><span class="spoiler-content" onclick="this.classList.toggle(\'revealed\')">' . $spoiler_content . '</span></span>';
+        },
+        $content
+    );
+    
+    // WordPress'in kendi text formatlamasını uygula (br, p tagları vs.)
+    $content = wpautop($content);
+    
+    return $content;
+}
+
+/**
+ * Dinamik post ID belirleme - Manga sistemi uyumlu
+ */
+function ruh_get_dynamic_post_id() {
+    global $wp_query, $post;
+    
+    // Önce normal WordPress post ID'yi al
+    $normal_post_id = get_the_ID() ?: ($post ? $post->ID : 0);
+    
+    // Eğer geçerli bir post ID varsa ve bu bir manga sayfası değilse, normal ID'yi kullan
+    if ($normal_post_id && get_post($normal_post_id)) {
+        // Sadece manga URL'leri için özel sistem kullan
+        $current_url = ruh_get_current_page_url();
+        $url_path = parse_url($current_url, PHP_URL_PATH);
+        
+        // Manga chapter pattern'ini kontrol et
+        if (preg_match('/\/manga\/([^\/]+)\/chapter-(\d+)/i', $url_path, $matches)) {
+            $manga_slug = $matches[1];
+            $chapter_number = $matches[2];
+            return abs(crc32($manga_slug . '_chapter_' . $chapter_number));
+        }
+        
+        // Manga ana sayfa pattern'ini kontrol et
+        if (preg_match('/\/manga\/([^\/]+)\/?$/i', $url_path, $matches)) {
+            $manga_slug = $matches[1];
+            return abs(crc32($manga_slug . '_main'));
+        }
+        
+        // Normal sayfa ise normal ID'yi döndür
+        return $normal_post_id;
+    }
+    
+    // Fallback: URL tabanlı sistem
+    $current_url = ruh_get_current_page_url();
+    $url_path = parse_url($current_url, PHP_URL_PATH);
+    
+    // Manga URL'leri için hash ID
+    if (preg_match('/\/manga\/([^\/]+)\/chapter-(\d+)/i', $url_path, $matches)) {
+        $manga_slug = $matches[1];
+        $chapter_number = $matches[2];
+        return abs(crc32($manga_slug . '_chapter_' . $chapter_number));
+    }
+    
+    if (preg_match('/\/manga\/([^\/]+)\/?$/i', $url_path, $matches)) {
+        $manga_slug = $matches[1];
+        return abs(crc32($manga_slug . '_main'));
+    }
+    
+    // Son çare: gerçek post ID veya 0
+    return $normal_post_id ?: 0;
+}
+
+/**
+ * Mevcut sayfa URL'sini al
+ */
+function ruh_get_current_page_url() {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    return $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+}
+
+/**
+ * URL'den dinamik post ID belirle - AJAX için
+ */
+function ruh_get_dynamic_post_id_from_url($url) {
+    if (empty($url)) {
+        return 0;
+    }
+    
+    $url_path = parse_url($url, PHP_URL_PATH);
+    
+    // Manga chapter pattern'ini kontrol et
+    if (preg_match('/\/manga\/([^\/]+)\/chapter-(\d+)/i', $url_path, $matches)) {
+        // Chapter tabanlı unique ID oluştur
+        $manga_slug = $matches[1];
+        $chapter_number = $matches[2];
+        return abs(crc32($manga_slug . '_chapter_' . $chapter_number));
+    }
+    
+    // Manga ana sayfa pattern'ini kontrol et
+    if (preg_match('/\/manga\/([^\/]+)\/?$/i', $url_path, $matches)) {
+        $manga_slug = $matches[1];
+        return abs(crc32($manga_slug . '_main'));
+    }
+    
+    return 0;
+}
+
+/**
  * Yorum HTML'ini oluşturan ana callback fonksiyonu - TÜM ÖZELLİKLER İLE
  */
 function ruh_comment_format($comment, $args, $depth) {
@@ -59,93 +178,101 @@ function ruh_comment_format($comment, $args, $depth) {
                 </div>
                 
                 <div class="comment-text" data-comment-id="<?php comment_ID(); ?>">
-                    <?php comment_text(); ?>
+                    <?php echo ruh_render_comment_content(get_comment_text()); ?>
                 </div>
 
-                <div class="comment-actions">
-                    <?php if (isset($options['enable_likes']) && $options['enable_likes']) : ?>
-                        <div class="comment-like-buttons" data-comment-id="<?php comment_ID(); ?>">
-                            <button class="like-btn <?php echo ($user_vote === 'liked') ? 'active' : ''; ?>" 
-                                    type="button" 
-                                    title="Beğen">
-                                👍 <span class="count"><?php echo get_comment_meta($comment->comment_ID, '_likes', true) ?: 0; ?></span>
+                <div class="comment-actions-modern">
+                    <div class="comment-interaction-buttons">
+                        <!-- Modern Icon'lu Beğeni Butonu -->
+                        <button class="heart-like-btn <?php echo ($user_vote === 'liked') ? 'active' : ''; ?>"
+                                type="button"
+                                data-comment-id="<?php comment_ID(); ?>"
+                                title="Beğen">
+                            <svg class="heart-icon" viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="currentColor" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                            </svg>
+                            <span class="like-count"><?php
+                                $likes = get_comment_meta($comment->comment_ID, '_likes', true) ?: 0;
+                                $dislikes = get_comment_meta($comment->comment_ID, '_dislikes', true) ?: 0;
+                                $total = $likes - $dislikes;
+                                echo $total > 0 ? $total : 0;
+                            ?></span>
+                        </button>
+                        
+                        <?php if ($depth < $max_depth) : ?>
+                            <!-- Modern Icon'lu Yanıt Butonu -->
+                            <button type="button" class="reply-btn-modern" data-comment-id="<?php comment_ID(); ?>" title="Yanıtla">
+                                <svg class="reply-icon" viewBox="0 0 24 24" width="18" height="18">
+                                    <path fill="currentColor" d="M10,9V5L3,12L10,19V14.9C15,14.9 18.5,16.5 21,20C20,15 17,10 10,9Z"/>
+                                </svg>
+                                <span class="reply-text">Yanıtla</span>
                             </button>
-                            <button class="dislike-btn <?php echo ($user_vote === 'disliked') ? 'active' : ''; ?>" 
-                                    type="button" 
-                                    title="Beğenme">
-                                👎 <span class="count"><?php echo get_comment_meta($comment->comment_ID, '_dislikes', true) ?: 0; ?></span>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- 3 nokta dropdown menü -->
+                    <?php if (is_user_logged_in()) : ?>
+                        <div class="comment-menu-dropdown">
+                            <button type="button" class="menu-trigger" data-comment-id="<?php comment_ID(); ?>" title="Seçenekler">
+                                <span class="dots">⋯</span>
                             </button>
+                            <div class="dropdown-menu" id="menu-<?php comment_ID(); ?>">
+                                <?php if ($comment->user_id == get_current_user_id()) : ?>
+                                    <button type="button" class="dropdown-item edit-comment-btn" data-comment-id="<?php comment_ID(); ?>">
+                                        <span class="icon">✏</span> Düzenle
+                                    </button>
+                                    <button type="button" class="dropdown-item delete-comment-btn" data-comment-id="<?php comment_ID(); ?>">
+                                        <span class="icon">🗑</span> Sil
+                                    </button>
+                                <?php else : ?>
+                                    <button type="button" class="dropdown-item report-comment-btn" data-comment-id="<?php comment_ID(); ?>">
+                                        <span class="icon">⚠</span> Şikayet Et
+                                    </button>
+                                <?php endif; ?>
+                                
+                                <?php if (current_user_can('moderate_comments')) : ?>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="<?php echo admin_url('comment.php?action=editcomment&c=' . $comment->comment_ID); ?>"
+                                       class="dropdown-item" target="_blank">
+                                        <span class="icon">🔧</span> Admin Düzenle
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($depth < $max_depth && comments_open($comment->comment_post_ID)) : ?>
-                        <button type="button" class="comment-reply-link" data-comment-id="<?php comment_ID(); ?>">
-                            Yanıtla
-                        </button>
-                    <?php endif; ?>
-                    
-                    <?php 
-                    // Kullanıcı kendi yorumunu düzenleyebilir ve silebilir
-                    if (is_user_logged_in() && $comment->user_id == get_current_user_id()) : ?>
-                        <button type="button" class="comment-edit-btn" data-comment-id="<?php comment_ID(); ?>">
-                            Düzenle
-                        </button>
-                        <button type="button" class="comment-delete-btn" data-comment-id="<?php comment_ID(); ?>">
-                            Sil
-                        </button>
-                    <?php endif; ?>
-                    
-                    <?php if (isset($options['enable_reporting']) && $options['enable_reporting'] && is_user_logged_in() && $comment->user_id != get_current_user_id()) : ?>
-                        <button type="button" class="report-btn" data-comment-id="<?php comment_ID(); ?>">
-                            Şikayet Et
-                        </button>
-                    <?php endif; ?>
-                    
-                    <?php if (current_user_can('moderate_comments')) : ?>
-                        <span class="admin-actions">
-                            <a href="<?php echo admin_url('comment.php?action=editcomment&c=' . $comment->comment_ID); ?>" class="edit-link">
-                                Düzenle
-                            </a>
-                        </span>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
         
+        <!-- Yanıt formu konteyneri -->
+        <div class="reply-form-container" id="reply-form-<?php comment_ID(); ?>" style="display: none;">
+            <!-- AJAX ile yüklenecek -->
+        </div>
+        
         <?php
-        // Alt yorumları göster
+        // Alt yorumları göster - YENİ TOGGLE SİSTEMİ
         $children = get_comments(array(
             'parent' => $comment->comment_ID,
             'status' => 'approve',
-            'number' => 3,
-            'orderby' => 'comment_date',
-            'order' => 'ASC'
+            'count' => true
         ));
         
-        if (!empty($children)) {
-            echo '<ol class="children">';
-            foreach ($children as $child) {
-                ruh_comment_format($child, $args, $depth + 1);
-            }
+        if ($children > 0) : ?>
+            <!-- Yanıtları Göster/Gizle Butonu -->
+            <div class="replies-toggle-container">
+                <button type="button" class="replies-toggle-btn" data-comment-id="<?php comment_ID(); ?>" data-replies-count="<?php echo $children; ?>">
+                    <svg class="toggle-icon" viewBox="0 0 24 24" width="16" height="16">
+                        <path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+                    </svg>
+                    <span class="toggle-text"><?php echo $children; ?> yanıtı göster</span>
+                </button>
+            </div>
             
-            // Daha fazla alt yorum varsa "daha fazla" butonu
-            $total_children = get_comments(array(
-                'parent' => $comment->comment_ID,
-                'status' => 'approve',
-                'count' => true
-            ));
-            
-            if ($total_children > 3) {
-                echo '<li class="load-more-replies">';
-                echo '<button type="button" class="load-more-replies-btn" data-parent-id="' . $comment->comment_ID . '">';
-                printf('%d yanıt daha göster', $total_children - 3);
-                echo '</button>';
-                echo '</li>';
-            }
-            
-            echo '</ol>';
-        }
-        ?>
+            <!-- Yanıtlar Konteyneri -->
+            <ol class="children replies-container" style="display: none;" data-parent-id="<?php comment_ID(); ?>">
+                <!-- AJAX ile yüklenecek -->
+            </ol>
+        <?php endif; ?>
     <?php
 }
 
