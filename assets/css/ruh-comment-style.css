@@ -2556,6 +2556,69 @@
     }
 }
 
+/* PROFILE PAGE - GIF TAŞMA SORUNU FIX */
+.profile-comment-item .comment-excerpt {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Profile comment'lerindeki GIF ve resimler için özel kontrol */
+.profile-comment-item .comment-excerpt img,
+.profile-comment-item .comment-excerpt .gif-container,
+.profile-comment-item .comment-excerpt .gif-container img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0.5rem 0 !important;
+    border-radius: 6px !important;
+    object-fit: contain !important;
+}
+
+/* Profile comment'lerindeki uzun URL'ler için */
+.profile-comment-item .comment-excerpt a {
+    word-break: break-all !important;
+    color: #005B43 !important;
+    text-decoration: none !important;
+}
+
+.profile-comment-item .comment-excerpt a:hover {
+    text-decoration: underline !important;
+    color: #007a5a !important;
+}
+
+/* Tüm profile comment container'ında taşmayı engelle */
+.profile-comment-item {
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+}
+
+/* Profile comments list container'ında da kontrol */
+.profile-comments-list {
+    overflow: hidden !important;
+}
+
+/* Genel comment excerpt'lerde de GIF taşma kontrolü */
+.comment-excerpt {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow: hidden !important;
+}
+
+.comment-excerpt img,
+.comment-excerpt .gif-container,
+.comment-excerpt .gif-container img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    object-fit: contain !important;
+}
+
+.comment-excerpt a {
+    word-break: break-all !important;
+}
+
 /* PROFILE PAGE STYLES - Daha önce eklenenler korunuyor */
 .ruh-user-profile {
     max-width: 900px; /* Mobilde daha küçük */
