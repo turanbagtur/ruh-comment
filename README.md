@@ -1,6 +1,6 @@
 # Ruh Comment - Gelişmiş WordPress Yorum Sistemi
 
-**Versiyon:** 4.0.0  
+**Versiyon:** 5.0.0 (03.10.2025 tarihinde güncellendi.)  
 **WordPress Uyumluluğu:** 5.0 ve üzeri  
 **PHP Gereksinimleri:** 7.4 ve üzeri
 
