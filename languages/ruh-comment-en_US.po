@@ -1,3 +1,4 @@
+# English (US) translation for Ruh Comment
 # Copyright (C) 2025 Solderet
 # This file is distributed under the GPL v2 or later.
 msgid ""
@@ -7,7 +8,7 @@ msgstr ""
 "POT-Creation-Date: 2025-12-09 16:30+0300\n"
 "PO-Revision-Date: 2025-12-09 16:30+0300\n"
 "Last-Translator: Solderet <info@mangaruhu.com>\n"
-"Language-Team: Solderet <info@mangaruhu.com>\n"
+"Language-Team: English <info@mangaruhu.com>\n"
 "Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -16,218 +17,164 @@ msgstr ""
 "X-Generator: Ruh Comment\n"
 "X-Domain: ruh-comment\n"
 
-#: includes/comment-template.php
 msgid "Bu içeriğe tepki ver"
 msgstr "React to this content"
 
-#: includes/comment-template.php
 msgid "tepki"
 msgstr "reactions"
 
-#: includes/comment-template.php
 msgid "Beğendim"
 msgstr "Like"
 
-#: includes/comment-template.php
 msgid "Sinir Bozucu"
 msgstr "Angry"
 
-#: includes/comment-template.php
 msgid "Mükemmel"
 msgstr "Love"
 
-#: includes/comment-template.php
 msgid "Şaşırtıcı"
 msgstr "Wow"
 
-#: includes/comment-template.php
 msgid "Üzücü"
 msgstr "Sad"
 
-#: includes/comment-template.php
 msgid "Bölüm Bitti"
 msgstr "Episode End"
 
-#: includes/comment-template.php
 msgid "Yorum"
 msgstr "Comments"
 
-#: includes/comment-template.php
 msgid "En Yeni"
 msgstr "Newest"
 
-#: includes/comment-template.php
 msgid "En Eski"
 msgstr "Oldest"
 
-#: includes/comment-template.php
 msgid "En Iyi"
 msgstr "Best"
 
-#: includes/comment-template.php
 msgid "Yorumunuzu yazın..."
 msgstr "Write your comment..."
 
-#: includes/comment-template.php
 msgid "Gönder"
 msgstr "Submit"
 
-#: includes/comment-template.php
 msgid "Yorum yapmak için giriş yapmalısınız."
 msgstr "You must login to comment."
 
-#: includes/comment-template.php
 msgid "Giriş Yap"
 msgstr "Login"
 
-#: includes/comment-template.php
 msgid "Yanıtla"
 msgstr "Reply"
 
-#: includes/comment-template.php
 msgid "Beğen"
 msgstr "Like"
 
-#: includes/comment-template.php
 msgid "Şikayet Et"
 msgstr "Report"
 
-#: includes/comment-template.php
 msgid "Düzenle"
 msgstr "Edit"
 
-#: includes/comment-template.php
 msgid "Sil"
 msgstr "Delete"
 
-#: includes/ajax-handlers.php
 msgid "Yorum icerigi bos olamaz."
 msgstr "Comment content cannot be empty."
 
-#: includes/ajax-handlers.php
 msgid "Yorum cok uzun. Maksimum 5000 karakter."
 msgstr "Comment too long. Maximum 5000 characters."
 
-#: includes/ajax-handlers.php
 msgid "Yorum en az 3 karakter olmalidir."
 msgstr "Comment must be at least 3 characters."
 
-#: includes/ajax-handlers.php
 msgid "Yorum basariyla gonderildi."
 msgstr "Comment submitted successfully."
 
-#: includes/ajax-handlers.php
 msgid "Yorum kaydedilemedi. Lutfen tekrar deneyin."
 msgstr "Could not save comment. Please try again."
 
-#: includes/ajax-handlers.php
 msgid "Giris yapmalisiniz."
 msgstr "You must be logged in."
 
-#: includes/ajax-handlers.php
 msgid "Gecersiz yorum."
 msgstr "Invalid comment."
 
-#: includes/ajax-handlers.php
 msgid "Bu yorumu duzenleyemezsiniz."
 msgstr "You cannot edit this comment."
 
-#: includes/ajax-handlers.php
 msgid "Yorum guncellendi."
 msgstr "Comment updated."
 
-#: includes/ajax-handlers.php
 msgid "Yorum silindi."
 msgstr "Comment deleted."
 
-#: includes/ajax-handlers.php
 msgid "Kendi yorumunuzu sikayet edemezsiniz."
 msgstr "You cannot report your own comment."
 
-#: includes/ajax-handlers.php
 msgid "Bu yorumu zaten sikayet ettiniz."
 msgstr "You have already reported this comment."
 
-#: includes/ajax-handlers.php
 msgid "Sikayetiniz alindi."
 msgstr "Your report has been received."
 
-#: includes/ajax-handlers.php
 msgid "Cok hizli islem yapiyorsunuz. Lutfen bekleyin."
 msgstr "You are doing this too fast. Please wait."
 
-#: includes/admin-page.php
 msgid "Ruh Comment Ayarları"
 msgstr "Ruh Comment Settings"
 
-#: includes/admin-page.php
 msgid "Ayarlar kaydedildi."
 msgstr "Settings saved."
 
-#: includes/admin-page.php
 msgid "Genel Ayarlar"
 msgstr "General Settings"
 
-#: includes/admin-page.php
 msgid "Sayfa başına yorum"
 msgstr "Comments per page"
 
-#: includes/admin-page.php
 msgid "Tepkileri etkinleştir"
 msgstr "Enable reactions"
 
-#: includes/admin-page.php
 msgid "Yorum başına XP"
 msgstr "XP per comment"
 
-#: includes/admin-page.php
 msgid "Şikayetler"
 msgstr "Reports"
 
-#: includes/admin-page.php
 msgid "Rozetler"
 msgstr "Badges"
 
-#: includes/admin-badge-manager.php
 msgid "Rozet Yönetimi"
 msgstr "Badge Management"
 
-#: includes/admin-badge-manager.php
 msgid "Yeni Rozet Ekle"
 msgstr "Add New Badge"
 
-#: includes/admin-badge-manager.php
 msgid "Rozet Adı"
 msgstr "Badge Name"
 
-#: includes/admin-badge-manager.php
 msgid "İkon"
 msgstr "Icon"
 
-#: includes/admin-badge-manager.php
 msgid "Renk"
 msgstr "Color"
 
-#: includes/admin-badge-manager.php
 msgid "Rozet Oluştur"
 msgstr "Create Badge"
 
-#: includes/admin-badge-manager.php
 msgid "Kullanıcıya Ata"
 msgstr "Assign to User"
 
-#: includes/template-helpers.php
 msgid "Seviye"
 msgstr "Level"
 
-#: assets/js/ruh-comment-script.js
 msgid "Sikayet gonderildi. Tesekkurler!"
 msgstr "Report submitted. Thank you!"
 
-#: assets/js/ruh-comment-script.js
 msgid "Hata olustu."
 msgstr "An error occurred."
 
-#: assets/js/ruh-comment-script.js
 msgid "Ag hatasi."
 msgstr "Network error."

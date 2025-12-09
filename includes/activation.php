@@ -66,6 +66,24 @@ function ruh_comment_activate() {
     dbDelta($sql_badges);
     dbDelta($sql_user_badges);
     dbDelta($sql_reports);
+    
+    // PERFORMANCE: İndeksler ekle
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_post_id ON {$table_reactions} (post_id)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_user_id_reactions ON {$table_reactions} (user_id)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_reaction ON {$table_reactions} (reaction)");
+    
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_user_id_levels ON {$table_user_levels} (user_id)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_level ON {$table_user_levels} (level)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_xp ON {$table_user_levels} (xp)");
+    
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_user_id_badges ON {$table_user_badges} (user_id)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_badge_id ON {$table_user_badges} (badge_id)");
+    
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_comment_id ON {$table_reports} (comment_id)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_reporter_id ON {$table_reports} (reporter_id)");
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_report_time ON {$table_reports} (report_time)");
+    
+    $wpdb->query("CREATE INDEX IF NOT EXISTS idx_is_automated ON {$table_badges} (is_automated)");
 
     // Varsayılan ayarları ekle
     $default_options = [

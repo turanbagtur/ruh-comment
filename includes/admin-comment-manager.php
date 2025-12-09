@@ -179,10 +179,11 @@ class Ruh_Comments_List_Table extends WP_List_Table {
                '<span style="color:#666;">' . esc_html($item->comment_author_email) . '</span>';
     }
     
-    function column_response($item) { 
-        $post_title = get_the_title($item->comment_post_ID);
-        return '<a href="' . esc_url(get_permalink($item->comment_post_ID)) . '" target="_blank">' . 
-               esc_html($post_title ?: 'Bilinmeyen Yazı') . '</a>';
+    function column_response($item) {
+        $post_title = ruh_get_comment_post_title($item->comment_post_ID);
+        $post_link = ruh_get_post_permalink($item->comment_post_ID, $item);
+        return '<a href="' . esc_url($post_link) . '" target="_blank">' .
+               esc_html($post_title) . '</a>';
     }
     
     function column_likes($item) { 
@@ -443,7 +444,7 @@ function render_comment_manager_page_content() {
     $list_table->prepare_items();
     ?>
     <div class="wrap">
-        <h1 class="wp-heading-inline"><?php _e('Yorum Yönetimi', 'ruh-comment'); ?></h1>
+        <h1 class="wp-heading-inline ruh-admin-title"><?php _e('Yorum Yönetimi', 'ruh-comment'); ?></h1>
         
         <div class="ruh-comment-manager-stats" style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 6px;">
             <?php
@@ -502,6 +503,20 @@ function render_comment_manager_page_content() {
         
         .ruh-comment-manager-stats {
             border: 1px solid #ddd;
+        }
+        
+        /* Admin başlık renklerini düzelt */
+        .ruh-admin-title {
+            color: #23282d !important;
+        }
+        
+        .wp-list-table thead th {
+            background: #f9f9f9 !important;
+            color: #23282d !important;
+        }
+        
+        .wp-list-table thead th a {
+            color: #23282d !important;
         }
         </style>
         

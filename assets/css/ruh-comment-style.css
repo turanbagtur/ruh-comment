@@ -1,69 +1,71 @@
 
-/* Ruh Comment - Mobile-First Modern Tasarım */
+/* Ruh Comment - Modern Minimal Dark Theme - Görsele Uygun */
 
-/* CSS Variables - Mobil Optimized */
+/* CSS Variables - Görseldeki Tam Dark Theme */
 :root {
-    /* Ana Renkler */
-    --primary: #2563eb;
-    --primary-light: #3b82f6;
-    --primary-dark: #1d4ed8;
-    --secondary: #64748b;
+    /* Ana Renkler - Görseldeki Tema */
+    --primary: #dc3545;
+    --primary-light: #e85a6a;
+    --primary-dark: #b02a37;
+    --secondary: #6c757d;
     
-    /* Arkaplan Renkleri */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-card: #f1f5f9;
-    --bg-hover: #e2e8f0;
+    /* Arkaplan Renkleri - Görseldeki Çok Koyu Tema */
+    --bg-primary: #0D0D0D;        /* Ana arkaplan - çok koyu */
+    --bg-secondary: #1A1A1A;      /* İkinci seviye - koyu gri */
+    --bg-card: #1F1F1F;          /* Kutular için - açık gri */
+    --bg-hover: #2A2A2A;         /* Hover durumu */
     
-    /* Metin Renkleri */
-    --text-primary: #1e293b;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    /* Metin Renkleri - Görseldeki Gibi */
+    --text-primary: #FFFFFF;      /* Ana metin - tam beyaz */
+    --text-secondary: #E0E0E0;    /* İkincil metin - açık gri */
+    --text-muted: #9A9A9A;        /* Soluk metin - orta gri */
     
-    /* Sınırlar */
-    --border: #e2e8f0;
-    --border-hover: #cbd5e1;
+    /* Sınırlar - Görseldeki Minimal Border */
+    --border: #2D2D2D;            /* Çok ince border */
+    --border-hover: #404040;      /* Hover border */
     
     /* Durum Renkleri */
-    --success: #10b981;
-    --error: #ef4444;
-    --warning: #f59e0b;
+    --success: #28a745;
+    --error: #dc3545;
+    --warning: #ffc107;
     
-    /* Mobil Boyutlar */
-    --radius: 8px;
-    --radius-sm: 6px;
-    --shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+    /* Görseldeki Minimal Radius ve Shadow */
+    --radius: 12px;               /* Görseldeki yumuşak köşeler */
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.15);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.2);
     
-    /* Mobil Spacing */
+    /* Optimal Spacing */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 0.75rem;
     --spacing-lg: 1rem;
-    --spacing-xl: 1.25rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    --spacing-3xl: 2.5rem;
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
+/* Force Dark Theme - Görseldeki Gibi */
+@media (prefers-color-scheme: light) {
     :root {
-        --bg-primary: #0f172a;
-        --bg-secondary: #1e293b;
-        --bg-card: #334155;
-        --bg-hover: #475569;
-        --text-primary: #f8fafc;
-        --text-secondary: #cbd5e1;
-        --text-muted: #94a3b8;
-        --border: #334155;
-        --border-hover: #475569;
+        --bg-primary: #121212;        /* Çok koyu ana arkaplan */
+        --bg-secondary: #1e1e1e;      /* İkinci seviye */
+        --bg-card: #1e1e1e;          /* Kutular */
+        --bg-hover: #2a2a2a;         /* Hover durumu */
+        --text-primary: #FFFFFF;      /* Tam beyaz metin */
+        --text-secondary: #E5E5E5;    /* Açık gri metin */
+        --text-muted: #8E8E8E;        /* Orta gri metin */
+        --border: #2a2a2a;            /* İnce border */
+        --border-hover: #3a3a3a;      /* Hover border */
     }
 }
 
 /* Tablet için boyutları artır */
 @media (min-width: 768px) {
     :root {
-        --radius: 10px;
-        --radius-sm: 7px;
-        --shadow-lg: 0 6px 12px -2px rgba(0, 0, 0, 0.1);
+        --radius: 8px;
+        --radius-sm: 6px;
+        --shadow-lg: none;
         --spacing-md: 1rem;
         --spacing-lg: 1.25rem;
         --spacing-xl: 1.5rem;
@@ -73,31 +75,49 @@
 /* Desktop için boyutları maksimize et */
 @media (min-width: 1024px) {
     :root {
-        --radius: 12px;
-        --radius-sm: 8px;
-        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --radius: 8px;
+        --radius-sm: 6px;
+        --shadow: none;
+        --shadow-lg: none;
         --spacing-lg: 1.5rem;
         --spacing-xl: 2rem;
     }
 }
 
-/* Reset ve Base - Mobile First */
+/* Base Styles - Modern Minimal - ARKA PLAN KALDIRILDI */
 .comments-area {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--text-primary);
-    background: var(--bg-primary);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    margin: var(--spacing-lg) 0;
-    border: 1px solid var(--border);
-    font-size: 14px; /* Mobil için küçük */
+    background: transparent !important;
+    padding: var(--spacing-2xl);
+    margin: 0;
+    font-size: 15px;
+    min-height: auto;
+}
+
+.comments-area.modern-dark {
+    background: transparent !important;
 }
 
 .comments-area * {
     box-sizing: border-box;
+}
+
+/* Modern Box Component - Görseldeki Kutular */
+.modern-box {
+    background: var(--bg-card) !important;
+    border-radius: var(--radius) !important;
+    padding: var(--spacing-3xl) !important;
+    margin-bottom: var(--spacing-2xl) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow) !important;
+    transition: all 0.2s ease !important;
+}
+
+.modern-box:hover {
+    border-color: var(--border-hover) !important;
+    background: var(--bg-hover) !important;
 }
 
 /* Tablet ve üstü için */
@@ -116,91 +136,151 @@
     }
 }
 
-/* 1. REACTIONS SECTION - Mobile First */
+/* 1. MODERN REACTIONS SECTION - Görseldeki Gibi */
 .ruh-reactions-section {
-    background: var(--bg-secondary);
-    padding: var(--spacing-lg);
     text-align: center;
-    border-bottom: 1px solid var(--border);
+}
+
+.reactions-header {
+    margin-bottom: var(--spacing-2xl);
 }
 
 .reactions-header h3 {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    margin: 0 0 var(--spacing-sm);
+    margin: 0 0 var(--spacing-md);
     color: var(--text-primary);
 }
 
 .total-reactions {
     color: var(--text-muted);
-    font-size: 0.8rem;
-    margin-bottom: var(--spacing-lg);
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
-.reactions {
+/* Modern Grid - Görseldeki Layout */
+.reactions.modern-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Mobilde 2 kolon */
-    gap: var(--spacing-sm);
-    max-width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-lg);
+    max-width: 600px;
     margin: 0 auto;
 }
 
-.reaction {
-    background: var(--bg-primary);
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--spacing-md) var(--spacing-sm);
+/* Çok küçük ekranlar için 2 kolon */
+@media (max-width: 480px) {
+    .reactions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+    
+    .reaction {
+        min-height: 70px;
+        padding: var(--spacing-sm) var(--spacing-xs);
+    }
+    
+    .reaction .emoji {
+        font-size: 1.5rem !important;
+    }
+    
+    .reaction span:not(.count) {
+        font-size: 0.6rem !important;
+    }
+}
+
+/* Modern Reaction Button - Kompakt */
+.reaction.modern-reaction {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
+    flex-direction: row;
     align-items: center;
-    gap: var(--spacing-xs);
-    min-height: 60px; /* Touch-friendly mobil */
+    gap: 6px;
+    min-height: auto;
+    position: relative;
+    overflow: hidden;
 }
 
-.reaction:hover {
+.reaction.modern-reaction:hover {
     border-color: var(--primary);
-    box-shadow: var(--shadow);
-    transform: translateY(-1px);
-}
-
-.reaction.selected {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: white;
+    background: var(--bg-hover);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
 
-.reaction .emoji {
-    font-size: 1.25rem; /* Mobilde küçük */
-    display: block;
+.reaction.modern-reaction.selected {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
 }
 
-.reaction span:not(.count) {
-    font-size: 0.65rem;
-    font-weight: 500;
-    color: var(--text-secondary);
+/* Emoji Section */
+.reaction-emoji {
+    font-size: 1rem;
+    line-height: 1;
+    margin-bottom: 0;
+    transition: all 0.2s ease;
 }
 
-.reaction.selected span:not(.count) {
-    color: rgba(255, 255, 255, 0.9);
+.reaction.modern-reaction:hover .reaction-emoji {
+    transform: scale(1.1);
 }
 
-.reaction .count {
-    background: var(--bg-card);
-    color: var(--text-primary);
-    padding: 0.125rem 0.375rem;
-    border-radius: 12px;
-    font-size: 0.65rem;
+/* Info Section - Name and Count */
+.reaction-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.reaction-name {
+    font-size: 0.75rem;
     font-weight: 600;
-    min-width: 20px;
+    color: var(--text-secondary);
     text-align: center;
+    line-height: 1.2;
+    transition: all 0.3s ease;
 }
 
-.reaction.selected .count {
+.reaction.modern-reaction.selected .reaction-name {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.reaction.modern-reaction:hover .reaction-name {
+    color: var(--text-primary);
+}
+
+/* Count Badge - Görseldeki Gibi */
+.reaction-info .count {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.reaction.modern-reaction.selected .reaction-info .count {
     background: rgba(255, 255, 255, 0.2);
     color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.reaction.modern-reaction:hover .reaction-info .count {
+    transform: scale(1.05);
+    background: var(--bg-card);
 }
 
 /* Tablet için reactions */
@@ -216,12 +296,12 @@
     }
     
     .reaction {
-        padding: var(--spacing-md);
-        min-height: 70px;
+        padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
+        min-height: 50px; /* 70px'den 50px'e (%28 azalma) */
     }
     
     .reaction .emoji {
-        font-size: 1.375rem;
+        font-size: 2.25rem; /* Tablet'te daha büyük */
     }
     
     .reaction span:not(.count) {
@@ -247,12 +327,12 @@
     }
     
     .reaction {
-        padding: 1rem 0.75rem;
-        min-height: 80px;
+        padding: 0.75rem 0.75rem; /* Vertical padding azaltıldı */
+        min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
     }
     
     .reaction .emoji {
-        font-size: 1.5rem;
+        font-size: 2rem; /* Desktop'ta optimize boyut */
     }
     
     .reaction span:not(.count) {
@@ -265,39 +345,161 @@
     }
 }
 
-/* 2. COMMENTS HEADER - Mobile First */
-.comments-header {
-    background: var(--bg-secondary);
-    padding: var(--spacing-lg) var(--spacing-md);
+/* 2. COMMENTS HEADER - MODERN LAYOUT */
+.comments-header-modern {
+    background: var(--bg-card);
+    padding: var(--spacing-lg);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing-lg);
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
+}
+
+.comments-info-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.comment-sorting-modern {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* LEGACY SUPPORT */
+.comments-header {
+    background: var(--bg-card);
+    padding: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+/* Mobil için modern header responsive */
+@media (max-width: 480px) {
+    .comments-header-modern {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+    
+    .comments-info-section {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .comment-sorting-modern {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .sort-buttons-inline {
+        gap: 4px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .sort-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        min-width: auto;
+    }
+    
+    /* LEGACY */
+    .comments-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+    
+    .comments-title-section {
+        order: 1;
+    }
+    
+    .comment-sorting {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.comments-title-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .comments-title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 0.5rem;
     color: var(--text-primary);
 }
 
 .comment-count {
-    background: var(--primary);
-    color: white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.65rem;
+    color: var(--text-primary);
+    font-size: 1.1rem;
     font-weight: 600;
 }
 
-/* Tablet için header */
+.comments-notification-bell {
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comments-notification-bell:hover {
+    opacity: 1;
+}
+
+.comments-notification-bell svg {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+}
+
+.comments-notification-bell:hover svg {
+    color: var(--text-primary);
+}
+
+/* Tablet için modern header */
 @media (min-width: 768px) {
+    .comments-header-modern {
+        padding: var(--spacing-xl) var(--spacing-lg);
+        gap: var(--spacing-lg);
+    }
+    
+    .comments-info-section {
+        gap: var(--spacing-lg);
+    }
+    
+    .sort-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    /* LEGACY */
     .comments-header {
         padding: var(--spacing-xl) var(--spacing-lg);
     }
@@ -312,8 +514,23 @@
     }
 }
 
-/* Desktop için header */
+/* Desktop için modern header */
 @media (min-width: 1024px) {
+    .comments-header-modern {
+        padding: 1.5rem 2rem;
+        gap: 2rem;
+    }
+    
+    .comments-info-section {
+        gap: 1rem;
+    }
+    
+    .sort-btn {
+        padding: 10px 18px;
+        font-size: 0.875rem;
+    }
+    
+    /* LEGACY */
     .comments-header {
         padding: 1.5rem 2rem;
     }
@@ -328,17 +545,87 @@
     }
 }
 
-/* Sorting Dropdown - Mobile First */
-.comment-sorting {
+/* Modern Sort Buttons - Görseldeki Gibi */
+.comment-sorting-modern {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
 }
 
-.comment-sorting label {
+.sort-buttons-inline.modern-sort {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    background: var(--bg-secondary);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.sort-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    background: transparent;
     color: var(--text-muted);
-    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-family: inherit;
+    position: relative;
+}
+
+.sort-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.sort-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.sort-btn.active:hover {
+    background: var(--primary-dark);
+}
+
+/* LEGACY SORT BUTTONS */
+.sort-button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: var(--radius-sm);
+    position: relative;
+}
+
+.sort-button:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.sort-button.active {
+    color: var(--text-primary);
+    font-weight: 600;
+    background: var(--bg-hover);
+}
+
+.sort-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 1px;
 }
 
 .sort-dropdown {
@@ -466,23 +753,29 @@
     }
 }
 
-/* 3. COMMENT FORM - Mobile First */
+/* 3. MODERN COMMENT FORM - Görseldeki Gibi */
 #ruh-comment-form-wrapper {
-    background: var(--bg-primary);
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
+    flex-direction: row;
+    gap: var(--spacing-lg);
     align-items: flex-start;
 }
 
+.comment-user-info {
+    flex-shrink: 0;
+}
+
 .comment-user-info img {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 2px solid var(--border);
     object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.comment-user-info img:hover {
+    border-color: var(--primary);
 }
 
 .comment-form {
@@ -490,34 +783,36 @@
     width: 100%;
 }
 
+/* Modern Editor Container - HEIGHT OPTİMİZE EDİLDİ */
 #ruh-editor-container {
-    background: var(--bg-card);
-    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     width: 100%;
 }
 
 #ruh-editor-container:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
 }
 
+/* Minimal Toolbar - HEIGHT AZALTILDI */
 #ruh-editor-toolbar {
-    background: var(--bg-secondary);
-    padding: var(--spacing-sm);
+    background: var(--bg-primary);
+    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
     border-bottom: 1px solid var(--border);
     display: flex;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-xs); /* sm'den xs'e azaltıldı */
     align-items: center;
     flex-wrap: wrap;
 }
 
 .ruh-toolbar-button {
-    background: var(--bg-primary);
+    background: transparent;
     border: 1px solid var(--border);
-    color: var(--text-secondary);
+    color: var(--text-muted);
     border-radius: var(--radius-sm);
     width: 32px;
     height: 32px;
@@ -525,7 +820,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     font-weight: 600;
     font-size: 0.75rem;
 }
@@ -534,17 +829,19 @@
     background: var(--primary);
     color: white;
     border-color: var(--primary);
+    transform: translateY(-1px);
 }
 
+/* Modern Textarea - HEIGHT AZALTILDI %25 */
 .comment-form textarea {
     width: 100%;
     background: transparent;
     border: none;
     color: var(--text-primary);
-    padding: var(--spacing-md);
-    min-height: 100px;
-    font-size: 16px; /* iOS zoom engellemek için */
-    line-height: 1.5;
+    padding: var(--spacing-xl); /* 2xl'den xl'e azaltıldı */
+    min-height: 90px; /* 120px'den 90px'e (%25 azalma) */
+    font-size: 0.95rem;
+    line-height: 1.5; /* 1.6'dan 1.5'e azaltıldı */
     resize: vertical;
     outline: none;
     font-family: inherit;
@@ -552,57 +849,66 @@
 
 .comment-form textarea::placeholder {
     color: var(--text-muted);
+    opacity: 0.7;
 }
 
+/* Modern Submit Area - HEIGHT AZALTILDI */
 .form-submit {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    align-items: stretch;
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border);
+}
+
+.form-submit-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
 }
 
 .char-counter {
     color: var(--text-muted);
-    font-size: 0.7rem;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    background: var(--bg-primary);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    align-self: center;
-    order: 1;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
 .char-counter.warning {
     color: var(--warning);
-    border-color: var(--warning);
 }
 
 .char-counter.danger {
     color: var(--error);
-    border-color: var(--error);
 }
 
+/* Modern Submit Button */
 .ruh-submit, #submit {
     background: var(--primary);
     color: white;
     border: none;
-    padding: var(--spacing-lg) var(--spacing-xl);
-    border-radius: var(--radius-sm);
-    font-size: 1rem; /* Touch-friendly */
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-    min-height: 48px; /* Touch target */
-    order: 2;
+    transition: all 0.3s ease;
+    min-height: 40px;
+    position: relative;
+    overflow: hidden;
 }
 
 .ruh-submit:hover, #submit:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow);
+}
+
+.ruh-submit:disabled, #submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Tablet için form */
@@ -630,9 +936,9 @@
     }
     
     .comment-form textarea {
-        min-height: 110px;
+        min-height: 165px; /* 220px'den 165px'e (%25 azalma) */
         font-size: 15px;
-        padding: var(--spacing-lg);
+        padding: 1.125rem; /* 1.5rem'den azaltıldı */
     }
     
     .form-submit {
@@ -683,10 +989,10 @@
     }
     
     .comment-form textarea {
-        min-height: 120px;
+        min-height: 180px; /* 240px'den 180px'e (%25 azalma) */
         font-size: 0.875rem;
-        line-height: 1.6;
-        padding: 1rem;
+        line-height: 1.5; /* 1.6'dan 1.5'e azaltıldı */
+        padding: 1.5rem; /* 2rem'den azaltıldı */
     }
     
     .form-submit {
@@ -719,7 +1025,7 @@
 }
 
 .ruh-comment-item {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
     border-bottom: 1px solid var(--border);
     transition: all 0.2s ease;
 }
@@ -735,11 +1041,12 @@
 }
 
 .comment-author img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    object-fit: cover;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--border) !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
 }
 
 .comment-content {
@@ -755,14 +1062,14 @@
 }
 
 .comment-author-meta .author-name {
-    color: var(--text-primary);
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.8rem;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    font-size: 0.9rem !important;
 }
 
 .comment-author-meta .author-name:hover {
-    color: var(--primary);
+    color: var(--primary) !important;
 }
 
 /* Mobile Level Rozeti - ÇOK KÜÇÜK */
@@ -840,24 +1147,25 @@
 }
 
 .comment-metadata {
-    color: var(--text-muted);
-    font-size: 0.65rem;
+    color: var(--text-muted) !important;
+    font-size: 0.7rem !important;
 }
 
 .comment-metadata .comment-time {
-    color: var(--text-muted);
-    text-decoration: none;
+    color: var(--text-muted) !important;
+    text-decoration: none !important;
 }
 
 .comment-metadata .comment-time:hover {
-    color: var(--primary);
+    color: var(--primary) !important;
 }
 
 .comment-text {
-    color: var(--text-secondary);
-    line-height: 1.5;
-    margin: var(--spacing-sm) 0;
-    font-size: 0.8rem;
+    color: var(--text-secondary) !important;
+    line-height: 1.6 !important;
+    margin: var(--spacing-md) 0 !important;
+    font-size: 0.85rem !important;
+    word-break: break-word !important;
 }
 
 .comment-text a {
@@ -878,7 +1186,7 @@
     }
     
     .ruh-comment-item {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
     }
     
     .comment-body {
@@ -939,7 +1247,7 @@
     }
     
     .ruh-comment-item {
-        padding: 1.5rem 2rem;
+        padding: 1.125rem 2rem; /* Vertical padding %25 azaltıldı */
     }
     
     .comment-body {
@@ -1176,33 +1484,37 @@
 }
 
 .menu-trigger {
-    background: var(--bg-secondary) !important;
+    background: transparent !important;
     border: 1px solid var(--border) !important;
     padding: var(--spacing-sm) !important;
-    border-radius: 50% !important;
+    border-radius: var(--radius-sm) !important;
     cursor: pointer !important;
-    color: var(--text-secondary) !important;
+    color: var(--text-muted) !important;
     font-size: 0.875rem !important;
     transition: all 0.2s ease !important;
-    width: 28px !important;
-    height: 28px !important;
+    width: 32px !important;
+    height: 32px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
     z-index: 101 !important;
+    backdrop-filter: blur(10px) !important;
 }
 
 .menu-trigger:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
     border-color: var(--primary) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow) !important;
 }
 
 .menu-trigger .dots {
     font-weight: bold;
     line-height: 1;
     user-select: none;
+    font-size: 1rem;
 }
 
 .dropdown-menu {
@@ -1238,30 +1550,33 @@
 .dropdown-item {
     display: flex !important;
     align-items: center !important;
-    gap: 0.5rem !important;
+    gap: 0.75rem !important;
     width: 100% !important;
-    padding: 0.5rem 0.75rem !important;
+    padding: 0.75rem 1rem !important;
     border: none !important;
     background: none !important;
     color: var(--text-primary) !important;
-    font-size: 0.75rem !important;
+    font-size: 0.8rem !important;
     cursor: pointer !important;
     text-decoration: none !important;
-    transition: all 0.15s ease !important;
+    transition: all 0.2s ease !important;
     font-family: inherit !important;
     text-align: left !important;
     font-weight: 500 !important;
+    border-radius: var(--radius-sm) !important;
+    margin: 0 var(--spacing-xs) !important;
 }
 
 .dropdown-item:hover {
-    background: var(--bg-hover) !important;
-    color: var(--primary) !important;
+    background: var(--primary) !important;
+    color: white !important;
+    transform: translateX(2px) !important;
 }
 
 .dropdown-item .icon {
-    font-size: 0.875rem !important;
-    opacity: 0.8 !important;
-    width: 14px !important;
+    font-size: 1rem !important;
+    opacity: 1 !important;
+    width: 16px !important;
     flex-shrink: 0 !important;
 }
 
@@ -1339,10 +1654,10 @@
 
 /* Yanıt Formu Tasarımı - Mobile First */
 .reply-form-container {
-    margin: var(--spacing-md) 0 0 var(--spacing-lg);
+    margin: var(--spacing-sm) 0 0 var(--spacing-lg); /* Top margin azaltıldı */
     background: var(--bg-secondary);
     border-radius: var(--radius);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
 }
@@ -1355,15 +1670,15 @@
 
 .reply-form textarea {
     width: 100%;
-    min-height: 80px;
-    padding: var(--spacing-md);
+    min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
+    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: inherit;
     font-size: 0.8rem;
-    line-height: 1.4;
+    line-height: 1.3; /* 1.4'ten 1.3'e azaltıldı */
     resize: vertical;
     transition: all 0.2s ease;
 }
@@ -1394,7 +1709,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: inherit;
-    min-height: 44px; /* Touch-friendly */
+    min-height: 36px; /* 44px'den 36px'e (%18 azalma) */
     width: 100%;
 }
 
@@ -1434,9 +1749,9 @@
     }
     
     .reply-form textarea {
-        min-height: 90px;
+        min-height: 68px; /* 90px'den 68px'e (%24 azalma) */
         font-size: 0.85rem;
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
     }
     
     .reply-form-actions {
@@ -1465,10 +1780,10 @@
     }
     
     .reply-form textarea {
-        min-height: 100px;
+        min-height: 75px; /* 100px'den 75px'e (%25 azalma) */
         font-size: 0.875rem;
-        line-height: 1.5;
-        padding: 1rem;
+        line-height: 1.4; /* 1.5'ten 1.4'e azaltıldı */
+        padding: 0.75rem; /* 1rem'den azaltıldı */
     }
     
     .reply-form textarea:focus {
@@ -1486,10 +1801,10 @@
     }
 }
 
-/* YORUM DÜZENLEME FORMU - Mobile First */
+/* YORUM DÜZENLEME FORMU - Mobile First - HEIGHT AZALTILDI */
 .comment-edit-form {
-    margin-top: var(--spacing-md);
-    padding: var(--spacing-lg);
+    margin-top: var(--spacing-sm); /* md'den sm'e azaltıldı */
+    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
     background: var(--bg-secondary);
     border-radius: var(--radius);
     border: 2px solid var(--border);
@@ -1533,15 +1848,15 @@
 
 .comment-edit-form textarea {
     width: 100%;
-    min-height: 80px;
-    padding: var(--spacing-md);
+    min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
+    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: inherit;
     font-size: 0.8rem;
-    line-height: 1.5;
+    line-height: 1.4; /* 1.5'ten 1.4'e azaltıldı */
     resize: vertical;
     transition: all 0.2s ease;
     box-sizing: border-box;
@@ -1587,7 +1902,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: inherit;
-    min-height: 44px; /* Touch-friendly */
+    min-height: 36px; /* 44px'den 36px'e (%18 azalma) */
     min-width: 80px;
 }
 
@@ -1640,9 +1955,9 @@
     }
     
     .comment-edit-form textarea {
-        min-height: 100px;
+        min-height: 75px; /* 100px'den 75px'e (%25 azalma) */
         font-size: 0.85rem;
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
     }
     
     .comment-edit-actions {
@@ -1674,10 +1989,10 @@
     }
     
     .comment-edit-form textarea {
-        min-height: 120px;
+        min-height: 90px; /* 120px'den 90px'e (%25 azalma) */
         font-size: 0.875rem;
-        line-height: 1.6;
-        padding: 1rem;
+        line-height: 1.5; /* 1.6'dan 1.5'e azaltıldı */
+        padding: 0.75rem; /* 1rem'den azaltıldı */
     }
     
     .comment-edit-form textarea:focus {
@@ -1725,7 +2040,7 @@
     height: auto;
     border-radius: var(--radius-sm);
     display: block;
-    max-height: 200px; /* Mobilde küçük */
+    max-height: 150px; /* 200px'den 150px'e (%25 azalma) */
     object-fit: cover;
 }
 
@@ -1737,7 +2052,7 @@
     
     .gif-container img,
     .comment-gif {
-        max-height: 250px;
+        max-height: 188px; /* 250px'den 188px'e (%25 azalma) */
     }
 }
 
@@ -1749,7 +2064,7 @@
     
     .gif-container img,
     .comment-gif {
-        max-height: 300px;
+        max-height: 225px; /* 300px'den 225px'e (%25 azalma) */
     }
 }
 
@@ -1841,60 +2156,81 @@
     }
 }
 
-/* 8. AUTH REQUIRED - Mobile First */
-.auth-required-message {
-    background: var(--primary);
-    color: white;
-    padding: var(--spacing-xl);
+/* 8. MODERN AUTH MESSAGE - Görseldeki Gibi */
+.auth-required-message.modern-box {
     text-align: center;
 }
 
-.auth-required-message h3 {
-    margin: 0 0 var(--spacing-sm);
-    font-size: 1.125rem;
+.auth-message-content {
+    padding: var(--spacing-lg);
+}
+
+.auth-main-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 400;
+}
+
+.auth-link-text {
+    color: var(--primary);
     font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: underline;
+    text-decoration-color: transparent;
 }
 
-.auth-required-message p {
-    margin: 0 0 var(--spacing-lg);
-    opacity: 0.9;
-    font-size: 0.8rem;
+.auth-link-text:hover {
+    color: var(--primary-light);
+    text-decoration-color: var(--primary-light);
 }
 
+/* Auth Buttons - Sadeleştirildi */
 .auth-buttons {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+    flex-wrap: wrap;
 }
 
 .auth-button {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--primary);
     color: white;
-    padding: var(--spacing-md) var(--spacing-lg);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: var(--radius-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--radius);
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.8rem;
-    transition: all 0.2s ease;
-    min-height: 44px; /* Touch-friendly */
-    display: flex;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 120px;
+    min-width: 140px;
 }
 
 .auth-button:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--primary-dark);
     text-decoration: none;
     color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
 }
 
-.auth-button.primary {
-    background: white;
-    color: var(--primary);
-    border-color: white;
+.auth-button.secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.auth-button.secondary:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
 /* Tablet için auth */
@@ -1956,13 +2292,13 @@
     background: var(--bg-secondary);
     color: var(--text-primary);
     border: 1px solid var(--border);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s ease;
     font-size: 0.8rem;
     font-family: inherit;
-    min-height: 48px; /* Touch-friendly */
+    min-height: 36px; /* 48px'den 36px'e (%25 azalma) */
 }
 
 #load-more-comments:hover {
@@ -1971,7 +2307,7 @@
 }
 
 .no-comments {
-    padding: 2rem var(--spacing-lg);
+    padding: 1.5rem var(--spacing-lg); /* Vertical padding %25 azaltıldı */
     text-align: center;
     color: var(--text-muted);
     background: var(--bg-secondary);
@@ -1979,7 +2315,7 @@
 }
 
 .comments-closed {
-    padding: var(--spacing-xl) var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-lg); /* xl'den lg'ye azaltıldı */
     text-align: center;
     color: var(--text-muted);
     background: var(--bg-secondary);
@@ -1990,16 +2326,16 @@
 @media (min-width: 768px) {
     #load-more-comments {
         font-size: 0.85rem;
-        min-height: 44px;
+        min-height: 33px; /* 44px'den 33px'e (%25 azalma) */
     }
     
     .no-comments {
-        padding: 2.5rem var(--spacing-xl);
+        padding: 1.88rem var(--spacing-xl); /* Vertical padding %25 azaltıldı */
         font-size: 0.85rem;
     }
     
     .comments-closed {
-        padding: var(--spacing-xl);
+        padding: var(--spacing-lg); /* xl'den lg'ye azaltıldı */
         font-size: 0.85rem;
     }
 }
@@ -2215,7 +2551,7 @@
 
 .gif-item img {
     width: 100%;
-    height: 100px;
+    height: 75px; /* 100px'den 75px'e (%25 azalma) */
     object-fit: cover;
     display: block;
 }
@@ -2262,7 +2598,7 @@
     }
     
     .gif-item img {
-        height: 110px;
+        height: 83px; /* 110px'den 83px'e (%25 azalma) */
     }
 }
 
@@ -2299,7 +2635,7 @@
     }
     
     .gif-item img {
-        height: 120px;
+        height: 90px; /* 120px'den 90px'e (%25 azalma) */
     }
     
     .gif-loading,
@@ -2349,9 +2685,115 @@
     }
 }
 
-/* Hide legacy comment actions */
+/* Comment actions - gorunur yap */
 .comment-actions {
-    display: none !important;
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.comment-actions .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.comment-actions .action-btn:hover {
+    background: #333;
+    color: #fff;
+    border-color: #444;
+}
+
+.comment-actions .action-btn.like-btn:hover,
+.comment-actions .action-btn.like-btn.liked {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.comment-actions .action-btn.reply-btn:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.comment-actions .action-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.comment-more-menu {
+    position: relative;
+    margin-left: auto;
+}
+
+.comment-more-menu .more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #666;
+    cursor: pointer;
+}
+
+.comment-more-menu .more-btn:hover {
+    background: #333;
+    color: #fff;
+}
+
+.comment-more-menu .more-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    min-width: 130px;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.comment-more-menu .more-dropdown.show {
+    display: block;
+}
+
+.comment-more-menu .more-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.comment-more-menu .more-dropdown button:hover {
+    background: #333;
+}
+
+.comment-more-menu .more-dropdown button.delete-btn {
+    color: #ef4444;
+}
+
+.comment-more-menu .more-dropdown button svg {
+    width: 14px;
+    height: 14px;
 }
 
 /* Image previews - Mobile First */
@@ -2459,11 +2901,25 @@
 .replies-toggle-btn .toggle-icon {
     width: 14px;
     height: 14px;
-    transition: transform 0.2s ease;
+    transition: transform 0.3s ease;
+    color: #9ca3af;
 }
 
 .replies-toggle-btn.expanded .toggle-icon {
     transform: rotate(180deg);
+}
+
+.replies-toggle-btn.loading .toggle-icon {
+    animation: spin 1s linear infinite;
+}
+
+.replies-toggle-btn.error {
+    border-color: var(--error);
+    color: var(--error);
+}
+
+.replies-toggle-btn.error .toggle-icon {
+    color: var(--error);
 }
 
 .replies-toggle-btn .toggle-text {
@@ -2619,6 +3075,623 @@
     word-break: break-all !important;
 }
 
+/* MINIMAL BOX DESIGN UPDATE - Görseldeki gibi tasarım */
+
+/* Ana container güncellemeleri */
+.comments-area {
+    background: var(--bg-primary);
+    padding: var(--spacing-lg);
+    border: none; /* Dış border kaldır */
+    box-shadow: none; /* Dış shadow kaldır */
+}
+
+/* Reactions section kutu tasarımı - BÜYÜK */
+.ruh-reactions-section {
+    background: var(--bg-card) !important;
+    border-radius: var(--radius) !important;
+    margin-bottom: var(--spacing-lg) !important;
+    box-shadow: none !important; /* Minimal */
+    border: 1px solid var(--border) !important;
+    padding: 3rem !important; /* Daha da büyük */
+}
+
+/* Comments header kutu tasarımı - KÜÇÜLTÜLMÜŞ */
+.comments-header {
+    background: var(--bg-card) !important;
+    border-radius: var(--radius) !important;
+    margin-bottom: var(--spacing-lg) !important;
+    box-shadow: none !important; /* Minimal */
+    border: 1px solid var(--border) !important;
+    padding: 1.5rem !important; /* KÜÇÜLTÜLMÜŞ PADDING */
+}
+
+/* Comment form kutu tasarımı - KÜÇÜLTÜLMÜŞ */
+#ruh-comment-form-wrapper {
+    background: var(--bg-card) !important;
+    border-radius: var(--radius) !important;
+    margin-bottom: var(--spacing-lg) !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border) !important;
+    padding: 1.5rem !important; /* KÜÇÜLTÜLMÜŞ PADDING */
+}
+
+/* Main comments area */
+.ruh-comments-main {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+/* Comment list - ayrı kutular */
+.comment-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-lg) !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Her comment bir kutu - MINIMAL - KÜÇÜLTÜLMÜŞ YÜKSEKLİK */
+.ruh-comment-item {
+    background: var(--bg-card) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: none !important; /* Minimal */
+    border: 1px solid var(--border) !important;
+    padding: 1.125rem !important; /* 1.5rem'den %25 azaltıldı */
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+}
+
+.ruh-comment-item:hover {
+    box-shadow: none !important; /* Minimal */
+    transform: none !important; /* Minimal */
+    border-color: var(--border-hover) !important;
+    background: var(--bg-hover) !important;
+}
+
+/* Children comments - yanıt kutularına özel stil */
+.comment-list .children {
+    padding-left: 0 !important;
+    border-left: none !important;
+    margin-top: var(--spacing-lg) !important;
+    gap: var(--spacing-md) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    list-style: none !important;
+    padding: 0 !important;
+}
+
+.comment-list .children .ruh-comment-item {
+    background: var(--bg-secondary) !important;
+    margin-left: var(--spacing-xl) !important;
+    position: relative !important;
+}
+
+/* Yanıt yorumları için indicator çizgisi */
+.comment-list .children .ruh-comment-item::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--spacing-xl) + var(--spacing-sm));
+    top: 50%;
+    width: 3px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 2px;
+    transform: translateY(-50%);
+}
+
+/* Comment body düzenlemeleri */
+.comment-body {
+    display: flex !important;
+    gap: var(--spacing-lg) !important;
+    align-items: flex-start !important;
+}
+
+.comment-author img {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--border) !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+}
+
+.comment-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.comment-author-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--spacing-md) !important;
+    margin-bottom: var(--spacing-sm) !important;
+    flex-wrap: wrap !important;
+}
+
+.comment-author-meta .author-name {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+}
+
+.comment-text {
+    line-height: 1.6 !important;
+    margin: var(--spacing-md) 0 !important;
+    font-size: 0.85rem !important;
+    word-break: break-word !important;
+}
+
+/* Tablet için güncellemeler */
+@media (min-width: 768px) {
+    .comments-area {
+        padding: var(--spacing-xl);
+    }
+    
+    .comment-body {
+        gap: var(--spacing-xl) !important;
+    }
+    
+    .comment-author img {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .comment-author-meta .author-name {
+        font-size: 1rem !important;
+    }
+    
+    .comment-text {
+        font-size: 0.9rem !important;
+    }
+    
+    .comment-list .children .ruh-comment-item {
+        margin-left: 2rem !important;
+    }
+    
+    .comment-list .children .ruh-comment-item::before {
+        left: calc(-2rem + var(--spacing-md));
+    }
+}
+
+/* TEPKİ KISMI - GÖRSELDEKI GİBİ MODERN MİNİMAL */
+.ruh-reactions-section {
+    background: var(--bg-card) !important;
+    padding: 2rem !important;
+    text-align: center !important;
+    border-radius: 12px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border) !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.reactions-header {
+    margin-bottom: 1.5rem !important;
+}
+
+.reactions-header h3 {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin: 0 0 0.5rem !important;
+    color: var(--text-primary) !important;
+}
+
+.total-reactions {
+    color: var(--text-muted) !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+}
+
+.reactions {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* Mobilde 3 kolon */
+    gap: 1rem !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+}
+
+/* Çok küçük ekranlar için reactions */
+@media (max-width: 480px) {
+    .ruh-reactions-section {
+        padding: 1.5rem !important;
+    }
+    
+    .reactions {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem !important;
+    }
+    
+    .reaction {
+        min-height: 70px !important;
+        padding: 0.75rem 0.5rem !important;
+    }
+    
+    .reaction .emoji {
+        font-size: 1.75rem !important;
+    }
+    
+    .reaction span:not(.count) {
+        font-size: 0.6rem !important;
+    }
+    
+    .reaction .count {
+        font-size: 0.6rem !important;
+        padding: 0.1rem 0.3rem !important;
+        min-width: 16px !important;
+        top: -4px !important;
+        right: -4px !important;
+    }
+}
+
+.reaction {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    padding: 1.25rem 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    min-height: 90px !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.reaction:hover {
+    background: var(--bg-secondary) !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-1px) !important;
+}
+
+.reaction.selected {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    border-width: 2px !important;
+}
+
+/* YENİ GÖRSELE GÖRE EMOJİLER - SAYILAR ALTTA */
+.reaction .emoji {
+    font-size: 2.25rem !important; /* Görsele uygun boyut */
+    display: block !important;
+    line-height: 1 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* SAYILAR ALTTA - YENİ TASARIM */
+.reaction .count {
+    position: relative !important; /* Absolute değil, normal akış */
+    top: auto !important;
+    right: auto !important;
+    background: rgba(255,255,255,0.1) !important;
+    color: var(--text-primary) !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 12px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    min-width: 24px !important;
+    text-align: center !important;
+    border: none !important;
+    z-index: auto !important;
+    display: inline-block !important;
+    margin-top: 0.25rem !important;
+}
+
+.reaction.selected .count {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    border: none !important;
+}
+
+/* EMOJİ İSİMLERİ GERİ EKLENDİ - SAYILAR VE İSİMLER ALTTA */
+.reaction .reaction-name {
+    display: block !important; /* İsimleri göster */
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    color: var(--text-muted) !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    margin-top: 0.25rem !important;
+}
+
+.reaction.selected .reaction-name {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important;
+}
+
+/* Eski selectorları da destekle */
+.reaction span:not(.count):not(.emoji) {
+    display: block !important;
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    color: var(--text-muted) !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    margin-top: 0.25rem !important;
+}
+
+.reaction.selected span:not(.count):not(.emoji) {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important;
+}
+
+/* Pulse animasyonu güncellendi */
+@keyframes countPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Tablet için tepki güncellemeleri - RESPONSIVE */
+@media (min-width: 768px) {
+    .ruh-reactions-section {
+        padding: 2.5rem !important;
+        margin-bottom: 2rem !important;
+    }
+    
+    .reactions {
+        grid-template-columns: repeat(6, 1fr) !important; /* Tablet'te 6 kolon */
+        gap: 1.25rem !important;
+        max-width: 100% !important;
+    }
+    
+    .reaction {
+        min-height: 75px !important; /* 100px'den 75px'e (%25 azalma) */
+        padding: 1.125rem 1rem !important; /* Vertical padding azaltıldı */
+    }
+    
+    .reaction .emoji {
+        font-size: 2.5rem !important;
+    }
+    
+    .reaction span:not(.count) {
+        font-size: 0.7rem !important;
+    }
+    
+    .reaction .count {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.6rem !important;
+        min-width: 24px !important;
+    }
+}
+
+/* Desktop için tepki güncellemeleri - DAHA DA KÜÇÜLTÜLMÜŞ EMOJİLER PC İÇİN */
+@media (min-width: 1024px) {
+    .ruh-reactions-section {
+        padding: 1.5rem !important; /* Daha da küçültülmüş padding */
+        margin-bottom: 1.5rem !important;
+        max-width: 800px !important; /* Daha da küçük genişlik */
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    
+    .reactions {
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 0.75rem !important; /* Daha küçük boşluk */
+        max-width: 100% !important;
+    }
+    
+    .reactions-header {
+        margin-bottom: 1rem !important;
+    }
+    
+    .reactions-header h3 {
+        font-size: 1rem !important; /* Daha küçük başlık */
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .total-reactions {
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .reaction {
+        min-height: 55px !important; /* Daha da küçük yükseklik - PC'de kompakt */
+        padding: 0.5rem 0.5rem !important; /* Minimal padding */
+        border-radius: 6px !important;
+        background: var(--bg-primary) !important;
+        border: 1px solid var(--border) !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+    }
+    
+    .reaction:hover {
+        transform: translateY(-1px) !important;
+        border-color: var(--primary) !important;
+        background: var(--bg-secondary) !important;
+    }
+    
+    .reaction.selected {
+        background: var(--primary) !important;
+        border-color: var(--primary) !important;
+        transform: none !important;
+    }
+    
+    .reaction.selected:hover {
+        transform: translateY(-1px) !important;
+    }
+    
+    .reaction .emoji {
+        font-size: 1rem !important; /* PC'de çok küçük emoji - 16px gibi */
+        margin-bottom: 0.25rem !important;
+        transition: all 0.2s ease !important;
+        display: block !important;
+        line-height: 1 !important;
+    }
+    
+    .reaction:hover .emoji {
+        transform: scale(1.05) !important; /* Küçük hover scale */
+    }
+    
+    /* SAYILAR VE İSİMLER - PC'DE ÇOK KÜÇÜK TASARIM */
+    .reaction .count {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        background: rgba(255,255,255,0.1) !important;
+        color: var(--text-primary) !important;
+        padding: 0.1rem 0.3rem !important;
+        border-radius: 8px !important;
+        font-size: 0.6rem !important; /* Çok küçük sayı boyutu - PC'de */
+        font-weight: 700 !important;
+        min-width: 16px !important;
+        text-align: center !important;
+        border: none !important;
+        z-index: auto !important;
+        display: inline-block !important;
+        margin: 0.2rem 0 0.1rem 0 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .reaction:hover .count {
+        transform: scale(1.05) !important;
+    }
+    
+    .reaction.selected .count {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+        border: none !important;
+        font-weight: 800 !important;
+    }
+    
+    .reaction .reaction-name,
+    .reaction span:not(.count):not(.emoji) {
+        font-size: 0.55rem !important; /* PC'de çok küçük isim boyutu */
+        font-weight: 500 !important;
+        color: var(--text-muted) !important;
+        text-align: center !important;
+        line-height: 1.1 !important;
+        margin-top: 0.1rem !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .reaction:hover .reaction-name,
+    .reaction:hover span:not(.count):not(.emoji) {
+        color: var(--text-primary) !important;
+    }
+    
+    .reaction.selected .reaction-name,
+    .reaction.selected span:not(.count):not(.emoji) {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 600 !important;
+    }
+}
+
+/* Çok büyük ekranlar için ekstra iyileştirmeler (1440px+) */
+@media (min-width: 1440px) {
+    .ruh-reactions-section {
+        padding: 5rem 4rem !important;
+        max-width: 1400px !important;
+    }
+    
+    .reactions {
+        gap: 2.5rem !important; /* Daha da geniş */
+    }
+    
+    .reactions-header h3 {
+        font-size: 1.75rem !important;
+    }
+    
+    .reaction {
+        min-height: 160px !important; /* Daha da yüksek */
+        padding: 2.5rem 2rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .reaction .emoji {
+        font-size: 4rem !important; /* Dev emoji */
+        margin-bottom: 1.25rem !important;
+    }
+    
+    .reaction .count {
+        font-size: 1.5rem !important; /* Dev sayılar */
+        margin: 0.75rem 0 0.5rem 0 !important;
+    }
+    
+    .reaction .reaction-name,
+    .reaction span:not(.count):not(.emoji) {
+        font-size: 1rem !important; /* Daha büyük isimler */
+    }
+}
+
+/* Hover efektleri güçlendirildi */
+.reaction:active {
+    transform: translateY(0) !important;
+}
+
+.reaction.selected {
+    animation: reactionSelected 0.4s ease !important;
+}
+
+@keyframes reactionSelected {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Desktop için güncellemeler */
+@media (min-width: 1024px) {
+    .comments-area {
+        padding: 2rem;
+    }
+    
+    .comment-author img {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .comment-author-meta .author-name {
+        font-size: 1.1rem !important;
+    }
+    
+    .comment-text {
+        font-size: 1rem !important;
+        margin: 1rem 0 !important;
+    }
+    
+    .comment-list .children .ruh-comment-item {
+        margin-left: 3rem !important;
+    }
+    
+    .comment-list .children .ruh-comment-item::before {
+        left: calc(-3rem + var(--spacing-lg));
+        height: 32px;
+    }
+}
+
+/* Dark mode için görseldeki renk ayarları */
+@media (prefers-color-scheme: dark) {
+    .ruh-comment-item {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+    
+    .ruh-comment-item:hover {
+        background: var(--bg-hover) !important;
+        border-color: var(--border-hover) !important;
+    }
+    
+    .comment-list .children .ruh-comment-item {
+        background: var(--bg-secondary) !important;
+    }
+    
+    .ruh-reactions-section,
+    .comments-header,
+    #ruh-comment-form-wrapper {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+    
+    .auth-required-message {
+        background: var(--bg-card) !important;
+        border-color: var(--border) !important;
+    }
+}
+
 /* PROFILE PAGE STYLES - Daha önce eklenenler korunuyor */
 .ruh-user-profile {
     max-width: 900px; /* Mobilde daha küçük */
@@ -2639,4 +3712,286 @@
         font-size: 16px;
     }
     /* Diğer profil desktop stilleri... */
+}
+/* BILDIR POP-UP SİSTEMİ - Mobile First */
+.report-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.report-popup {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.report-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.report-popup-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.report-popup-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-popup-close:hover {
+    background: var(--error);
+    color: white;
+}
+
+.report-popup-body {
+    padding: var(--spacing-lg);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.form-group textarea {
+    min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
+    resize: vertical;
+}
+
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.report-popup-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.report-cancel-btn,
+.report-submit-btn {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    min-height: 33px; /* 44px'den 33px'e (%25 azalma) */
+    min-width: 80px;
+}
+
+.report-cancel-btn {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.report-cancel-btn:hover {
+    background: var(--border);
+    color: var(--text-primary);
+}
+
+.report-submit-btn {
+    background: var(--error);
+    color: white;
+}
+
+.report-submit-btn:hover {
+    background: #b02a37;
+    transform: translateY(-1px);
+}
+
+.report-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Tablet için report popup */
+@media (min-width: 768px) {
+    .report-popup {
+        max-width: 500px;
+    }
+    
+    .report-popup-actions {
+        flex-wrap: nowrap;
+    }
+}
+
+/* Desktop için report popup */
+@media (min-width: 1024px) {
+    .report-popup {
+        max-width: 600px;
+    }
+    
+    .report-popup-header {
+        padding: 1.5rem;
+    }
+    
+    .report-popup-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group textarea {
+        min-height: 75px; /* 100px'den 75px'e (%25 azalma) */
+    }
+}
+
+/* ===== TEPKI STILLERI - GORSELDEKI GIBI ===== */
+.ruh-reactions-section {
+    background: #1F1F1F !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    text-align: center !important;
+}
+
+.reactions-header h3 {
+    font-size: 16px !important;
+    color: #fff !important;
+    margin: 0 0 4px 0 !important;
+}
+
+.total-reactions {
+    font-size: 13px !important;
+    color: #888 !important;
+}
+
+/* Tepki stilleri - Ornek Gibi */
+.content-reactions {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+}
+
+.reaction-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.content-reaction-btn {
+    background: transparent !important;
+    border: none !important;
+    padding: 8px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.content-reaction-btn:hover {
+    transform: scale(1.1) !important;
+}
+
+.content-reaction-btn.active {
+    outline: 3px solid #667EEA !important;
+    outline-offset: 2px !important;
+}
+
+.reaction-emoji {
+    font-size: 32px !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+
+.reaction-label {
+    font-size: 11px !important;
+    color: #888 !important;
+    white-space: nowrap !important;
+}
+
+.reaction-count {
+    font-size: 14px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+}
+
+/* Mobil - 3x2 Grid */
+@media (max-width: 768px) {
+    .ruh-reactions-section {
+        padding: 16px !important;
+    }
+    
+    .content-reactions {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 16px 10px !important;
+        justify-items: center !important;
+    }
+    
+    .reaction-emoji {
+        font-size: 30px !important;
+    }
+    
+    .reaction-label {
+        font-size: 10px !important;
+    }
+    
+    .reaction-count {
+        font-size: 13px !important;
+    }
 }

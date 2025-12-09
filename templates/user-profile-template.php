@@ -133,10 +133,10 @@ if (!$last_activity) {
         <h3><?php _e('Son Yorumları', 'ruh-comment'); ?></h3>
         <div class="profile-comments-list">
             <?php if (!empty($user_data['comments'])) : ?>
-                <?php foreach ($user_data['comments'] as $comment) : 
-                    $post_title = get_the_title($comment->comment_post_ID);
-                    $comment_link = get_comment_link($comment);
-                    $post_link = get_permalink($comment->comment_post_ID);
+                <?php foreach ($user_data['comments'] as $comment) :
+                    $post_title = ruh_get_comment_post_title($comment->comment_post_ID);
+                    $comment_link = ruh_get_comment_link($comment);
+                    $post_link = ruh_get_post_permalink($comment->comment_post_ID, $comment);
                     $likes = get_comment_meta($comment->comment_ID, '_likes', true) ?: 0;
                     
                     // FIX: Convert to integer timestamp properly
@@ -150,7 +150,7 @@ if (!$last_activity) {
                     <div class="comment-header">
                         <div class="comment-post-info">
                             <a href="<?php echo esc_url($post_link); ?>" class="post-title" target="_blank">
-                                <?php echo esc_html($post_title ?: 'Bilinmeyen Yazı'); ?>
+                                <?php echo esc_html($post_title); ?>
                             </a>
                         </div>
                         <div class="comment-meta">
@@ -227,7 +227,7 @@ if (!$last_activity) {
                     <!-- Temel Bilgiler -->
                     <div class="tab-pane active" id="basic-tab">
                         <form id="profile-basic-form">
-                            <?php wp_nonce_field('ruh_profile_nonce', 'nonce'); ?>
+                            <?php wp_nonce_field('ruh_update_profile_' . $user_data['info']->ID, 'nonce'); ?>
                             <input type="hidden" name="action" value="ruh_update_profile">
                             <input type="hidden" name="action_type" value="basic_info">
                             
@@ -250,7 +250,7 @@ if (!$last_activity) {
                     <!-- Hesap Bilgileri -->
                     <div class="tab-pane" id="account-tab">
                         <form id="profile-account-form">
-                            <?php wp_nonce_field('ruh_profile_nonce', 'nonce'); ?>
+                            <?php wp_nonce_field('ruh_update_profile_' . $user_data['info']->ID, 'nonce'); ?>
                             <input type="hidden" name="action" value="ruh_update_profile">
                             <input type="hidden" name="action_type" value="account_info">
                             
@@ -274,7 +274,7 @@ if (!$last_activity) {
                     <!-- Şifre Değiştirme -->
                     <div class="tab-pane" id="password-tab">
                         <form id="profile-password-form">
-                            <?php wp_nonce_field('ruh_profile_nonce', 'nonce'); ?>
+                            <?php wp_nonce_field('ruh_update_profile_' . $user_data['info']->ID, 'nonce'); ?>
                             <input type="hidden" name="action" value="ruh_update_profile">
                             <input type="hidden" name="action_type" value="change_password">
                             
@@ -311,11 +311,12 @@ if (!$last_activity) {
 </div>
 
 <style>
+/* Modern Profile Styles - Glassmorphism */
 .ruh-user-profile {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2rem 1rem;
-    background: #1C1C1C;
+    background: var(--bg-primary, #0f0f23);
     color: #ffffff;
 }
 
@@ -324,10 +325,10 @@ if (!$last_activity) {
     gap: 2rem;
     align-items: flex-start;
     margin-bottom: 3rem;
-    background: #2a2a2a;
+    background: #1a1a1a;
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid #404040;
+    border: 1px solid #2a2a2a;
 }
 
 .profile-avatar {
@@ -338,25 +339,34 @@ if (!$last_activity) {
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    border: 4px solid #005B43;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 3px solid #3b82f6;
+    transition: all 0.2s ease;
+}
+
+.profile-avatar img:hover {
+    border-color: #60a5fa;
 }
 
 .change-avatar-btn {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: #005B43;
-    border: none;
+    background: #3b82f6;
+    border: 2px solid #1a1a1a;
     color: white;
     cursor: pointer;
     font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.change-avatar-btn:hover {
+    background: #2563eb;
 }
 
 .profile-info {
@@ -377,14 +387,22 @@ if (!$last_activity) {
 }
 
 .edit-profile-btn {
-    background: #005B43;
+    background: #3b82f6;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 0.875rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.edit-profile-btn:hover {
+    background: #2563eb;
 }
 
 .user-status {
@@ -418,8 +436,8 @@ if (!$last_activity) {
 
 .stat-item strong {
     display: block;
-    font-size: 1.5rem;
-    color: #005B43;
+    font-size: 2rem;
+    color: #3b82f6;
     font-weight: 700;
 }
 
@@ -455,15 +473,18 @@ if (!$last_activity) {
 
 .xp-bar {
     flex: 1;
-    height: 10px;
-    background: #404040;
-    border-radius: 5px;
+    height: 14px;
+    background: rgba(15, 15, 35, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
     overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .xp-bar-progress {
     height: 100%;
-    background: linear-gradient(90deg, #005B43, #00b894);
+    background: #3b82f6;
+    border-radius: 20px;
     transition: width 0.3s ease;
 }
 
@@ -500,18 +521,17 @@ if (!$last_activity) {
 .profile-badge-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    background: #2a2a2a;
+    gap: 1rem;
+    background: #1a1a1a;
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid #404040;
+    border: 1px solid #2a2a2a;
     transition: all 0.2s ease;
 }
 
 .profile-badge-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border-color: #005B43;
+    border-color: #3b82f6;
+    background: #242424;
 }
 
 .profile-badge-item .badge-icon {
@@ -541,16 +561,15 @@ if (!$last_activity) {
 
 .profile-comment-item {
     padding: 1.5rem;
-    background: #2a2a2a;
-    border-radius: 12px;
-    border-left: 4px solid #005B43;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #1a1a1a;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
     transition: all 0.2s ease;
 }
 
 .profile-comment-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    background: #242424;
+    border-left-color: #60a5fa;
 }
 
 .comment-header {
@@ -567,17 +586,17 @@ if (!$last_activity) {
 }
 
 .post-title {
-    color: #005B43;
+    color: #3b82f6;
     text-decoration: none;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
     line-height: 1.4;
     display: block;
+    transition: all 0.2s ease;
 }
 
 .post-title:hover {
-    text-decoration: underline;
-    color: #007a5a;
+    color: #60a5fa;
 }
 
 .comment-meta {
@@ -670,14 +689,14 @@ if (!$last_activity) {
     opacity: 0.5;
 }
 
-/* Modal Styles */
+/* Modal Styles - Dark */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0, 0, 0, 0.8);
     z-index: 10000;
     display: none;
     align-items: center;
@@ -694,24 +713,13 @@ if (!$last_activity) {
 }
 
 .modal-content {
-    background: #2a2a2a;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    animation: modalSlideIn 0.3s ease;
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9) translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
 }
 
 .modal-header {
@@ -719,7 +727,7 @@ if (!$last_activity) {
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
-    border-bottom: 1px solid #404040;
+    border-bottom: 1px solid #2a2a2a;
 }
 
 .modal-header h3 {
@@ -762,8 +770,8 @@ if (!$last_activity) {
 }
 
 .tab-btn.active {
-    color: #005B43;
-    border-bottom-color: #005B43;
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
 }
 
 .tab-btn:hover:not(.active) {
@@ -804,16 +812,15 @@ if (!$last_activity) {
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #005B43;
-    box-shadow: 0 0 0 3px rgba(0, 91, 67, 0.1);
+    border-color: #3b82f6;
 }
 
 .ruh-submit {
-    background: linear-gradient(135deg, #005B43, #007a5a);
+    background: #3b82f6;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -821,8 +828,7 @@ if (!$last_activity) {
 }
 
 .ruh-submit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 91, 67, 0.3);
+    background: #2563eb;
 }
 
 .ruh-submit:disabled {
@@ -843,15 +849,15 @@ if (!$last_activity) {
     background: #ef4444;
     color: white;
     padding: 0.75rem 2rem;
-    border-radius: 6px;
+    border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
     transition: all 0.2s ease;
+    display: inline-block;
 }
 
 .logout-btn:hover {
     background: #dc2626;
-    transform: translateY(-1px);
     text-decoration: none;
     color: white;
 }
@@ -926,44 +932,54 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editBtn && modal) {
         editBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('Edit profile button clicked'); // Debug
-            modal.classList.add('show');
-            modal.style.display = 'flex';
-            modal.style.opacity = '1';
-            modal.style.visibility = 'visible';
             
-            // İlk tab'ı aktif yap
-            const firstTab = modal.querySelector('.tab-btn');
-            const firstPane = modal.querySelector('.tab-pane');
-            if (firstTab && firstPane) {
-                firstTab.classList.add('active');
-                firstPane.classList.add('active');
-            }
+            // Modal'ı göster
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            modal.classList.add('show');
+            
+            // Tab'ları kontrol et ve aktif yap
+            const tabBtns = modal.querySelectorAll('.tab-btn');
+            const tabPanes = modal.querySelectorAll('.tab-pane');
+            
+            // Tüm tab'ları resetle
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
+            // İlkini aktif yap
+            if (tabBtns[0]) tabBtns[0].classList.add('active');
+            if (tabPanes[0]) tabPanes[0].classList.add('active');
+            
+            // Modal içeriğinin yüklendiğinden emin ol
+            setTimeout(() => {
+                const basicTab = document.getElementById('basic-tab');
+                if (basicTab && !basicTab.classList.contains('active')) {
+                    basicTab.classList.add('active');
+                }
+            }, 100);
         });
         
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                console.log('Modal close button clicked'); // Debug
-                modal.classList.remove('show');
-                modal.style.opacity = '0';
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    modal.style.visibility = 'hidden';
-                }, 300);
+                closeModal();
             });
         }
         
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                console.log('Modal overlay clicked'); // Debug
-                modal.classList.remove('show');
-                modal.style.opacity = '0';
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    modal.style.visibility = 'hidden';
-                }, 300);
+                closeModal();
             }
         });
+        
+        function closeModal() {
+            modal.classList.remove('show');
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
     } else {
         console.log('Modal elements not found:', {editBtn, modal, closeBtn}); // Debug
     }
@@ -1027,12 +1043,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const formData = new FormData(form);
         
+        console.log('Form data:', Object.fromEntries(formData)); // Debug
+        
         fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status); // Debug
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data); // Debug
+            
             if (data.success) {
                 showNotification(data.data.message, 'success');
                 
@@ -1041,17 +1064,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     form.reset();
                 }
                 
-                // Modal'ı kapat
+                // Modal'ı kapat ve sayfayı yenile
                 setTimeout(() => {
-                    modal.classList.remove('show');
-                    setTimeout(() => modal.style.display = 'none', 300);
-                    location.reload(); // Sayfayı yenile
+                    if (modal) {
+                        modal.classList.remove('show');
+                        modal.style.display = 'none';
+                    }
+                    location.reload();
                 }, 1500);
             } else {
-                showNotification(data.data.message || 'Bir hata oluştu.', 'error');
+                showNotification(data.data?.message || 'Bir hata oluştu.', 'error');
+                console.error('Error:', data); // Debug
             }
         })
         .catch(error => {
+            console.error('Fetch error:', error); // Debug
             showNotification('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
         })
         .finally(() => {

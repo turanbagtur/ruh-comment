@@ -54,13 +54,14 @@ add_shortcode('ruh_register', 'ruh_auth_shortcode_handler'); // Eski uyumluluk i
 function ruh_auth_shortcode_handler($atts) {
     if (is_user_logged_in()) {
         $user = wp_get_current_user();
-        $profile_url = ruh_get_user_profile_url($user->ID);
+        $profile_url = function_exists('ruh_get_user_profile_url') ? ruh_get_user_profile_url($user->ID) : '#';
+        $logout_url = function_exists('ruh_logout_url') ? ruh_logout_url() : wp_logout_url();
         return '<div class="ruh-info-message">
                     <h3>Zaten giriş yapmışsınız!</h3>
                     <p>Merhaba <strong>' . esc_html($user->display_name) . '</strong>, zaten giriş yapmışsınız.</p>
                     <div class="ruh-action-buttons">
                         <a href="' . esc_url($profile_url) . '" class="ruh-button primary">Profilim</a>
-                        <a href="' . esc_url(ruh_logout_url()) . '" class="ruh-button secondary">Çıkış Yap</a>
+                        <a href="' . esc_url($logout_url) . '" class="ruh-button secondary">Çıkış Yap</a>
                     </div>
                 </div>';
     }
