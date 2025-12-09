@@ -42,15 +42,6 @@ Disqus benzeri, **glassmorphism tasarımlı**, tepki sistemi, seviye/rozet mekan
 - 🚀 **Lazy Loading** - GIF ve görsel lazy loading
 - 🚀 **Minification** - CSS/JS optimizasyonu
 
-### 🔧 Gelişmiş Özellikler
-- 📊 **Analytics Dashboard** - Detaylı istatistikler ve grafikler
-- 🔍 **Yorum Arama** - Gerçek zamanlı arama
-- 📱 **Responsive** - Mobil-first tasarım
-- 🌐 **REST API** - WordPress REST API desteği
-- 📥 **Import/Export** - Disqus import, CSV/JSON export
-- 🎨 **Syntax Highlighting** - Prism.js ile kod renklendirme
-- 🔨 **Gelişmiş Moderasyon** - Toplu işlemler, otomatik moderasyon
-
 ## 🚀 Kurulum
 
 1. Plugin'i WordPress'in `wp-content/plugins/` klasörüne yükleyin
