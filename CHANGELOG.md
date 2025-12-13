@@ -1,5 +1,46 @@
 # Changelog - Ruh Comment
 
+## [6.1] - 2025-12-13
+
+### 🔧 Yeni Özellikler
+
+#### 📌 Yorum Sabitleme (Admin)
+- **Sabitleme Butonu** - Admin kullanıcılar yorumları sabitleyebilir
+- **Üstte Gösterim** - Sabitlenmiş yorumlar her zaman en üstte
+- **Özel Tasarım** - Mor kenarlık, gradient arka plan, yuvarlak köşeler
+- **Rozet** - "Sabitlendi" rozeti ile görsel belirginlik
+- **Kolay Yönetim** - 3 nokta menüsünden sabitle/kaldır
+
+#### 📋 Yorum Kuralları
+- **Admin Ayarı** - Özellikler sekmesinden açılıp kapatılabilir
+- **Özel Metin** - Her satır bir kural olarak görüntülenir
+- **Dropdown UI** - Tıklanınca açılır/kapanır menü
+- **Modern Tasarım** - Mor gradient bullet noktaları
+
+#### 😀 Özelleştirilebilir Tepki Emojileri
+- **Admin Ayarı** - Özellikler sekmesinden 6 emoji değiştirilebilir
+- **Kolay Düzenleme** - Her tepki için ayrı input alanı
+- **Anında Güncelleme** - Kaydet ve hemen yansır
+- **Varsayılan Emojiler** - 👍😡🥰😳🥺😔
+
+### 🔐 Giriş/Kayıt Popup
+- **Modal Form** - Ayrı sayfa yerine popup modal
+- **Tab Sistemi** - Giriş/Kayıt sekmeleri
+- **AJAX İşlem** - Sayfa yenilenmeden giriş/kayıt
+- **Güvenlik** - Nonce doğrulama, rate limiting
+
+### 🐛 Düzeltmeler
+- Şifre doğrulama uyumsuzluğu düzeltildi (JS: 6 → 8 karakter)
+- `$lang` undefined hatası düzeltildi (`$ruh_lang` olarak güncellendi)
+- Dropdown menü z-index sorunu çözüldü
+- Ayar kaydetme sorunu düzeltildi (sanitize_settings güncellendi)
+
+### 📝 Diğer
+- **Sürüm:** 6.1
+- **Tarih:** 13 Aralık 2025
+
+---
+
 ## [6.0] - 2025-12-09
 
 ### 🎨 Tepki Emoji Sistemi - Tamamen Yeniden Tasarlandı

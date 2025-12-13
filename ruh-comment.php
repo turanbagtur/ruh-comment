@@ -3,7 +3,7 @@
  * Plugin Name:       Ruh Comment
  * Plugin URI:        https://mangaruhu.com
  * Description:       Ultra modern glassmorphism tasarımlı yorum sistemi. Mention, markdown, GIF, syntax highlighting, analytics, REST API, seviye/rozet sistemi, gelişmiş güvenlik ve spam koruması. Manga siteleri için optimize edilmiş.
- * Version:           6.0
+ * Version:           6.1
  * Author:            Solderet
  * Author URI:        https://mangaruhu.com
  * Text Domain:       ruh-comment
@@ -16,7 +16,7 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * 
  * @package RuhComment
- * @version 6.0
+ * @version 6.1
  * @author Solderet <info@mangaruhu.com>
  * @copyright 2025 Solderet
  * @license GPL-2.0+
@@ -24,7 +24,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('RUH_COMMENT_VERSION', '6.0');
+define('RUH_COMMENT_VERSION', '6.1');
 define('RUH_COMMENT_PATH', plugin_dir_path(__FILE__));
 define('RUH_COMMENT_URL', plugin_dir_url(__FILE__));
 
