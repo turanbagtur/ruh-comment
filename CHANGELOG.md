@@ -1,5 +1,43 @@
 # Changelog - Ruh Comment
 
+## [6.2] - 2025-12-14
+
+### 🎨 UI/UX İyileştirmeleri
+
+#### ✨ Animasyonlu Tepkiler
+- **Pop Efekti** - Emoji tıklandığında büyüyüp küçülme animasyonu
+- **Parçacık Efekti** - 6 mini emoji dağılma efekti
+- **Tıklama Geri Bildirimi** - Buton scale animasyonu
+
+#### 💀 Skeleton Loading
+- **İskelet Yükleme** - Yorumlar yüklenirken 3 adet iskelet kart
+- **Shimmer Animasyonu** - Parlayan yükleme efekti
+- **Profesyonel Görünüm** - Avatar, isim, tarih, metin alanları
+
+#### 🖱️ Gelişmiş Hover Efektleri
+- **Yorum Kartı** - Hafif aydınlatma hover efekti
+- **Butonlar** - translateY yukarı kaldırma efekti
+- **Gönder Butonu** - Mor gölge efekti
+- **Daha Fazla Yükle** - Hover shadow efekti
+
+### 🛡️ Moderasyon
+
+#### 🔤 Regex Yasaklı Kelime Desteği
+- **Normal Mod** - Virgülle ayrılmış kelimeler
+- **Regex Mod** - `/pattern/` formatında regex desteği
+- **Örnekler** - `/k[e3]l[i1]m[e3]/`, `/ba?d\s*word/`
+- **Akıllı Flag** - Flag yoksa otomatik `iu` eklenir
+
+#### 😀 Emoji İsim Özelleştirme
+- **İsim Değiştirme** - Her emoji için özel isim belirleme
+- **Kolay Düzenleme** - Admin panelinden emoji + isim
+
+### 📝 Diğer
+- **Sürüm:** 6.2
+- **Tarih:** 14 Aralık 2025
+
+---
+
 ## [6.1] - 2025-12-13
 
 ### 🔧 Yeni Özellikler
