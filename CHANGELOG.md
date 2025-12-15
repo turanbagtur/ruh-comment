@@ -1,6 +1,6 @@
 # Changelog - Ruh Comment
 
-## [6.2] - 2025-12-14
+## [6.2] - 2025-12-15
 
 ### 🎨 UI/UX İyileştirmeleri
 
@@ -20,6 +20,14 @@
 - **Gönder Butonu** - Mor gölge efekti
 - **Daha Fazla Yükle** - Hover shadow efekti
 
+### 🚀 Yeni Özellikler
+
+#### 👤 Misafir Tepki Sistemi
+- **Giriş Gerektirmez** - Giriş yapmamış kullanıcılar da emoji tepki verebilir
+- **IP Bazlı Takip** - Misafir tepkileri IP adresi ile takip edilir
+- **Çift Tepki Engeli** - Aynı IP'den tekrar tepki verilirse güncellenir/kaldırılır
+- **Rate Limiting** - Spam koruması aktif
+
 ### 🛡️ Moderasyon
 
 #### 🔤 Regex Yasaklı Kelime Desteği
@@ -32,9 +40,15 @@
 - **İsim Değiştirme** - Her emoji için özel isim belirleme
 - **Kolay Düzenleme** - Admin panelinden emoji + isim
 
-### 📝 Diğer
+### � Düzeltmeler
+- **Şikayet Modal X Butonu** - Kapatma butonu artık çalışıyor
+- **Modal Dışı Tıklama** - Şikayet modalı dışına tıklayınca kapanıyor
+- **BOM Karakter Hatası** - Plugin aktivasyonunda "3 characters unexpected output" hatası düzeltildi
+- **Türkçe Karakter Hataları** - Kod içindeki `limıt` → `limit` gibi hatalar düzeltildi
+
+### �📝 Diğer
 - **Sürüm:** 6.2
-- **Tarih:** 14 Aralık 2025
+- **Tarih:** 15 Aralık 2025
 
 ---
 

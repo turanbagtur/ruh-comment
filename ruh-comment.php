@@ -88,20 +88,21 @@ function ruh_comment_activate() {
             KEY idx_reporter (reporter_id)
         ) $charset_collate;";
 
-        // Reactions table - FIX: Varchar length düzeltmesi
+        // Reactions table - visitor_ip eklendi (giriş yapmamış kullanıcılar için)
         $table_reactions = $wpdb->prefix . 'ruh_reactions';
         $sql_reactions = "CREATE TABLE IF NOT EXISTS $table_reactions (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             post_id bigint(20) NOT NULL,
-            user_id bigint(20) NOT NULL,
+            user_id bigint(20) NOT NULL DEFAULT 0,
+            visitor_ip varchar(45) DEFAULT NULL,
             reaction varchar(20) NOT NULL DEFAULT 'like',
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            UNIQUE KEY unique_reaction (post_id, user_id),
             KEY idx_post (post_id),
-            KEY idx_user (user_id)
+            KEY idx_user (user_id),
+            KEY idx_visitor_ip (visitor_ip)
         ) $charset_collate;";
-
+        
         // WordPress dbDelta kullanarak tabloları oluştur
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         
@@ -199,7 +200,7 @@ function ruh_comment_enqueue_scripts() {
         $post_id = get_the_ID();
     }
     
-    // Dil ayari
+    // Dil ayarı
     $options = get_option('ruh_comment_options', array());
     $lang = $options['language'] ?? 'tr_TR';
     $texts = array(
@@ -211,12 +212,12 @@ function ruh_comment_enqueue_scripts() {
         'level' => $lang === 'en_US' ? 'Level' : 'Seviye',
         'login_required' => $lang === 'en_US' ? 'You must be logged in.' : 'Giriş yapmalısınız.',
         'report_sent' => $lang === 'en_US' ? 'Report submitted. Thank you!' : 'Şikayet gönderildi. Teşekkürler!',
-        'error' => $lang === 'en_US' ? 'An error occurred.' : 'Hata olustu.',
+        'error' => $lang === 'en_US' ? 'An error occurred.' : 'Hata oluştu.',
         'load_more' => $lang === 'en_US' ? 'Load More' : 'Daha Fazla',
-        'no_comments' => $lang === 'en_US' ? 'No comments yet.' : 'Henuz yorum yok.',
-        'comment_sent' => $lang === 'en_US' ? 'Comment sent!' : 'Yorum gonderildi!',
+        'no_comments' => $lang === 'en_US' ? 'No comments yet.' : 'Henüz yorum yok.',
+        'comment_sent' => $lang === 'en_US' ? 'Comment sent!' : 'Yorum gönderildi!',
         'confirm_delete' => $lang === 'en_US' ? 'Delete?' : 'Silinsin mi?',
-        'replying_to' => $lang === 'en_US' ? 'Replying to' : 'Yanitlaniyor:',
+        'replying_to' => $lang === 'en_US' ? 'Replying to' : 'Yanıtlanıyor:',
     );
     
     // AJAX verilerini JS'e aktar
@@ -244,7 +245,7 @@ function ruh_comment_override_template($template) {
 }
 add_filter('comments_template', 'ruh_comment_override_template');
 
-// Text domain yukle
+// Text domain yükle
 add_action('plugins_loaded', function() {
     load_plugin_textdomain('ruh-comment', false, dirname(plugin_basename(__FILE__)) . '/languages');
 });
