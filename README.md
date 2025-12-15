@@ -253,6 +253,7 @@ GPL v2 veya üzeri
 ## 👨‍💻 Geliştirici
 
 **Solderet**
+- Destek olamk için: https://kreosus.com/mangaruhu
 - Website: https://mangaruhu.com
 - E-posta: mangaruhu@gmail.com
 
