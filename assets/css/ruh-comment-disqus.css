@@ -1,0 +1,516 @@
+﻿/**
+ * Ruh Comment - Disqus Tema (Koyu)
+ * KUTU YOK - Duz liste - Gercek Disqus
+ */
+
+/* KRITIK: Tum kutulari, borderlari, golgeleri kaldir */
+.theme-disqus,
+.theme-disqus *,
+.comments-area.theme-disqus,
+.ruh-comments-section.theme-disqus {
+    --bg-card: transparent !important;
+    --bg-hover: transparent !important;
+    --radius: 0 !important;
+    --shadow: none !important;
+}
+
+/* Ana Container */
+.comments-area.theme-disqus,
+.ruh-comments-section.theme-disqus {
+    background: #191919 !important;
+    padding: 20px !important;
+    color: #c5c5c5 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+}
+
+/* TUM KUTULARI KALDIR */
+.theme-disqus .modern-box,
+.theme-disqus .comment-form-wrap,
+.theme-disqus .comments-list-wrapper,
+.theme-disqus .comment-item,
+.theme-disqus .comment,
+.theme-disqus .ruh-comment-item,
+.theme-disqus .comment-body,
+.theme-disqus .comment-content,
+.theme-disqus .ruh-reactions-section,
+.theme-disqus .comments-header,
+.theme-disqus .comments-header-modern,
+.theme-disqus .comment-list,
+.theme-disqus .comment-form,
+.theme-disqus #respond {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.theme-disqus .modern-box,
+.theme-disqus .comment-form-wrap,
+.theme-disqus .comments-list-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Hover efektlerini kaldir */
+.theme-disqus .modern-box:hover,
+.theme-disqus .comment-item:hover,
+.theme-disqus .ruh-comment-item:hover {
+    background: transparent !important;
+    transform: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Yorum item - sadece alt cizgi */
+.theme-disqus .comment-item,
+.theme-disqus .ruh-comment-item {
+    padding: 16px 0 !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #2a2a2a !important;
+}
+
+.theme-disqus .comment-item:last-child,
+.theme-disqus .ruh-comment-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Avatar */
+.theme-disqus .comment-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    margin-right: 12px !important;
+    flex-shrink: 0 !important;
+}
+
+.theme-disqus .comment-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+}
+
+/* Yazar ve tarih */
+.theme-disqus .comment-author {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #2e9fff !important;
+    text-decoration: none !important;
+}
+
+.theme-disqus .comment-author:hover {
+    text-decoration: underline !important;
+}
+
+.theme-disqus .comment-date {
+    font-size: 12px !important;
+    color: #656565 !important;
+    margin-left: 8px !important;
+}
+
+/* Yorum icerigi */
+.theme-disqus .comment-content {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #c5c5c5 !important;
+    margin: 8px 0 !important;
+    background: transparent !important;
+}
+
+.theme-disqus .comment-content p {
+    color: #c5c5c5 !important;
+    margin: 0 0 8px 0 !important;
+}
+
+/* Aksiyonlar */
+.theme-disqus .comment-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-top: 8px !important;
+}
+
+.theme-disqus .comment-actions button,
+.theme-disqus .comment-actions a {
+    background: transparent !important;
+    border: none !important;
+    color: #656565 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+}
+
+.theme-disqus .comment-actions button:hover,
+.theme-disqus .comment-actions a:hover {
+    color: #2e9fff !important;
+}
+
+/* Like/Dislike butonlari - Disqus tarzi */
+.theme-disqus .like-btn,
+.theme-disqus .dislike-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    color: #656565 !important;
+    font-size: 12px !important;
+}
+
+.theme-disqus .like-btn:hover { color: #2e9fff !important; }
+.theme-disqus .dislike-btn:hover { color: #e74c3c !important; }
+.theme-disqus .like-btn.active { color: #2e9fff !important; }
+.theme-disqus .dislike-btn.active { color: #e74c3c !important; }
+
+/* Like/Dislike SVG ikonlari */
+.theme-disqus .like-btn svg,
+.theme-disqus .dislike-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Yanitlar - sadece indent */
+.theme-disqus .comment-item.depth-2,
+.theme-disqus .comment-item.depth-3,
+.theme-disqus .comment-item.depth-4,
+.theme-disqus .children .comment-item {
+    margin-left: 52px !important;
+    border-bottom: none !important;
+    padding: 12px 0 !important;
+}
+
+/* Textarea */
+.theme-disqus textarea {
+    border: 1px solid #333 !important;
+    border-radius: 4px !important;
+    padding: 12px !important;
+    background: #1f1f1f !important;
+    color: #c5c5c5 !important;
+}
+
+.theme-disqus textarea:focus {
+    border-color: #2e9fff !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Submit buton */
+.theme-disqus .submit-btn,
+.theme-disqus button[type="submit"] {
+    background: #2e9fff !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 8px 16px !important;
+    font-weight: 600 !important;
+}
+
+/* Header */
+.theme-disqus .comments-header,
+.theme-disqus .comments-title {
+    background: transparent !important;
+    color: #c5c5c5 !important;
+    padding: 0 0 16px 0 !important;
+    border: none !important;
+}
+
+/* Siralama */
+.theme-disqus .sort-options {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 16px !important;
+}
+
+.theme-disqus .sort-options button {
+    background: transparent !important;
+    border: none !important;
+    color: #656565 !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+}
+
+.theme-disqus .sort-options button.active {
+    color: #c5c5c5 !important;
+    font-weight: 600 !important;
+}
+
+/* Inline reply */
+.theme-disqus .inline-reply-form {
+    background: transparent !important;
+    border: none !important;
+    padding: 12px 0 !important;
+    margin-left: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+/* Toolbar */
+.theme-disqus .comment-toolbar {
+    background: #1f1f1f !important;
+    border: 1px solid #333 !important;
+    border-bottom: none !important;
+    border-radius: 4px 4px 0 0 !important;
+}
+
+.theme-disqus .comment-toolbar .toolbar-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #656565 !important;
+}
+
+.theme-disqus .comment-toolbar .toolbar-btn:hover {
+    color: #c5c5c5 !important;
+}
+
+/* User level */
+.theme-disqus .user-level-oval {
+    background: #2a2a2a !important;
+    color: #8a8a8a !important;
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+    border-radius: 2px !important;
+}
+
+/* Spoiler */
+.theme-disqus .ruh-spoiler {
+    background: #1f1f1f !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px !important;
+}
+
+/* Modal */
+.theme-disqus .ruh-modal-content {
+    background: #1f1f1f !important;
+    border: 1px solid #333 !important;
+    color: #c5c5c5 !important;
+}
+
+/* Load more */
+.theme-disqus .load-more-btn {
+    background: transparent !important;
+    border: 1px solid #333 !important;
+    color: #2e9fff !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+}
+
+.theme-disqus .load-more-btn:hover {
+    background: #1f1f1f !important;
+}
+
+/* No comments */
+.theme-disqus .no-comments {
+    color: #656565 !important;
+}
+
+/* Comments list */
+.theme-disqus .comments-list {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+/* Mobil Uyumluluk - Geliştirilmiş */
+@media (max-width: 768px) {
+    .comments-area.theme-disqus,
+    .ruh-comments-section.theme-disqus {
+        padding: 10px !important; /* 12→10: biraz daha kompakt */
+    }
+    
+    .theme-disqus .comment-item.depth-2,
+    .theme-disqus .comment-item.depth-3,
+    .theme-disqus .comment-item.depth-4,
+    .theme-disqus .children .comment-item {
+        margin-left: 20px !important;
+        padding: 10px 0 !important;
+    }
+    
+    .theme-disqus .comment-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        margin-right: 8px !important;
+    }
+    
+    .theme-disqus .inline-reply-form {
+        margin-left: 0 !important;
+    }
+    
+    .theme-disqus .comment-actions {
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .theme-disqus .comment-content {
+        font-size: 13px !important;
+    }
+    
+    .theme-disqus .comment-author {
+        font-size: 12px !important;
+    }
+    
+    .theme-disqus .comment-date {
+        font-size: 11px !important;
+    }
+    
+    .theme-disqus textarea {
+        font-size: 16px !important; /* iOS zoom engellemek için min 16px */
+        padding: 10px !important;
+    }
+    
+    .theme-disqus .user-level-oval,
+    .theme-disqus .user-tag-badge {
+        font-size: 9px !important;
+        padding: 2px 5px !important;
+    }
+    
+    /* Mobilde yorum formu tam genişlik */
+    .theme-disqus .comment-form-wrap,
+    .theme-disqus #ruh-comment-form-wrapper {
+        padding: 0 !important;
+    }
+    
+    /* Aksiyon butonları daha küçük */
+    .theme-disqus .comment-actions button,
+    .theme-disqus .comment-actions a {
+        font-size: 11px !important;
+    }
+}
+
+/* ===== TASARIM İYİLEŞTİRMELERİ v5.2 ===== */
+
+/* Yorum item geçişleri daha akıcı */
+.theme-disqus .comment-item,
+.theme-disqus .ruh-comment-item {
+    transition: background 0.15s ease !important;
+}
+.theme-disqus .comment-item:hover,
+.theme-disqus .ruh-comment-item:hover {
+    background: rgba(255,255,255,0.02) !important;
+}
+
+/* Yazar adı hover rengi iyileştirme */
+.theme-disqus .comment-author {
+    transition: color 0.15s ease !important;
+}
+
+/* Aksiyon butonları daha dokunma dostu */
+.theme-disqus .comment-actions button,
+.theme-disqus .comment-actions a {
+    padding: 4px 6px !important;
+    border-radius: 4px !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+.theme-disqus .comment-actions button:hover,
+.theme-disqus .comment-actions a:hover {
+    background: rgba(46, 159, 255, 0.08) !important;
+}
+
+/* Avatar ince ring */
+.theme-disqus .comment-avatar img {
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) !important;
+    transition: box-shadow 0.15s ease !important;
+}
+.theme-disqus .comment-item:hover .comment-avatar img,
+.theme-disqus .ruh-comment-item:hover .comment-avatar img {
+    box-shadow: 0 0 0 2px rgba(46, 159, 255, 0.4) !important;
+}
+
+/* Submit butonu iyileştirme */
+.theme-disqus .submit-btn,
+.theme-disqus button[type="submit"] {
+    transition: background 0.2s ease, opacity 0.2s ease !important;
+    cursor: pointer !important;
+}
+.theme-disqus .submit-btn:hover,
+.theme-disqus button[type="submit"]:hover {
+    background: #1a8de6 !important;
+}
+
+/* Textarea focus daha belirgin */
+.theme-disqus textarea:focus {
+    box-shadow: 0 0 0 2px rgba(46, 159, 255, 0.2) !important;
+}
+
+/* Yorum içeriği seçim rengi */
+.theme-disqus ::selection {
+    background: rgba(46, 159, 255, 0.3);
+    color: #fff;
+}
+
+/* ===== TASARIM İYİLEŞTİRMELERİ SONU ===== */
+
+/* Yanıtları Göster/Gizle Toggle - Disqus */
+.theme-disqus .replies-toggle-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #2e9fff !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+.theme-disqus .replies-toggle-btn:hover {
+    color: #5cb3ff !important;
+    text-decoration: underline !important;
+}
+
+.theme-disqus .replies-toggle-btn .toggle-icon {
+    width: 14px !important;
+    height: 14px !important;
+    transition: transform 0.3s ease !important;
+}
+
+.theme-disqus .replies-toggle-btn.expanded .toggle-icon {
+    transform: rotate(180deg) !important;
+}
+
+.theme-disqus .replies-container {
+    margin-left: 20px !important;
+    border-left: 2px solid #333 !important;
+    padding-left: 15px !important;
+}
+
+/* Küçük mobil - Geliştirilmiş */
+@media (max-width: 480px) {
+    .comments-area.theme-disqus,
+    .ruh-comments-section.theme-disqus {
+        padding: 6px !important; /* Minimum kenar boşluğu */
+    }
+    
+    .theme-disqus .comment-item,
+    .theme-disqus .ruh-comment-item {
+        padding: 12px 4px !important; /* Yanlarda az boşluk */
+    }
+    
+    .theme-disqus .comment-item.depth-2,
+    .theme-disqus .comment-item.depth-3,
+    .theme-disqus .comment-item.depth-4,
+    .theme-disqus .children .comment-item {
+        margin-left: 10px !important;
+    }
+    
+    .theme-disqus .comment-avatar {
+        width: 26px !important;
+        height: 26px !important;
+        margin-right: 6px !important;
+    }
+    
+    .theme-disqus .comment-actions button,
+    .theme-disqus .comment-actions a {
+        font-size: 11px !important;
+    }
+    
+    .theme-disqus .like-btn svg,
+    .theme-disqus .dislike-btn svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+    
+    /* Çok küçük ekranlarda textarea */
+    .theme-disqus textarea {
+        min-height: 80px !important;
+    }
+}

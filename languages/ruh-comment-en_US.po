@@ -1,0 +1,180 @@
+# English (US) translation for Ruh Comment
+# Copyright (C) 2025 Solderet
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Ruh Comment 6.0\n"
+"Report-Msgid-Bugs-To: https://mangaruhu.com\n"
+"POT-Creation-Date: 2025-12-09 16:30+0300\n"
+"PO-Revision-Date: 2025-12-09 16:30+0300\n"
+"Last-Translator: Solderet <info@mangaruhu.com>\n"
+"Language-Team: English <info@mangaruhu.com>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Ruh Comment\n"
+"X-Domain: ruh-comment\n"
+
+msgid "Bu içeriğe tepki ver"
+msgstr "React to this content"
+
+msgid "tepki"
+msgstr "reactions"
+
+msgid "Beğendim"
+msgstr "Like"
+
+msgid "Sinir Bozucu"
+msgstr "Angry"
+
+msgid "Mükemmel"
+msgstr "Love"
+
+msgid "Şaşırtıcı"
+msgstr "Wow"
+
+msgid "Üzücü"
+msgstr "Sad"
+
+msgid "Bölüm Bitti"
+msgstr "Episode End"
+
+msgid "Yorum"
+msgstr "Comments"
+
+msgid "En Yeni"
+msgstr "Newest"
+
+msgid "En Eski"
+msgstr "Oldest"
+
+msgid "En Iyi"
+msgstr "Best"
+
+msgid "Yorumunuzu yazın..."
+msgstr "Write your comment..."
+
+msgid "Gönder"
+msgstr "Submit"
+
+msgid "Yorum yapmak için giriş yapmalısınız."
+msgstr "You must login to comment."
+
+msgid "Giriş Yap"
+msgstr "Login"
+
+msgid "Yanıtla"
+msgstr "Reply"
+
+msgid "Beğen"
+msgstr "Like"
+
+msgid "Şikayet Et"
+msgstr "Report"
+
+msgid "Düzenle"
+msgstr "Edit"
+
+msgid "Sil"
+msgstr "Delete"
+
+msgid "Yorum icerigi bos olamaz."
+msgstr "Comment content cannot be empty."
+
+msgid "Yorum cok uzun. Maksimum 5000 karakter."
+msgstr "Comment too long. Maximum 5000 characters."
+
+msgid "Yorum en az 3 karakter olmalidir."
+msgstr "Comment must be at least 3 characters."
+
+msgid "Yorum basariyla gonderildi."
+msgstr "Comment submitted successfully."
+
+msgid "Yorum kaydedilemedi. Lutfen tekrar deneyin."
+msgstr "Could not save comment. Please try again."
+
+msgid "Giris yapmalisiniz."
+msgstr "You must be logged in."
+
+msgid "Gecersiz yorum."
+msgstr "Invalid comment."
+
+msgid "Bu yorumu duzenleyemezsiniz."
+msgstr "You cannot edit this comment."
+
+msgid "Yorum guncellendi."
+msgstr "Comment updated."
+
+msgid "Yorum silindi."
+msgstr "Comment deleted."
+
+msgid "Kendi yorumunuzu sikayet edemezsiniz."
+msgstr "You cannot report your own comment."
+
+msgid "Bu yorumu zaten sikayet ettiniz."
+msgstr "You have already reported this comment."
+
+msgid "Sikayetiniz alindi."
+msgstr "Your report has been received."
+
+msgid "Cok hizli islem yapiyorsunuz. Lutfen bekleyin."
+msgstr "You are doing this too fast. Please wait."
+
+msgid "Ruh Comment Ayarları"
+msgstr "Ruh Comment Settings"
+
+msgid "Ayarlar kaydedildi."
+msgstr "Settings saved."
+
+msgid "Genel Ayarlar"
+msgstr "General Settings"
+
+msgid "Sayfa başına yorum"
+msgstr "Comments per page"
+
+msgid "Tepkileri etkinleştir"
+msgstr "Enable reactions"
+
+msgid "Yorum başına XP"
+msgstr "XP per comment"
+
+msgid "Şikayetler"
+msgstr "Reports"
+
+msgid "Rozetler"
+msgstr "Badges"
+
+msgid "Rozet Yönetimi"
+msgstr "Badge Management"
+
+msgid "Yeni Rozet Ekle"
+msgstr "Add New Badge"
+
+msgid "Rozet Adı"
+msgstr "Badge Name"
+
+msgid "İkon"
+msgstr "Icon"
+
+msgid "Renk"
+msgstr "Color"
+
+msgid "Rozet Oluştur"
+msgstr "Create Badge"
+
+msgid "Kullanıcıya Ata"
+msgstr "Assign to User"
+
+msgid "Seviye"
+msgstr "Level"
+
+msgid "Sikayet gonderildi. Tesekkurler!"
+msgstr "Report submitted. Thank you!"
+
+msgid "Hata olustu."
+msgstr "An error occurred."
+
+msgid "Ag hatasi."
+msgstr "Network error."
