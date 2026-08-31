@@ -2,6 +2,11 @@
 
 ## [8.0] - 2026-08-31
 
+### 8.0.1
+- Admin bağış butonu kaldırıldı.
+- Öne çıkan yorum kutusu yerine ilgili yorumlara otomatik rozet (Öne çıkan / En çok tartışılan).
+- Bildirim paneli okundu işareti ve rozet kazanma bildirimi düzeltildi.
+
 ### ✨ Yeni Özellikler
 - **En çok tartışılan sıralama** — Yorumlar yanıt sayısına göre sıralanabilir.
 - **Tenor GIF** — Giphy yoksa Tenor API ile GIF arama.

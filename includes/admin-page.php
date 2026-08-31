@@ -408,12 +408,6 @@ class Ruh_Comment_Admin {
                             <span class="version">v<?php echo RUH_COMMENT_VERSION; ?></span>
                         </div>
                     </div>
-                    <a href="https://ko-fi.com/solderet" target="_blank" rel="noopener noreferrer" class="ruh-kofi-btn">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                            <path d="M18,3H2V13A4,4 0 0,0 6,17H12A4,4 0 0,0 16,13V11H18A3,3 0 0,0 21,8V6A3,3 0 0,0 18,3M18,8H16V5H18A1,1 0 0,1 19,6V7A1,1 0 0,1 18,8M4,19H14V21H4V19Z"/>
-                        </svg>
-                        ☕ Bağış Yap &amp; Destek Ol
-                    </a>
                 </div>
                 <p class="ruh-admin-desc">Modern ve güvenli yorum sisteminizi yapılandırın.</p>
             </div>
@@ -759,7 +753,7 @@ class Ruh_Comment_Admin {
                                 <div class="ruh-setting-input"><label class="ruh-toggle"><input type="checkbox" name="ruh_comment_options[enable_comment_search]" value="1" <?php checked(1, $options['enable_comment_search'] ?? 1); ?>><span class="ruh-toggle-slider"></span></label></div>
                             </div>
                             <div class="ruh-setting-row">
-                                <div class="ruh-setting-label"><label>Öne çıkan yorumlar</label><span class="ruh-setting-desc">En çok beğenilen yorumları göster</span></div>
+                                <div class="ruh-setting-label"><label>Yorum rozetleri</label><span class="ruh-setting-desc">En çok beğenilen ve en çok tartışılan yorumlara otomatik rozet</span></div>
                                 <div class="ruh-setting-input"><label class="ruh-toggle"><input type="checkbox" name="ruh_comment_options[enable_highlights]" value="1" <?php checked(1, $options['enable_highlights'] ?? 1); ?>><span class="ruh-toggle-slider"></span></label></div>
                             </div>
                             <div class="ruh-setting-row">
@@ -979,34 +973,6 @@ class Ruh_Comment_Admin {
             margin-bottom: 10px;
             flex-wrap: wrap;
             gap: 12px;
-        }
-        
-        .ruh-kofi-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #ff5e5b;
-            color: #fff !important;
-            text-decoration: none !important;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            box-shadow: 0 4px 15px rgba(255, 94, 91, 0.45);
-            transition: all 0.25s ease;
-            white-space: nowrap;
-        }
-        
-        .ruh-kofi-btn:hover {
-            background: #ff3b38;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 94, 91, 0.6);
-            color: #fff !important;
-        }
-        
-        .ruh-kofi-btn svg {
-            flex-shrink: 0;
         }
         
         .ruh-admin-logo {
@@ -1334,12 +1300,6 @@ class Ruh_Comment_Admin {
             .ruh-admin-header-top {
                 flex-direction: column;
                 align-items: flex-start;
-            }
-            
-            .ruh-kofi-btn {
-                align-self: flex-start;
-                font-size: 13px;
-                padding: 9px 16px;
             }
             
             .ruh-admin-logo {

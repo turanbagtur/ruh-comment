@@ -97,6 +97,7 @@ function ruh_community_on_comment($comment_id, $comment = null) {
     ruh_flush_comment_list_cache($comment->comment_post_ID);
     if ($comment->comment_approved != 1) return;
     ruh_notify_reply($comment_id, $comment);
+    ruh_refresh_comment_awards($comment->comment_post_ID);
     ruh_send_webhooks('comment', array(
         'title' => get_the_title($comment->comment_post_ID),
         'author' => $comment->comment_author,
@@ -113,31 +114,81 @@ add_action('wp_set_comment_status', function ($comment_id) {
     if ($comment) ruh_flush_comment_list_cache($comment->comment_post_ID);
 });
 
-function ruh_get_highlight_comments($post_id, $limit = 3) {
+function ruh_refresh_comment_awards($post_id) {
     $post_id = intval($post_id);
-    $cache_key = 'ruh_highlights_' . $post_id;
-    $cached = wp_cache_get($cache_key, 'ruh_comment');
-    if ($cached !== false) return $cached;
+    if (!$post_id) return;
+    $options = get_option('ruh_comment_options', array());
+    if (isset($options['enable_highlights']) && empty($options['enable_highlights'])) return;
 
     global $wpdb;
-    $rows = $wpdb->get_results($wpdb->prepare(
-        "SELECT c.comment_ID, c.comment_author, c.comment_content, c.user_id,
-                CAST(COALESCE(cm.meta_value, 0) AS UNSIGNED) as likes
+    $liked = $wpdb->get_var($wpdb->prepare(
+        "SELECT c.comment_ID
          FROM {$wpdb->comments} c
-         LEFT JOIN {$wpdb->commentmeta} cm ON c.comment_ID = cm.comment_id AND cm.meta_key = '_likes'
+         INNER JOIN {$wpdb->commentmeta} cm ON c.comment_ID = cm.comment_id AND cm.meta_key = '_likes'
          WHERE c.comment_post_ID = %d AND c.comment_approved = '1' AND c.comment_parent = 0
-         ORDER BY likes DESC, c.comment_date_gmt DESC
-         LIMIT %d",
-        $post_id,
-        $limit
+           AND CAST(cm.meta_value AS UNSIGNED) >= 3
+         ORDER BY CAST(cm.meta_value AS UNSIGNED) DESC, c.comment_date_gmt DESC
+         LIMIT 1",
+        $post_id
     ));
-    $out = array();
-    foreach ((array) $rows as $row) {
-        if (intval($row->likes) < 1) continue;
-        $out[] = $row;
+    $discussed = $wpdb->get_var($wpdb->prepare(
+        "SELECT c.comment_ID
+         FROM {$wpdb->comments} c
+         WHERE c.comment_post_ID = %d AND c.comment_approved = '1' AND c.comment_parent = 0
+           AND (SELECT COUNT(*) FROM {$wpdb->comments} r WHERE r.comment_parent = c.comment_ID AND r.comment_approved = '1') >= 2
+         ORDER BY (SELECT COUNT(*) FROM {$wpdb->comments} r WHERE r.comment_parent = c.comment_ID AND r.comment_approved = '1') DESC, c.comment_date_gmt DESC
+         LIMIT 1",
+        $post_id
+    ));
+
+    $prev_liked = get_post_meta($post_id, '_ruh_award_liked', true);
+    $prev_discussed = get_post_meta($post_id, '_ruh_award_discussed', true);
+    $liked = $liked ? intval($liked) : 0;
+    $discussed = $discussed ? intval($discussed) : 0;
+
+    if (intval($prev_liked) !== $liked) {
+        if ($prev_liked) delete_comment_meta(intval($prev_liked), '_ruh_award_liked');
+        if ($liked) {
+            update_comment_meta($liked, '_ruh_award_liked', 1);
+            $winner = get_comment($liked);
+            if ($winner && $winner->user_id) {
+                ruh_add_notification($winner->user_id, 'badge', array(
+                    'comment_id' => $liked,
+                    'post_id' => $post_id,
+                    'message' => 'Yorumunuz Öne Çıkan rozeti kazandı',
+                ));
+            }
+        }
+        update_post_meta($post_id, '_ruh_award_liked', $liked);
     }
-    wp_cache_set($cache_key, $out, 'ruh_comment', 300);
-    return $out;
+    if (intval($prev_discussed) !== $discussed) {
+        if ($prev_discussed) delete_comment_meta(intval($prev_discussed), '_ruh_award_discussed');
+        if ($discussed) {
+            update_comment_meta($discussed, '_ruh_award_discussed', 1);
+            $winner = get_comment($discussed);
+            if ($winner && $winner->user_id) {
+                ruh_add_notification($winner->user_id, 'badge', array(
+                    'comment_id' => $discussed,
+                    'post_id' => $post_id,
+                    'message' => 'Yorumunuz En Çok Tartışılan rozeti kazandı',
+                ));
+            }
+        }
+        update_post_meta($post_id, '_ruh_award_discussed', $discussed);
+    }
+}
+
+function ruh_get_comment_award_badges($comment_id) {
+    $html = '';
+    $lang = get_option('ruh_comment_options', array());
+    $is_en = (($lang['language'] ?? 'tr_TR') === 'en_US');
+    if (get_comment_meta($comment_id, '_ruh_award_liked', true)) {
+        $html .= '<span class="comment-award-badge award-liked">' . ($is_en ? 'Top liked' : 'Öne çıkan') . '</span>';
+    }
+    if (get_comment_meta($comment_id, '_ruh_award_discussed', true)) {
+        $html .= '<span class="comment-award-badge award-discussed">' . ($is_en ? 'Most discussed' : 'En çok tartışılan') . '</span>';
+    }
+    return $html;
 }
 
 function ruh_notifications_ajax() {
@@ -154,21 +205,21 @@ function ruh_notifications_ajax() {
     $mark = isset($_POST['mark_read']) ? intval($_POST['mark_read']) : 0;
     if ($mark) {
         $wpdb->update($table, array('is_read' => 1), array('user_id' => $user_id), array('%d'), array('%d'));
-        wp_send_json_success(array('ok' => true, 'unread' => 0, 'items' => array()));
     }
     $rows = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table WHERE user_id = %d ORDER BY id DESC LIMIT 20",
         $user_id
     ));
-    $unread = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE user_id = %d AND is_read = 0", $user_id));
+    $unread = $mark ? 0 : (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE user_id = %d AND is_read = 0", $user_id));
     $items = array();
     foreach ((array) $rows as $row) {
+        $is_read = $mark ? 1 : intval($row->is_read);
         $link = $row->comment_id ? get_comment_link($row->comment_id) : '';
         $items[] = array(
             'id' => intval($row->id),
             'type' => $row->type,
             'message' => $row->message,
-            'is_read' => intval($row->is_read),
+            'is_read' => $is_read,
             'link' => $link,
             'time' => human_time_diff(strtotime($row->created_at), current_time('timestamp')) . ' önce',
         );

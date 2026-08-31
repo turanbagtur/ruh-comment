@@ -1026,7 +1026,7 @@ jQuery(document).ready(function($) {
                     const unread = res.data.unread || 0;
                     const $count = $('#ruh-notify-count');
                     if (unread > 0) { $count.text(unread).removeAttr('hidden'); }
-                    else { $count.attr('hidden', 'hidden'); }
+                    else { $count.text('0').attr('hidden', 'hidden'); }
                     let html = '';
                     (res.data.items || []).forEach(function(item) {
                         html += '<a class="ruh-notify-item' + (item.is_read ? '' : ' unread') + '" href="' + (item.link || '#') + '">' +
@@ -1041,9 +1041,14 @@ jQuery(document).ready(function($) {
             loadNotes(false);
             $(document).on('click', '#ruh-notify-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 const $panel = $('#ruh-notify-panel');
-                if ($panel.is('[hidden]')) { $panel.removeAttr('hidden'); loadNotes(false); }
-                else { $panel.attr('hidden', 'hidden'); }
+                if ($panel.prop('hidden') || $panel.is('[hidden]')) {
+                    $panel.prop('hidden', false).removeAttr('hidden');
+                    loadNotes(false);
+                } else {
+                    $panel.prop('hidden', true).attr('hidden', 'hidden');
+                }
             });
             $(document).on('click', '.ruh-notify-read', function(e) {
                 e.preventDefault();

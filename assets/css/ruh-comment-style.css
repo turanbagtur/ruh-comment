@@ -3393,16 +3393,24 @@ body > .more-dropdown .pin-btn:hover,
     .comment-list .children { padding-left: 14px !important; }
 }
 
-.ruh-highlights {
-    margin: 0 0 14px;
-    padding: 12px 14px;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
+.comment-award-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
 }
-.ruh-highlights h4 { margin: 0 0 8px; font-size: 0.85rem; }
-.ruh-highlights ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.ruh-highlights li p { margin: 4px 0 0; color: var(--text-secondary); font-size: 0.8rem; }
-.ruh-highlights .hl-likes { color: #22c55e; font-size: 0.72rem; margin-left: 6px; }
+.comment-award-badge.award-liked {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #052e16;
+}
+.comment-award-badge.award-discussed {
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    color: #0b1220;
+}
 .ruh-comment-tools {
     display: flex;
     gap: 8px;
@@ -3494,7 +3502,7 @@ body > .more-dropdown .pin-btn:hover,
 #ruh-comments[data-color-mode="light"] .comment-item,
 #ruh-comments[data-color-mode="light"] #ruh-comment-form-wrapper,
 #ruh-comments[data-color-mode="light"] .comments-header,
-#ruh-comments[data-color-mode="light"] .ruh-highlights,
+#ruh-comments[data-color-mode="light"] .comment-award-badge,
 #ruh-comments[data-color-mode="light"] .ruh-notify-panel {
     background: rgba(255,255,255,0.72) !important;
     border-color: rgba(0,0,0,0.08) !important;

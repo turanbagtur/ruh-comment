@@ -17,7 +17,7 @@ Disqus benzeri, **glassmorphism tasarımlı**, tepki sistemi, seviye/rozet mekan
 - ✅ **İç İçe Yanıtlar** - Sınırsız derinlikte yanıt sistemi
 - ✅ **GIF Desteği** - Giphy ve Tenor entegrasyonu
 - ✅ **Yorum Arama** - Metin ve kullanıcı filtresi
-- ✅ **Öne Çıkan Yorumlar** - En çok beğenilen yorum özeti
+- ✅ **Yorum Rozetleri** - En çok beğenilen ve en çok tartışılan yorumlara otomatik rozet
 - ✅ **Sıralama** - En yeni, en eski, en iyi, en çok tartışılan
 - ✅ **Spoiler Sistemi** - Tıkla-göster spoiler etiketleri
 - ✅ **Mention Sistemi** - @kullaniciadi ile kullanıcıları etiketle

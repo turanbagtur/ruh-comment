@@ -230,25 +230,6 @@ $color_mode = isset($options['color_mode']) ? $options['color_mode'] : 'auto';
     </div>
     <?php endif; ?>
 
-    <?php
-    if (!empty($options['enable_highlights']) && function_exists('ruh_get_highlight_comments')) :
-        $highlights = ruh_get_highlight_comments($post_id, 3);
-        if (!empty($highlights)) :
-    ?>
-    <div class="ruh-highlights">
-        <h4><?php echo esc_html($t['highlights']); ?></h4>
-        <ul>
-            <?php foreach ($highlights as $hl) : ?>
-            <li>
-                <strong><?php echo esc_html($hl->comment_author); ?></strong>
-                <span class="hl-likes">♥ <?php echo intval($hl->likes); ?></span>
-                <p><?php echo esc_html(wp_trim_words(wp_strip_all_tags($hl->comment_content), 16)); ?></p>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-    <?php endif; endif; ?>
-
     <div class="ruh-comments-main">
         <div class="comments-header">
             <h3 class="comments-title">

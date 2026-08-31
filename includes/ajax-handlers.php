@@ -379,6 +379,9 @@ class Ruh_Comment_Ajax_Handlers {
             $_pinned_label = ((get_option('ruh_comment_options', array())['language'] ?? 'tr_TR') === 'en_US') ? 'Pinned' : 'Sabitlendi';
             $html .= '<span class="pinned-badge"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/></svg> ' . esc_html($_pinned_label) . '</span>';
         }
+        if (function_exists('ruh_get_comment_award_badges')) {
+            $html .= ruh_get_comment_award_badges($comment->comment_ID);
+        }
         
         $html .= $user_tag_html;
         $level_color = function_exists('ruh_get_level_color') ? ruh_get_level_color($user_level) : '#6b7280';
@@ -804,6 +807,9 @@ class Ruh_Comment_Ajax_Handlers {
         
         if (function_exists('ruh_flush_comment_list_cache')) {
             ruh_flush_comment_list_cache($comment->comment_post_ID);
+        }
+        if (function_exists('ruh_refresh_comment_awards')) {
+            ruh_refresh_comment_awards($comment->comment_post_ID);
         }
         wp_send_json_success(array(
             'likes' => $new_likes,
