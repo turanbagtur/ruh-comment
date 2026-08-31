@@ -592,6 +592,10 @@ class Ruh_Comment_Ajax_Handlers {
         if ($author_filter !== '') {
             $user = get_user_by('login', $author_filter);
             if (!$user) $user = get_user_by('slug', $author_filter);
+            if (!$user) {
+                $found = get_users(array('search' => $author_filter, 'search_columns' => array('display_name', 'user_login'), 'number' => 1));
+                $user = !empty($found) ? $found[0] : null;
+            }
             if ($user) {
                 $args['user_id'] = $user->ID;
             } else {

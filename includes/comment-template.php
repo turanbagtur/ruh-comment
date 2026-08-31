@@ -264,7 +264,7 @@ $color_mode = isset($options['color_mode']) ? $options['color_mode'] : 'auto';
                 <button class="sort-btn" data-sort="discussed"><?php echo $t['discussed']; ?></button>
             </div>
             <?php endif; ?>
-            <?php if (is_user_logged_in() && !empty($options['enable_notifications'])) : ?>
+            <?php if (is_user_logged_in() && (!isset($options['enable_notifications']) || !empty($options['enable_notifications']))) : ?>
             <div class="ruh-notify-wrap">
                 <button type="button" id="ruh-notify-btn" class="ruh-notify-btn" aria-label="<?php echo esc_attr($t['notifications']); ?>">
                     <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z"/></svg>

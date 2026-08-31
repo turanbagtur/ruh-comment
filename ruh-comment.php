@@ -176,9 +176,11 @@ function ruh_comment_install_tables() {
             KEY idx_created (created_at)
         ) $charset_collate;");
 
-        $badge_col = $wpdb->get_results("SHOW COLUMNS FROM $table_badges LIKE 'rarity'");
-        if (empty($badge_col)) {
-            $wpdb->query("ALTER TABLE $table_badges ADD rarity varchar(20) NOT NULL DEFAULT 'common'");
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_badges'") === $table_badges) {
+            $badge_col = $wpdb->get_results("SHOW COLUMNS FROM $table_badges LIKE 'rarity'");
+            if (empty($badge_col)) {
+                $wpdb->query("ALTER TABLE $table_badges ADD rarity varchar(20) NOT NULL DEFAULT 'common'");
+            }
         }
 
         update_option('ruh_comment_db_version', RUH_COMMENT_DB_VERSION);
@@ -399,7 +401,7 @@ function ruh_comment_enqueue_scripts() {
          'gif_proxy' => admin_url('admin-ajax.php?action=ruh_gif_search'),
          'logged_in' => is_user_logged_in(),
          'color_mode' => isset($options['color_mode']) ? $options['color_mode'] : 'auto',
-         'enable_notifications' => !empty($options['enable_notifications']) && is_user_logged_in() ? 1 : 0,
+         'enable_notifications' => is_user_logged_in() && (!isset($options['enable_notifications']) || !empty($options['enable_notifications'])) ? 1 : 0,
      ));
 }
 add_action('wp_enqueue_scripts', 'ruh_comment_enqueue_scripts');

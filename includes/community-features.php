@@ -18,12 +18,16 @@ function ruh_add_notification($user_id, $type, $args = array()) {
     $user_id = intval($user_id);
     if ($user_id <= 0) return false;
     $options = get_option('ruh_comment_options', array());
-    if (empty($options['enable_notifications'])) return false;
+    if (isset($options['enable_notifications']) && empty($options['enable_notifications'])) return false;
     if (!empty($args['actor_id']) && intval($args['actor_id']) === $user_id) return false;
 
     global $wpdb;
+    $table = $wpdb->prefix . 'ruh_notifications';
+    if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) !== $table) {
+        return false;
+    }
     return (bool) $wpdb->insert(
-        $wpdb->prefix . 'ruh_notifications',
+        $table,
         array(
             'user_id' => $user_id,
             'type' => sanitize_key($type),
@@ -60,7 +64,7 @@ function ruh_send_webhooks($event, $payload) {
     $text = sprintf('[%s] %s: %s %s', $event, $author, $excerpt, $link);
 
     $discord = isset($options['discord_webhook_url']) ? esc_url_raw($options['discord_webhook_url']) : '';
-    if ($discord && strpos($discord, 'https://') === 0) {
+    if ($discord && (strpos($discord, 'https://discord.com/api/webhooks/') === 0 || strpos($discord, 'https://discordapp.com/api/webhooks/') === 0)) {
         wp_remote_post($discord, array(
             'timeout' => 4,
             'blocking' => false,
@@ -144,10 +148,13 @@ function ruh_notifications_ajax() {
     global $wpdb;
     $table = $wpdb->prefix . 'ruh_notifications';
     $user_id = get_current_user_id();
+    if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) !== $table) {
+        wp_send_json_success(array('items' => array(), 'unread' => 0, 'ok' => true));
+    }
     $mark = isset($_POST['mark_read']) ? intval($_POST['mark_read']) : 0;
     if ($mark) {
         $wpdb->update($table, array('is_read' => 1), array('user_id' => $user_id), array('%d'), array('%d'));
-        wp_send_json_success(array('ok' => true));
+        wp_send_json_success(array('ok' => true, 'unread' => 0, 'items' => array()));
     }
     $rows = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table WHERE user_id = %d ORDER BY id DESC LIMIT 20",
