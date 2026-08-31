@@ -674,26 +674,18 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     color: #a855f7;
 }
 
-/* Mobil - 3x2 Grid */
 @media (max-width: 768px) {
-    .ruh-reactions-section {
-        padding: 16px;
-    }
+    .ruh-reactions-section { padding: 12px 4px 16px; }
     .content-reactions {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px 10px;
+        gap: 12px 8px;
         justify-items: center;
     }
-    .reaction-emoji {
-        font-size: 30px;
-    }
-    .reaction-label {
-        font-size: 10px;
-    }
-    .reaction-count {
-        font-size: 13px;
-    }
+    .content-reaction-btn { width: 62px; height: 62px; }
+    .reaction-emoji { font-size: 32px; }
+    .reaction-label { font-size: 12px; }
+    .reaction-count { font-size: 13px; }
 }
 
 /* Ana Bölüm */

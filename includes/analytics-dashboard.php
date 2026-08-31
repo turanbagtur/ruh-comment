@@ -44,8 +44,11 @@ class Ruh_Analytics_Dashboard {
     public function render_page() {
         $stats = $this->get_stats();
         ?>
-        <div class="wrap ruh-analytics-dashboard">
-            <h1>📊 Analytics & İstatistikler</h1>
+        <div class="wrap ruh-admin-wrap ruh-analytics-dashboard">
+            <div class="ruh-admin-header" style="background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 28px;border-radius:16px;color:#fff;margin-bottom:20px;">
+                <h1 style="margin:0;color:#fff;">Analytics & İstatistikler</h1>
+                <p style="margin:8px 0 0;opacity:.9;">Yorum, tepki ve kullanıcı aktivitesinin özeti.</p>
+            </div>
             
             <!-- Overview Cards -->
             <div class="analytics-overview">
@@ -196,7 +199,8 @@ class Ruh_Analytics_Dashboard {
         
         <script>
         jQuery(document).ready(function($) {
-            // Comments trend chart
+            if (typeof Chart === 'undefined') return;
+            if (!document.getElementById('commentsChart') || !document.getElementById('reactionsChart')) return;
             const commentsData = <?php echo json_encode($this->get_comments_trend()); ?>;
             
             new Chart(document.getElementById('commentsChart'), {
@@ -376,6 +380,15 @@ class Ruh_Analytics_Dashboard {
             font-weight: 600;
             display: inline-block;
         }
+        @media (max-width: 782px) {
+            .analytics-overview,
+            .analytics-charts,
+            .analytics-tables {
+                grid-template-columns: 1fr !important;
+            }
+            .stat-card { padding: 1rem; }
+            .chart-card, .table-card { padding: 1rem; overflow-x: auto; }
+        }
         </style>
         <?php
     }
@@ -404,8 +417,11 @@ class Ruh_Analytics_Dashboard {
                 "SELECT COUNT(*) FROM {$wpdb->prefix}ruh_reactions WHERE created_at >= %s",
                 $week_ago
             )) ?: 0,
-            'total_badges_earned' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ruh_user_badges"),
-            'badges_this_week' => 0 // TODO: Add timestamp to badges table
+            'total_badges_earned' => $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ruh_user_badges") ?: 0,
+            'badges_this_week' => $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}ruh_user_badges WHERE assigned_at >= %s",
+                $week_ago
+            )) ?: 0
         );
     }
     
@@ -454,13 +470,16 @@ class Ruh_Analytics_Dashboard {
         $labels = array();
         $data = array();
         
+        $opts = get_option('ruh_comment_options', array());
         $reaction_names = array(
-            'begendim' => 'Beğendim',
-            'sinir_bozucu' => 'Sinir Bozucu',
-            'mukemmel' => 'Mükemmel',
-            'sasirtici' => 'Şaşırtıcı',
-            'sakin_olmalivim' => 'Sakin Olmalıyım',
-            'bolum_bitti' => 'Bölüm Bitti'
+            'begendim' => $opts['emoji_label_begendim'] ?? 'Beğendim',
+            'sinir_bozucu' => $opts['emoji_label_sinir_bozucu'] ?? 'Sinir Bozucu',
+            'mukemmel' => $opts['emoji_label_mukemmel'] ?? 'Mükemmel',
+            'sasirtici' => $opts['emoji_label_sasirtici'] ?? 'Şaşırtıcı',
+            'sakin' => $opts['emoji_label_sakin'] ?? 'Üzücü',
+            'bitti' => $opts['emoji_label_bitti'] ?? 'Bitti',
+            'sakin_olmalivim' => $opts['emoji_label_sakin'] ?? 'Üzücü',
+            'bolum_bitti' => $opts['emoji_label_bitti'] ?? 'Bitti'
         );
         
         foreach ($results as $result) {
@@ -563,13 +582,21 @@ class Ruh_Advanced_Moderation {
             LIMIT 20
         ");
         ?>
-        <div class="wrap ruh-moderation-page">
-            <h1>🛡️ Gelişmiş Moderasyon</h1>
+        <div class="wrap ruh-admin-wrap ruh-moderation-page">
+            <div class="ruh-admin-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:24px 28px;border-radius:16px;color:#fff;margin-bottom:20px;">
+                <h1 style="margin:0;color:#fff;">Gelişmiş Moderasyon</h1>
+                <p style="margin:8px 0 0;opacity:.9;">Şikayetli yorumları inceleyin ve toplu işlem uygulayın.</p>
+            </div>
+            <?php if (isset($_GET['processed'])) : ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html(intval($_GET['processed'])); ?> yorum işlendi.</p></div>
+            <?php endif; ?>
             
             <?php if (!empty($reported_comments)) : ?>
             <div class="moderation-card">
-                <h2>⚠️ Şikayetli Yorumlar (<?php echo count($reported_comments); ?>)</h2>
-                
+                <h2>Şikayetli Yorumlar (<?php echo count($reported_comments); ?>)</h2>
+                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="ruh-moderation-bulk-form">
+                    <input type="hidden" name="action" value="ruh_bulk_action">
+                    <?php wp_nonce_field('ruh_bulk_action'); ?>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
@@ -602,30 +629,31 @@ class Ruh_Advanced_Moderation {
                             </td>
                             <td><?php echo esc_html($comment->reporters); ?></td>
                             <td>
-                                <a href="<?php echo admin_url('comment.php?action=approve&c=' . $comment->comment_ID); ?>" class="button button-small">Onayla</a>
-                                <a href="<?php echo admin_url('comment.php?action=trash&c=' . $comment->comment_ID); ?>" class="button button-small">Sil</a>
+                                <a href="<?php echo esc_url(wp_nonce_url(admin_url('comment.php?action=approvecomment&c=' . $comment->comment_ID), 'approve-comment_' . $comment->comment_ID)); ?>" class="button button-small">Onayla</a>
+                                <a href="<?php echo esc_url(wp_nonce_url(admin_url('comment.php?action=trashcomment&c=' . $comment->comment_ID), 'delete-comment_' . $comment->comment_ID)); ?>" class="button button-small">Sil</a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                
-                <div class="bulk-actions-bar">
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                        <input type="hidden" name="action" value="ruh_bulk_action">
-                        <?php wp_nonce_field('ruh_bulk_action'); ?>
-                        
-                        <select name="bulk_action">
+                    <div class="bulk-actions-bar">
+                        <select name="bulk_action" required>
                             <option value="">Toplu İşlem Seç</option>
                             <option value="approve">Onayla</option>
                             <option value="trash">Çöpe Taşı</option>
                             <option value="spam">Spam Olarak İşaretle</option>
                             <option value="delete">Kalıcı Sil</option>
                         </select>
-                        
                         <button type="submit" class="button button-primary">Uygula</button>
-                    </form>
-                </div>
+                    </div>
+                </form>
+                <script>
+                jQuery(function($){
+                    $('#select-all').on('change', function(){
+                        $('input[name="comment_ids[]"]').prop('checked', this.checked);
+                    });
+                });
+                </script>
             </div>
             <?php else : ?>
             <div class="notice notice-success">

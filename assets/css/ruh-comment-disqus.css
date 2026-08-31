@@ -67,7 +67,22 @@
 .theme-disqus .ruh-comment-item {
     padding: 16px 0 !important;
     margin: 0 !important;
+    border: none !important;
     border-bottom: 1px solid #2a2a2a !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.theme-disqus .comment-item.pinned,
+.theme-disqus .comment-item.is-pinned {
+    background: rgba(46,159,255,0.06) !important;
+    border-bottom-color: rgba(46,159,255,0.25) !important;
+}
+.theme-disqus .comment-item.pinned::before,
+.theme-disqus .comment-item.is-pinned::before {
+    background: #2e9fff !important;
+    top: 12px !important;
+    bottom: 12px !important;
 }
 
 .theme-disqus .comment-item:last-child,
@@ -471,6 +486,39 @@
     margin-left: 20px !important;
     border-left: 2px solid #333 !important;
     padding-left: 15px !important;
+}
+.theme-disqus .content-reaction-btn {
+    background: transparent !important;
+    border: 1px solid #333 !important;
+}
+.theme-disqus .content-reaction-btn.active {
+    border-color: #2e9fff !important;
+    background: rgba(46,159,255,0.12) !important;
+    box-shadow: none !important;
+}
+.theme-disqus .reaction-item.is-active {
+    background: transparent !important;
+}
+.theme-disqus .submit-btn,
+.theme-disqus #submit {
+    background: #2e9fff !important;
+    border-radius: 4px !important;
+}
+.theme-disqus #ruh-comment-form-wrapper {
+    border: none !important;
+    padding: 0 0 16px !important;
+}
+.theme-disqus .comments-header {
+    border: none !important;
+}
+@media (max-width: 768px) {
+    .theme-disqus .content-reaction-btn {
+        width: 60px !important;
+        height: 60px !important;
+        min-width: 60px !important;
+        min-height: 60px !important;
+    }
+    .theme-disqus .reaction-emoji { font-size: 30px !important; }
 }
 
 /* Küçük mobil - Geliştirilmiş */

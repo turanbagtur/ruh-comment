@@ -179,11 +179,19 @@ class Ruh_Comment_Admin {
                 <p style="margin:8px 0 0;opacity:.9;">Kullanıcılar tarafından şikayet edilen yorumları buradan yönetebilirsiniz.</p>
             </div>
             
+            <?php
+            $pending_count = 0;
+            foreach ((array) $reports as $r) {
+                if (($r->status ?: 'pending') === 'pending') $pending_count++;
+            }
+            ?>
+            <p style="margin:0 0 12px;color:#646970;"><?php echo intval($pending_count); ?> bekleyen şikayet / <?php echo count((array) $reports); ?> kayıt</p>
             <?php if (empty($reports)): ?>
                 <div class="notice notice-info">
                     <p>Bekleyen şikayet bulunmuyor.</p>
                 </div>
             <?php else: ?>
+                <div style="overflow-x:auto;">
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
@@ -256,6 +264,7 @@ class Ruh_Comment_Admin {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
             <?php endif; ?>
         </div>
         <?php

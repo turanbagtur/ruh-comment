@@ -38,8 +38,14 @@ class Ruh_Import_Export {
      */
     public function render_page() {
         ?>
-        <div class="wrap ruh-import-export-page">
-            <h1>📦 İçe/Dışa Aktar</h1>
+        <div class="wrap ruh-admin-wrap ruh-import-export-page">
+            <div class="ruh-admin-header" style="background:linear-gradient(135deg,#0ea5e9,#2563eb);padding:24px 28px;border-radius:16px;color:#fff;margin-bottom:20px;">
+                <h1 style="margin:0;color:#fff;">İçe / Dışa Aktar</h1>
+                <p style="margin:8px 0 0;opacity:.9;">Yorumları yedekleyin, CSV alın veya Disqus XML içe aktarın.</p>
+            </div>
+            <?php if (isset($_GET['imported'])) : ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html(intval($_GET['imported'])); ?> yorum içe aktarıldı<?php echo isset($_GET['skipped']) ? ', ' . intval($_GET['skipped']) . ' atlandı' : ''; ?>.</p></div>
+            <?php endif; ?>
             
             <div class="ruh-admin-grid">
                 <!-- Export Section -->
@@ -116,17 +122,20 @@ class Ruh_Import_Export {
         
         .ruh-admin-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
         
         .ruh-admin-card {
             background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #eef0f6;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+        }
+        @media (max-width: 782px) {
+            .ruh-admin-grid { grid-template-columns: 1fr; }
         }
         
         .ruh-admin-card h2 {
@@ -318,6 +327,8 @@ class Ruh_Import_Export {
             wp_die('Yetkisiz erişim.');
         }
         
+        global $wpdb;
+        
         if (!isset($_FILES['disqus_file'])) {
             wp_die('Dosya yüklenmedi.');
         }
@@ -345,30 +356,55 @@ class Ruh_Import_Export {
         
         $imported = 0;
         $skipped = 0;
+        $xml->registerXPathNamespace('dsq', 'http://disqus.com/disqus-internals');
+        $posts = $xml->xpath('//post') ?: $xml->xpath('//dsq:post') ?: array();
+        if (empty($posts) && isset($xml->post)) {
+            $posts = $xml->post;
+        }
         
-        // Disqus XML yapısına göre yorumları işle
-        foreach ($xml->post as $post_node) {
-            foreach ($post_node->comment as $comment_node) {
-                $comment_data = array(
-                    'comment_author' => (string)$comment_node->author->name,
-                    'comment_author_email' => (string)$comment_node->author->email,
-                    'comment_content' => (string)$comment_node->message,
-                    'comment_date' => date('Y-m-d H:i:s', strtotime((string)$comment_node->createdAt)),
-                    'comment_approved' => ((string)$comment_node->isSpam === 'false' && (string)$comment_node->isDeleted === 'false') ? 1 : 0,
-                    'comment_type' => ''
-                );
-                
-                // Post eşleştir (thread identifier'a göre)
-                $thread_id = (string)$post_node->id;
-                // Burada post eşleştirme mantığınızı ekleyin
-                
-                $result = wp_insert_comment($comment_data);
-                
-                if ($result) {
-                    $imported++;
-                } else {
-                    $skipped++;
-                }
+        foreach ($posts as $comment_node) {
+            $author = isset($comment_node->author) ? $comment_node->author : null;
+            $author_name = 'Anonim';
+            $author_email = '';
+            if ($author) {
+                if (isset($author->name)) $author_name = (string) $author->name;
+                elseif (isset($author->username)) $author_name = (string) $author->username;
+                if (isset($author->email)) $author_email = (string) $author->email;
+            }
+            $message = isset($comment_node->message) ? (string) $comment_node->message : (isset($comment_node->content) ? (string) $comment_node->content : '');
+            $created = isset($comment_node->createdAt) ? (string) $comment_node->createdAt : current_time('mysql');
+            $is_spam = strtolower(isset($comment_node->isSpam) ? (string) $comment_node->isSpam : 'false');
+            $is_deleted = strtolower(isset($comment_node->isDeleted) ? (string) $comment_node->isDeleted : 'false');
+            $thread = isset($comment_node->thread) ? (string) $comment_node->thread : (isset($comment_node['thread']) ? (string) $comment_node['thread'] : '');
+            
+            $post_id = 0;
+            if ($thread) {
+                $matched = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE guid LIKE %s OR post_name = %s LIMIT 1", '%' . $wpdb->esc_like($thread) . '%', sanitize_title($thread)));
+                $post_id = intval($matched);
+            }
+            if (!$post_id) {
+                $post_id = (int) get_option('page_on_front');
+            }
+            if (!$post_id || !$message) {
+                $skipped++;
+                continue;
+            }
+            
+            $comment_data = array(
+                'comment_post_ID' => $post_id,
+                'comment_author' => sanitize_text_field($author_name),
+                'comment_author_email' => sanitize_email($author_email),
+                'comment_content' => wp_kses_post($message),
+                'comment_date' => date('Y-m-d H:i:s', strtotime($created) ?: time()),
+                'comment_approved' => ($is_spam === 'false' && $is_deleted === 'false') ? 1 : 'spam',
+                'comment_type' => 'comment'
+            );
+            
+            $result = wp_insert_comment($comment_data);
+            if ($result) {
+                $imported++;
+            } else {
+                $skipped++;
             }
         }
         

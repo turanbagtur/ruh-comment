@@ -107,12 +107,12 @@ function render_level_manager_page_content() {
     
     ?>
     <div class="wrap ruh-admin-wrap">
-        <h1 class="wp-heading-inline">
-            <span class="dashicons dashicons-chart-line" style="color: #2271b1; margin-right: 8px;"></span>
-            Seviye Yönetimi
-        </h1>
+        <div class="ruh-admin-header" style="background:linear-gradient(135deg,#667eea,#764ba2);padding:22px 26px;border-radius:16px;color:#fff;margin:12px 0 8px;">
+            <h1 class="wp-heading-inline" style="color:#fff;margin:0;">Seviye Yönetimi</h1>
+            <p style="margin:8px 0 0;opacity:.9;">Kullanıcı seviye ve XP değerlerini düzenleyin.</p>
+        </div>
         
-        <div class="ruh-admin-header">
+        <div class="ruh-level-stats">
             <div class="ruh-stats-cards">
                 <?php
                 $total_levels = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ruh_user_levels");
@@ -305,7 +305,7 @@ function render_level_manager_page_content() {
     </div>
 
     <style>
-    .ruh-admin-header {
+    .ruh-level-stats {
         margin: 20px 0;
     }
     .ruh-stats-cards {

@@ -50,7 +50,9 @@ class Ruh_Comments_List_Table extends WP_List_Table {
         $comment_ids = array_map('intval', $_GET['comment']);
         $action = $this->current_action();
         
-        if (!$action || !wp_verify_nonce($_GET['_wpnonce'], 'bulk-' . $this->_args['plural'])) {
+        if (!$action) return;
+        $nonce = isset($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '';
+        if (!wp_verify_nonce($nonce, 'bulk-' . $this->_args['plural']) && !wp_verify_nonce($nonce, 'bulk-yorumlar')) {
             return;
         }
 
@@ -464,7 +466,10 @@ function render_comment_manager_page_content() {
     $list_table->prepare_items();
     ?>
     <div class="wrap ruh-admin-wrap">
-        <h1 class="wp-heading-inline ruh-admin-title"><?php _e('Yorum Yönetimi', 'ruh-comment'); ?></h1>
+        <div class="ruh-admin-header" style="background:linear-gradient(135deg,#667eea,#764ba2);padding:22px 26px;border-radius:16px;color:#fff;margin:12px 0 18px;">
+            <h1 class="wp-heading-inline ruh-admin-title" style="color:#fff;margin:0;"><?php _e('Yorum Yönetimi', 'ruh-comment'); ?></h1>
+            <p style="margin:8px 0 0;opacity:.9;">Onay, spam, şikayet ve kullanıcı işlemlerini buradan yönetin.</p>
+        </div>
         
         <div class="ruh-comment-manager-stats" style="margin: 20px 0; padding: 18px 20px; background: #fff; border-radius: 14px; box-shadow: 0 6px 18px rgba(15,23,42,.06);">
             <?php

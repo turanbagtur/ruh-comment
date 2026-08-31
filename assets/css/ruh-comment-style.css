@@ -93,8 +93,29 @@
     font-size: 13px;
 }
 
-.comments-area.modern-dark { background: transparent !important; }
+.comments-area.modern-dark,
+.comments-area.theme-modern { background: transparent !important; }
 .comments-area * { box-sizing: border-box; }
+
+.theme-modern .comment-item,
+.theme-modern .ruh-comment-item {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.theme-modern #ruh-comment-form-wrapper,
+.theme-modern .comments-header,
+.theme-modern .comments-header-modern {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.theme-modern .content-reaction-btn {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
 
 .modern-box {
     background: var(--bg-card) !important;
@@ -3019,32 +3040,43 @@ body > .more-dropdown .pin-btn:hover,
 
 @media (max-width: 768px) {
     .ruh-reactions-section {
-        padding: 8px 4px 12px !important;
+        padding: 12px 6px 16px !important;
     }
     
     .content-reactions {
         display: grid !important;
         grid-template-columns: repeat(3, 1fr) !important;
-        gap: 10px 8px !important;
+        gap: 12px 8px !important;
         justify-items: center !important;
+        width: 100% !important;
+    }
+    
+    .reaction-item {
+        min-width: 0 !important;
+        width: 100% !important;
+        padding: 8px 4px !important;
     }
     
     .content-reaction-btn {
-        width: 48px;
-        height: 48px;
-        padding: 8px !important;
+        width: 62px !important;
+        height: 62px !important;
+        padding: 0 !important;
+        min-width: 62px;
+        min-height: 62px;
     }
     
     .reaction-emoji {
-        font-size: 24px !important;
+        font-size: 32px !important;
     }
     
     .reaction-label {
-        font-size: 10px !important;
+        font-size: 12px !important;
     }
     
     .reaction-count {
-        font-size: 11px !important;
+        font-size: 13px !important;
+        min-width: 26px;
+        padding: 2px 8px;
     }
 }
 
@@ -3071,11 +3103,12 @@ body > .more-dropdown .pin-btn:hover,
         border-radius: 10px !important;
     }
     
-    /* Textarea genişliği */
+    /* Textarea genişliği — iOS zoom olmasın */
     #comment,
-    .ruh-comment-textarea {
+    .ruh-comment-textarea,
+    .inline-reply-textarea {
         min-height: 90px !important;
-        font-size: 14px !important;
+        font-size: 16px !important;
     }
     
     /* Yorum kartı */
@@ -3181,7 +3214,7 @@ body > .more-dropdown .pin-btn:hover,
     
     .inline-reply-textarea {
         min-height: 70px !important;
-        font-size: 13px !important;
+        font-size: 16px !important;
     }
 }
 
@@ -3273,21 +3306,24 @@ body > .more-dropdown .pin-btn:hover,
 
     /* Action butonları */
     .action-btn, .heart-like-btn {
-        padding: 2px 5px !important;
-        font-size: 0.58rem !important;
-        min-height: 18px !important;
+        padding: 8px 10px !important;
+        font-size: 0.75rem !important;
+        min-height: 36px !important;
     }
     .comment-more-menu .more-btn {
-        width: 18px !important;
-        height: 18px !important;
+        width: 36px !important;
+        height: 36px !important;
     }
 
     /* Form */
-    #ruh-comment-form-wrapper { padding: 6px !important; }
-    .comment-form textarea { min-height: 56px !important; font-size: 0.78rem !important; }
-    #ruh-editor-toolbar { padding: 3px 4px !important; }
-    .ruh-toolbar-button { width: 22px !important; height: 22px !important; }
-    .ruh-submit, #submit { padding: 4px 10px !important; font-size: 0.7rem !important; }
+    #ruh-comment-form-wrapper { padding: 10px !important; }
+    .comment-form textarea,
+    #comment,
+    .inline-reply-textarea { min-height: 72px !important; font-size: 16px !important; }
+    #ruh-editor-toolbar { padding: 4px 0 !important; }
+    .toolbar-btn { width: 36px !important; height: 36px !important; }
+    .ruh-toolbar-button { width: 36px !important; height: 36px !important; }
+    .ruh-submit, #submit, .submit-btn { padding: 10px 16px !important; font-size: 0.9rem !important; min-height: 44px !important; }
 
     /* Header */
     .comments-header, .comments-header-modern {
@@ -3295,13 +3331,21 @@ body > .more-dropdown .pin-btn:hover,
         gap: 5px !important;
         padding: 8px !important;
     }
-    .sort-btn, .sort-button { padding: 3px 7px !important; font-size: 0.65rem !important; }
+    .sort-btn, .sort-button { padding: 8px 12px !important; font-size: 0.8rem !important; min-height: 36px !important; }
 
-    /* Reactions */
-    .ruh-reactions-section { padding: 8px !important; }
-    .reactions.modern-grid { gap: 4px !important; }
-    .reaction.modern-reaction { padding: 3px 7px !important; }
-    .reaction-emoji { font-size: 0.85rem !important; }
+    /* Reactions — mobilde küçük kalmasın */
+    .ruh-reactions-section { padding: 10px 4px 14px !important; }
+    .reactions.modern-grid { gap: 8px !important; }
+    .reaction.modern-reaction { padding: 8px 12px !important; }
+    .content-reaction-btn {
+        width: 64px !important;
+        height: 64px !important;
+        min-width: 64px !important;
+        min-height: 64px !important;
+    }
+    .reaction-emoji { font-size: 34px !important; }
+    .reaction-label { font-size: 12px !important; }
+    .reaction-count { font-size: 13px !important; }
 
     /* Reply form */
     .reply-form-container, .inline-reply-form {
