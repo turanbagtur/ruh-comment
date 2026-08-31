@@ -8,14 +8,14 @@ class Ruh_Comment_Ajax_Handlers {
             'get_initial_data', 'handle_reaction', 'get_comments', 
             'handle_like', 'handle_dislike', 'flag_comment', 'submit_comment', 
             'edit_comment', 'delete_comment', 'load_replies', 'pin_comment',
-            'load_more_profile_comments'
+            'load_more_profile_comments', 'search_comments'
         );
         
         foreach ($actions as $action) {
             add_action('wp_ajax_ruh_' . $action, array($this, $action . '_callback'));
             
             // Public actions (giriş yapmadan erişilebilir)
-            $public_actions = array('get_initial_data', 'get_comments', 'load_more_profile_comments', 'handle_reaction', 'load_replies');
+            $public_actions = array('get_initial_data', 'get_comments', 'load_more_profile_comments', 'handle_reaction', 'load_replies', 'search_comments');
             if (in_array($action, $public_actions)) {
                 add_action('wp_ajax_nopriv_ruh_' . $action, array($this, $action . '_callback'));
             }
@@ -549,6 +549,8 @@ class Ruh_Comment_Ajax_Handlers {
         $page = max(1, intval($_POST['page'] ?? 1));
         $sort = sanitize_key($_POST['sort'] ?? 'newest');
         $parent_id = intval($_POST['parent_id'] ?? 0);
+        $search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
+        $author_filter = isset($_POST['author']) ? sanitize_text_field(wp_unslash($_POST['author'])) : '';
         
         // Post ID yoksa URL'den al
         if (!$post_id) {
@@ -565,6 +567,16 @@ class Ruh_Comment_Ajax_Handlers {
         $options_temp = get_option('ruh_comment_options', array());
         $comments_per_page = min(50, max(5, intval($options_temp['comments_per_page'] ?? 10)));
         
+        $cache_key = function_exists('ruh_comment_list_cache_key')
+            ? ruh_comment_list_cache_key($post_id, $page, $sort, $parent_id, $search, $author_filter)
+            : '';
+        if ($cache_key && $parent_id === 0) {
+            $cached = wp_cache_get($cache_key, 'ruh_comment');
+            if (is_array($cached) && isset($cached['html'])) {
+                wp_send_json_success($cached);
+            }
+        }
+
         $args = array(
             'post_id' => $post_id,
             'status' => 'approve',
@@ -574,8 +586,50 @@ class Ruh_Comment_Ajax_Handlers {
             'orderby' => 'comment_date_gmt',
             'order' => ($sort === 'oldest') ? 'ASC' : 'DESC'
         );
-        
-        $comments = get_comments($args);
+        if ($search !== '') {
+            $args['search'] = $search;
+        }
+        if ($author_filter !== '') {
+            $user = get_user_by('login', $author_filter);
+            if (!$user) $user = get_user_by('slug', $author_filter);
+            if ($user) {
+                $args['user_id'] = $user->ID;
+            } else {
+                $args['author'] = $author_filter;
+            }
+        }
+
+        if (in_array($sort, array('best', 'discussed'), true) && $parent_id === 0) {
+            global $wpdb;
+            $offset = ($page - 1) * $comments_per_page;
+            $search_sql = '';
+            $author_sql = '';
+            $params = array($post_id);
+            if ($search !== '') {
+                $search_sql = ' AND c.comment_content LIKE %s';
+                $params[] = '%' . $wpdb->esc_like($search) . '%';
+            }
+            if (!empty($args['user_id'])) {
+                $author_sql = ' AND c.user_id = %d';
+                $params[] = intval($args['user_id']);
+            }
+            if ($sort === 'best') {
+                $order_sql = 'CAST(COALESCE(cm.meta_value, 0) AS UNSIGNED) DESC, c.comment_date_gmt DESC';
+            } else {
+                $order_sql = '(SELECT COUNT(*) FROM ' . $wpdb->comments . ' r WHERE r.comment_parent = c.comment_ID AND r.comment_approved = \'1\') DESC, c.comment_date_gmt DESC';
+            }
+            $params[] = $comments_per_page;
+            $params[] = $offset;
+            $sql = "SELECT c.* FROM {$wpdb->comments} c
+                    LEFT JOIN {$wpdb->commentmeta} cm ON c.comment_ID = cm.comment_id AND cm.meta_key = '_likes'
+                    WHERE c.comment_post_ID = %d AND c.comment_approved = '1' AND c.comment_parent = 0
+                    $search_sql $author_sql
+                    ORDER BY $order_sql
+                    LIMIT %d OFFSET %d";
+            $comments = $wpdb->get_results($wpdb->prepare($sql, $params));
+        } else {
+            $comments = get_comments($args);
+        }
         $total_count = wp_count_comments($post_id)->approved;
         
         // Sabitlenmıs yorumlari en üste taşı (sadece ilk sayfada)
@@ -618,20 +672,24 @@ class Ruh_Comment_Ajax_Handlers {
             $html .= $this->generate_comment_html($comment, $reply_counts_cache);
         }
         
-        // Daha fazla yorum var mı?
-        $next_args = $args;
-        $next_args['offset'] = $page * $comments_per_page;
-        $next_args['number'] = 1;
-        $has_more = !empty(get_comments($next_args));
+        $has_more = count($comments) >= $comments_per_page;
         
-        wp_send_json_success(array(
+        $payload = array(
             'html' => $html,
             'has_more' => $has_more,
             'total' => count($comments),
             'comment_count' => $total_count,
             'current_page' => $page,
             'sort_type' => $sort
-        ));
+        );
+        if ($cache_key && $parent_id === 0) {
+            wp_cache_set($cache_key, $payload, 'ruh_comment', 120);
+        }
+        wp_send_json_success($payload);
+    }
+
+    public function search_comments_callback() {
+        $this->get_comments_callback();
     }
 
     // TEPKILER - Giriş yapmamış kullanıcılar da tepki verebilir
@@ -740,6 +798,9 @@ class Ruh_Comment_Ajax_Handlers {
         
         $new_likes = intval(get_comment_meta($comment_id, '_likes', true));
         
+        if (function_exists('ruh_flush_comment_list_cache')) {
+            ruh_flush_comment_list_cache($comment->comment_post_ID);
+        }
         wp_send_json_success(array(
             'likes' => $new_likes,
             'dislikes' => intval(get_comment_meta($comment_id, '_dislikes', true)),
@@ -786,6 +847,9 @@ class Ruh_Comment_Ajax_Handlers {
             $new_user_vote = 'disliked';
         }
         
+        if (function_exists('ruh_flush_comment_list_cache')) {
+            ruh_flush_comment_list_cache($comment->comment_post_ID);
+        }
         wp_send_json_success(array(
             'likes' => intval(get_comment_meta($comment_id, '_likes', true)),
             'dislikes' => intval(get_comment_meta($comment_id, '_dislikes', true)),

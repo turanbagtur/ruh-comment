@@ -1,73 +1,87 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-add_filter('preprocess_comment', 'ruh_comment_checks');
-function ruh_comment_checks($commentdata) {
+/**
+ * Yorum güvenlik/spam kontrollerini uygular.
+ *
+ * ÖNEMLİ: Bu fonksiyon önceden sadece 'preprocess_comment' filtresine bağlıydı.
+ * Ancak preprocess_comment SADECE wp_new_comment() çağrıldığında tetiklenir.
+ * Bu eklentinin AJAX yorum gönderme sistemi (ajax-handlers.php) wp_insert_comment()
+ * kullanıyor ve bu filtreyi HİÇ TETİKLEMİYORDU - yani honeypot, IP ban, link limiti,
+ * küfür filtresi ve tekrar-yorum koruması AJAX üzerinden tamamen bypass ediliyordu.
+ * Bu fonksiyon artık AJAX handler tarafından da doğrudan çağrılıyor (bkz. ajax-handlers.php
+ * submit_comment_callback). $context parametresi rate-limit davranışını ayırt eder.
+ *
+ * @param string $comment_content Ham yorum içeriği
+ * @param int $user_id Yorumu yapan kullanıcı ID (0 ise misafir)
+ * @param int $post_id Yorumun yapıldığı post/manga ID
+ * @param string $context 'form' (klasik WP formu) veya 'ajax'
+ * @return true|WP_Error Kontroller geçerse true, aksi halde hata mesajı içeren WP_Error
+ */
+function ruh_run_comment_security_checks($comment_content, $user_id, $post_id, $context = 'ajax') {
     // 1. Kullanıcı engelli mi veya zaman aşımı var mı kontrol et
-    if (isset($commentdata['user_id']) && $commentdata['user_id']) {
-        $user_id = intval($commentdata['user_id']);
+    if ($user_id) {
         $ban_status = get_user_meta($user_id, 'ruh_ban_status', true);
         if ($ban_status === 'banned') {
-            wp_die('Bu siteden kalıcı olarak engellendiniz.', 'Engellendi', array('response' => 403));
+            return new WP_Error('ruh_banned', 'Bu siteden kalıcı olarak engellendiniz.');
         }
         $timeout_until = get_user_meta($user_id, 'ruh_timeout_until', true);
         if ($timeout_until && current_time('timestamp') < intval($timeout_until)) {
             $remaining = (function_exists('ruh_human_time_diff_tr') ? ruh_human_time_diff_tr(intval($timeout_until), current_time('timestamp')) : human_time_diff(intval($timeout_until), current_time('timestamp')));
-            wp_die(sprintf('Yorum gönderme yasağınızın bitmesine %s kaldı.', $remaining), 'Geçici Engel', array('response' => 403));
+            return new WP_Error('ruh_timeout', sprintf('Yorum gönderme yasağınızın bitmesine %s kaldı.', $remaining));
         }
     }
 
     // 2. Honeypot Spam Korumasi
     if (isset($_POST['ruh_honeypot']) && !empty($_POST['ruh_honeypot'])) {
-        wp_die('Spam tespit edildi.', 'Spam', array('response' => 403));
+        return new WP_Error('ruh_spam', 'Spam tespit edildi.');
     }
-    
+
     // 2.5. IP Ban Kontrolü
     $user_ip = ruh_get_user_ip();
     $ip_bans = get_option('ruh_banned_ips', array());
     if (isset($ip_bans[$user_ip])) {
-        wp_die('IP adresiniz engellenmiştir. Yorum gönderemezsiniz.', 'IP Engeli', array('response' => 403));
+        return new WP_Error('ruh_ip_banned', 'IP adresiniz engellenmiştir. Yorum gönderemezsiniz.');
     }
 
-    // 3. Link Sayisi Limiti - REGEX DUZELTILDI
     $options = get_option('ruh_comment_options', array());
+
+    // 3. Link Sayisi Limiti
     $link_limit = isset($options['spam_link_limit']) ? intval($options['spam_link_limit']) : 2;
     if ($link_limit > 0) {
-        // Duzeltilmis regex - escape karakterleri duzgun
-        $link_count = preg_match_all('/<a\s|https?:\/\//i', $commentdata['comment_content'], $matches);
+        $link_count = preg_match_all('/<a\s|https?:\/\//i', $comment_content, $matches);
         if ($link_count === false) {
             error_log('RUH Comment: preg_match_all hatasi - link kontrolu');
             $link_count = 0;
         }
         if ($link_count > $link_limit) {
-            wp_die('Yorumunuzda çok fazla link var. Lütfen link sayısını azaltın.', 'Link Limiti', array('response' => 400));
+            return new WP_Error('ruh_link_limit', 'Yorumunuzda çok fazla link var. Lütfen link sayısını azaltın.');
         }
     }
 
-    // 4. Rate Limiting - Sadece standart WordPress yorum formu için (AJAX istekler kendi handler'larında kontrol ediliyor)
-    if (!defined('RUH_AJAX_RATE_CHECKED') && !defined('DOING_AJAX')) {
-        if (isset($commentdata['user_id']) && $commentdata['user_id']) {
-            $user_id = intval($commentdata['user_id']);
+    // 4. Rate Limiting - Sadece standart WordPress yorum formu için
+    // (AJAX istekler kendi handler'larında check_rate_limit() ile kontrol ediliyor)
+    if ($context === 'form') {
+        if ($user_id) {
             $last_comment_time = get_user_meta($user_id, '_ruh_last_comment_time', true);
             $min_interval = 30; // 30 saniye
-            
+
             if ($last_comment_time && (time() - intval($last_comment_time)) < $min_interval) {
                 $wait_time = $min_interval - (time() - intval($last_comment_time));
-                wp_die(sprintf('Çok hızlı yorum gönderiyorsunuz. %d saniye bekleyip tekrar deneyin.', $wait_time), 'Rate Limit', array('response' => 429));
+                return new WP_Error('ruh_rate_limit', sprintf('Çok hızlı yorum gönderiyorsunuz. %d saniye bekleyip tekrar deneyin.', $wait_time));
             }
         }
 
         // IP tabanlı rate limiting
-        $user_ip = ruh_get_user_ip();
         $ip_key = 'ruh_ip_' . md5($user_ip);
         $last_ip_time = get_transient($ip_key);
         $ip_min_interval = 15; // 15 saniye
-        
+
         if ($last_ip_time && (time() - intval($last_ip_time)) < $ip_min_interval) {
             $wait_time = $ip_min_interval - (time() - intval($last_ip_time));
-            wp_die(sprintf('Bu IP adresinden çok hızlı yorum gönderiliyor. %d saniye bekleyin.', $wait_time), 'Rate Limit', array('response' => 429));
+            return new WP_Error('ruh_ip_rate_limit', sprintf('Bu IP adresinden çok hızlı yorum gönderiliyor. %d saniye bekleyin.', $wait_time));
         }
-        
+
         set_transient($ip_key, time(), 300); // 5 dakika tutulacak
     }
 
@@ -76,22 +90,19 @@ function ruh_comment_checks($commentdata) {
     if (!empty($profanity_words)) {
         $banned_words = array_map('trim', explode(',', $profanity_words));
         $banned_words = array_filter($banned_words);
-        $comment_content = $commentdata['comment_content'];
-        
+
         foreach ($banned_words as $word) {
             if (empty($word)) continue;
-            
+
             // Regex pattern kontrolu (/ ile baslayip / ile bitiyorsa regex)
             if (preg_match('/^\/(.*)\/([gimsu]*)$/u', $word, $matches)) {
-                // Regex pattern - flag yoksa iu ekle
                 $pattern = '/' . $matches[1] . '/' . (empty($matches[2]) ? 'iu' : $matches[2]);
                 if (@preg_match($pattern, $comment_content)) {
-                    wp_die('Yorumunuzda uygunsuz içerik tespit edildi.', 'Uygunsuz İçerik', array('response' => 400));
+                    return new WP_Error('ruh_profanity', 'Yorumunuzda uygunsuz içerik tespit edildi.');
                 }
             } else {
-                // Normal kelime - case insensitive arama
                 if (mb_stripos($comment_content, $word) !== false) {
-                    wp_die('Yorumunuzda uygunsuz içerik tespit edildi.', 'Uygunsuz İçerik', array('response' => 400));
+                    return new WP_Error('ruh_profanity', 'Yorumunuzda uygunsuz içerik tespit edildi.');
                 }
             }
         }
@@ -99,32 +110,55 @@ function ruh_comment_checks($commentdata) {
 
     // 7. Cok kisa yorum kontrolu
     $min_length = 3;
-    $clean_content = trim(strip_tags($commentdata['comment_content']));
+    $clean_content = trim(strip_tags($comment_content));
     if (mb_strlen($clean_content) < $min_length) {
-        wp_die(sprintf('Yorum en az %d karakter olmalıdır.', $min_length), 'Çok Kısa', array('response' => 400));
+        return new WP_Error('ruh_too_short', sprintf('Yorum en az %d karakter olmalıdır.', $min_length));
     }
 
     // 8. Cok uzun yorum kontrolu
     $max_length = isset($options['max_comment_length']) ? intval($options['max_comment_length']) : 1000;
-    if (mb_strlen($commentdata['comment_content']) > $max_length) {
-        wp_die(sprintf('Yorum maksimum %d karakter olabilir.', $max_length), 'Çok Uzun', array('response' => 400));
+    if (mb_strlen($comment_content) > $max_length) {
+        return new WP_Error('ruh_too_long', sprintf('Yorum maksimum %d karakter olabilir.', $max_length));
     }
 
-    // 9. Ayni icerikli yorum kontrolu (duplicate check) - PERFORMANS IYILESTIRILDI
-    if (isset($commentdata['user_id']) && $commentdata['user_id']) {
-        $content_hash = md5($commentdata['comment_content']);
-        $cache_key = 'ruh_dup_' . $commentdata['user_id'] . '_' . $commentdata['comment_post_ID'];
+    // 9. Ayni icerikli yorum kontrolu (duplicate check)
+    if ($user_id) {
+        $content_hash = md5($comment_content);
+        $cache_key = 'ruh_dup_' . $user_id . '_' . $post_id;
         $last_hash = get_transient($cache_key);
-        
+
         if ($last_hash === $content_hash) {
-            wp_die('Bu yorumu daha önce yapmışsınız.', 'Tekrar Yorum', array('response' => 400));
+            return new WP_Error('ruh_duplicate', 'Bu yorumu daha önce yapmışsınız.');
         }
-        
+
         // 5 dakika icinde ayni yorumu engelle
         set_transient($cache_key, $content_hash, 300);
     }
-    
-    // 10. Yorum içeriğini temizle - GÜVENLİK İYİLEŞTİRİLMİŞ
+
+    if (!empty($options['enable_spam_score'])) {
+        $score = 0;
+        $plain = mb_strtolower(trim(wp_strip_all_tags($comment_content)));
+        if (preg_match('/https?:\/\//i', $comment_content)) $score += 2;
+        if (preg_match('/(.)\1{6,}/u', $plain)) $score += 2;
+        if (preg_match('/[A-ZÇĞİÖŞÜ]{12,}/u', $comment_content)) $score += 1;
+        $words = preg_split('/\s+/', $plain);
+        if (count($words) > 8 && count(array_unique($words)) < 3) $score += 2;
+        if (preg_match('/(viagra|casino|crypto|bitcoin|loan|xxx)/i', $plain)) $score += 4;
+        if ($score >= 5) {
+            return new WP_Error('ruh_spam_score', 'Yorum spam olarak algılandı. Lütfen içeriği sadeleştirin.');
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Yorum içeriğini güvenli HTML'e temizler (allowed tags + nofollow linkler).
+ *
+ * @param string $content
+ * @return string
+ */
+function ruh_sanitize_comment_html($content) {
     $allowed_html = array(
         'b' => array(), 
         'i' => array(), 
@@ -141,22 +175,43 @@ function ruh_comment_checks($commentdata) {
         'pre' => array('class' => array()),
         'span' => array('class' => array())
     );
-    
-    $commentdata['comment_content'] = wp_kses($commentdata['comment_content'], $allowed_html);
-    
+
+    $content = wp_kses($content, $allowed_html);
+
     // URL'leri guvenli hale getir - nofollow ve noopener ekle
-    $commentdata['comment_content'] = preg_replace_callback(
+    $content = preg_replace_callback(
         '/<a\s+([^>]*)href=["\']([^"\']+)["\']([^>]*)>/i',
         function($matches) {
             $url = esc_url($matches[2]);
-            // Sadece http/https URL'lere izin ver
             if (!preg_match('/^https?:\/\//i', $url)) {
                 return '';
             }
             return '<a href="' . $url . '" rel="nofollow noopener noreferrer" target="_blank">';
         },
-        $commentdata['comment_content']
+        $content
     );
+
+    return $content;
+}
+
+// Klasik WordPress yorum formu (preprocess_comment sadece wp_new_comment() ile tetiklenir,
+// bu eklentinin AJAX akışını etkilemez - bkz. ruh_run_comment_security_checks() dokümantasyonu)
+add_filter('preprocess_comment', 'ruh_comment_checks');
+function ruh_comment_checks($commentdata) {
+    $user_id = isset($commentdata['user_id']) ? intval($commentdata['user_id']) : 0;
+    $result = ruh_run_comment_security_checks($commentdata['comment_content'], $user_id, intval($commentdata['comment_post_ID']), 'form');
+
+    if (is_wp_error($result)) {
+        $status_map = array(
+            'ruh_banned' => 403, 'ruh_timeout' => 403, 'ruh_spam' => 403, 'ruh_ip_banned' => 403,
+            'ruh_link_limit' => 400, 'ruh_rate_limit' => 429, 'ruh_ip_rate_limit' => 429,
+            'ruh_profanity' => 400, 'ruh_too_short' => 400, 'ruh_too_long' => 400, 'ruh_duplicate' => 400,
+        );
+        $response_code = $status_map[$result->get_error_code()] ?? 400;
+        wp_die(esc_html($result->get_error_message()), 'Yorum Reddedildi', array('response' => $response_code));
+    }
+
+    $commentdata['comment_content'] = ruh_sanitize_comment_html($commentdata['comment_content']);
 
     return $commentdata;
 }
@@ -234,6 +289,11 @@ function ruh_handle_post_comment_actions($comment_id, $comment) {
     // Son yorum zamanını güncelle
     if ($comment->user_id) {
         update_user_meta($comment->user_id, '_ruh_last_comment_time', time());
+    }
+
+    // Bu bir yanıtsa, parent yorumun cache'lenmiş yanıt sayısını temizle
+    if ($comment->comment_parent) {
+        wp_cache_delete('ruh_reply_count_' . $comment->comment_parent, 'ruh_comment');
     }
     
     if ($comment->comment_approved == 1) {

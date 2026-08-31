@@ -748,6 +748,11 @@ function ruh_check_and_assign_auto_badges($user_id) {
                     'user_id' => $user_id,
                     'badge_id' => $badge->badge_id
                 ));
+                if (function_exists('ruh_add_notification')) {
+                    ruh_add_notification($user_id, 'badge', array(
+                        'message' => sprintf('Yeni rozet kazandınız: %s', $badge->badge_name),
+                    ));
+                }
             }
         }
     }
@@ -984,6 +989,10 @@ function ruh_get_level_tier($level) {
 }
 
 function ruh_get_badge_rarity($badge) {
+    $allowed = array('common', 'rare', 'auto', 'legendary');
+    if (!empty($badge->rarity) && in_array($badge->rarity, $allowed, true)) {
+        return $badge->rarity;
+    }
     $name = mb_strtolower(isset($badge->badge_name) ? $badge->badge_name : '');
     if (preg_match('/efsane|legend|vip|owner|kurucu|admin|kral|queen|king/u', $name)) {
         return 'legendary';
@@ -1453,52 +1462,68 @@ function ruh_gif_search_proxy() {
     }
     
     $options = get_option('ruh_comment_options', array());
-    $api_key = isset($options['giphy_api_key']) ? $options['giphy_api_key'] : '';
-    
-    if (empty($api_key)) {
-        wp_send_json_error(array('message' => 'Giphy API key yapılandırılmamış.'));
-    }
-    
+    $giphy_key = isset($options['giphy_api_key']) ? $options['giphy_api_key'] : '';
+    $tenor_key = isset($options['tenor_api_key']) ? $options['tenor_api_key'] : '';
     $limit = isset($_GET['limit']) ? min(intval($_GET['limit']), 20) : 12;
     $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
-    
-    $url = 'https://api.giphy.com/v1/gifs/search?' . http_build_query(array(
-        'api_key' => $api_key,
-        'q' => $search,
-        'limit' => $limit,
-        'offset' => $offset,
-        'rating' => 'pg-13',
-        'lang' => 'tr'
-    ));
-    
-    $response = wp_remote_get($url, array(
-        'timeout' => 5,
-        'headers' => array('Accept' => 'application/json')
-    ));
-    
-    if (is_wp_error($response)) {
-        wp_send_json_error(array('message' => 'Giphy bağlantı hatası.'));
-    }
-    
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
-    if (!$data || !isset($data['data'])) {
-        wp_send_json_error(array('message' => 'Giphy yanıt hatası.'));
-    }
-    
     $gifs = array();
-    foreach ($data['data'] as $gif) {
-        $gifs[] = array(
-            'id' => $gif['id'],
-            'url' => $gif['images']['fixed_width_small']['url'],
-            'preview_url' => $gif['images']['fixed_width_small']['url'],
-            'original_url' => $gif['images']['original']['url'],
-            'width' => intval($gif['images']['fixed_width_small']['width']),
-            'height' => intval($gif['images']['fixed_width_small']['height']),
-        );
+
+    if (!empty($giphy_key)) {
+        $url = 'https://api.giphy.com/v1/gifs/search?' . http_build_query(array(
+            'api_key' => $giphy_key,
+            'q' => $search,
+            'limit' => $limit,
+            'offset' => $offset,
+            'rating' => 'pg-13',
+            'lang' => 'tr'
+        ));
+        $response = wp_remote_get($url, array('timeout' => 5, 'headers' => array('Accept' => 'application/json')));
+        if (!is_wp_error($response)) {
+            $data = json_decode(wp_remote_retrieve_body($response), true);
+            if (!empty($data['data'])) {
+                foreach ($data['data'] as $gif) {
+                    $gifs[] = array(
+                        'id' => $gif['id'],
+                        'preview_url' => $gif['images']['fixed_width_small']['url'],
+                        'original_url' => $gif['images']['original']['url'],
+                    );
+                }
+            }
+        }
     }
-    
+
+    if (empty($gifs) && !empty($tenor_key)) {
+        $url = 'https://tenor.googleapis.com/v2/search?' . http_build_query(array(
+            'key' => $tenor_key,
+            'q' => $search,
+            'limit' => $limit,
+            'media_filter' => 'gif,tinygif',
+            'contentfilter' => 'medium',
+        ));
+        $response = wp_remote_get($url, array('timeout' => 5, 'headers' => array('Accept' => 'application/json')));
+        if (!is_wp_error($response)) {
+            $data = json_decode(wp_remote_retrieve_body($response), true);
+            if (!empty($data['results'])) {
+                foreach ($data['results'] as $gif) {
+                    $tiny = isset($gif['media_formats']['tinygif']['url']) ? $gif['media_formats']['tinygif']['url'] : '';
+                    $orig = isset($gif['media_formats']['gif']['url']) ? $gif['media_formats']['gif']['url'] : $tiny;
+                    if (!$orig) continue;
+                    $gifs[] = array(
+                        'id' => isset($gif['id']) ? $gif['id'] : md5($orig),
+                        'preview_url' => $tiny ? $tiny : $orig,
+                        'original_url' => $orig,
+                    );
+                }
+            }
+        }
+    }
+
+    if (empty($giphy_key) && empty($tenor_key)) {
+        wp_send_json_error(array('message' => 'GIF API anahtarı yapılandırılmamış.'));
+    }
+    if (empty($gifs)) {
+        wp_send_json_error(array('message' => 'GIF bulunamadı.'));
+    }
     wp_send_json_success(array('gifs' => $gifs));
 }
 add_action('wp_ajax_ruh_gif_search', 'ruh_gif_search_proxy');
@@ -1589,6 +1614,16 @@ function ruh_process_mentions($comment_id) {
         $already_notified[] = $user->ID;
         
         ruh_send_mention_notification($comment_id, $user->ID);
+        if (function_exists('ruh_add_notification')) {
+            $actor = $comment->user_id ? get_userdata($comment->user_id) : null;
+            $name = $actor ? $actor->display_name : ($comment->comment_author ?: 'Birisi');
+            ruh_add_notification($user->ID, 'mention', array(
+                'actor_id' => intval($comment->user_id),
+                'comment_id' => intval($comment_id),
+                'post_id' => intval($comment->comment_post_ID),
+                'message' => sprintf('%s sizi andı', $name),
+            ));
+        }
     }
 }
 

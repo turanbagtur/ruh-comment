@@ -171,10 +171,12 @@
     font-size: 12px !important;
 }
 
-.theme-disqus .like-btn:hover { color: #2e9fff !important; }
-.theme-disqus .dislike-btn:hover { color: #e74c3c !important; }
-.theme-disqus .like-btn.active { color: #2e9fff !important; }
-.theme-disqus .dislike-btn.active { color: #e74c3c !important; }
+.theme-disqus .like-btn:hover,
+.theme-disqus .like-btn.liked,
+.theme-disqus .like-btn.active { color: #22c55e !important; }
+.theme-disqus .dislike-btn:hover,
+.theme-disqus .dislike-btn.disliked,
+.theme-disqus .dislike-btn.active { color: #ef4444 !important; }
 
 /* Like/Dislike SVG ikonlari */
 .theme-disqus .like-btn svg,

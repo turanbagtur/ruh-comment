@@ -21,6 +21,7 @@ $custom_tables = array(
     $wpdb->prefix . 'ruh_badges',
     $wpdb->prefix . 'ruh_user_badges',
     $wpdb->prefix . 'ruh_reports',
+    $wpdb->prefix . 'ruh_notifications',
 );
 
 foreach ($custom_tables as $table) {

@@ -125,9 +125,10 @@ class Ruh_Badge_Manager {
             array(
                 'badge_name' => $name,
                 'badge_svg' => $svg,
-                'is_automated' => 0
+                'is_automated' => 0,
+                'rarity' => in_array(sanitize_key($_POST['badge_rarity'] ?? 'common'), array('common','rare','auto','legendary'), true) ? sanitize_key($_POST['badge_rarity']) : 'common'
             ),
-            array('%s', '%s', '%d')
+            array('%s', '%s', '%d', '%s')
         );
         
         if ($result === false) {
@@ -168,9 +169,10 @@ class Ruh_Badge_Manager {
                 'badge_svg' => $svg,
                 'is_automated' => 1,
                 'auto_condition_type' => $condition_type,
-                'auto_condition_value' => $condition_value
+                'auto_condition_value' => $condition_value,
+                'rarity' => in_array(sanitize_key($_POST['badge_rarity'] ?? 'auto'), array('common','rare','auto','legendary'), true) ? sanitize_key($_POST['badge_rarity']) : 'auto'
             ),
-            array('%s', '%s', '%d', '%s', '%d')
+            array('%s', '%s', '%d', '%s', '%d', '%s')
         );
         
         if ($result === false) {
@@ -244,9 +246,10 @@ class Ruh_Badge_Manager {
                 'badge_svg' => $badge_html,
                 'is_automated' => 0,
                 'auto_condition_type' => 'custom_image',
-                'auto_condition_value' => 0
+                'auto_condition_value' => 0,
+                'rarity' => in_array(sanitize_key($_POST['badge_rarity'] ?? 'common'), array('common','rare','auto','legendary'), true) ? sanitize_key($_POST['badge_rarity']) : 'common'
             ),
-            array('%s', '%s', '%d', '%s', '%d')
+            array('%s', '%s', '%d', '%s', '%d', '%s')
         );
         
         if ($result === false) {
@@ -461,6 +464,15 @@ class Ruh_Badge_Manager {
                             </div>
                             
                             <div class="ruh-form-group">
+                                <label>Nadirlik</label>
+                                <select name="badge_rarity" id="badge-rarity">
+                                    <option value="common">Common</option>
+                                    <option value="rare">Rare</option>
+                                    <option value="legendary">Legendary</option>
+                                    <option value="auto">Auto</option>
+                                </select>
+                            </div>
+                            <div class="ruh-form-group">
                                 <label>Önizleme</label>
                                 <div id="badge-preview" class="ruh-badge-preview">
                                     <?php echo str_replace('{color}', '#667eea', $this->badge_icons['star']); ?>
@@ -488,6 +500,14 @@ class Ruh_Badge_Manager {
                             <div class="ruh-form-group">
                                 <label>Rozet Adı</label>
                                 <input type="text" id="custom-badge-name" name="badge_name" required placeholder="Örnek: Özel VIP">
+                            </div>
+                            <div class="ruh-form-group">
+                                <label>Nadirlik</label>
+                                <select id="custom-badge-rarity">
+                                    <option value="common">Common</option>
+                                    <option value="rare">Rare</option>
+                                    <option value="legendary">Legendary</option>
+                                </select>
                             </div>
                             
                             <div class="ruh-form-group">
@@ -549,6 +569,15 @@ class Ruh_Badge_Manager {
                                 </div>
                             </div>
                             
+                            <div class="ruh-form-group">
+                                <label>Nadirlik</label>
+                                <select name="auto_badge_rarity" id="auto-badge-rarity">
+                                    <option value="auto" selected>Auto</option>
+                                    <option value="common">Common</option>
+                                    <option value="rare">Rare</option>
+                                    <option value="legendary">Legendary</option>
+                                </select>
+                            </div>
                             <div class="ruh-form-group">
                                 <label>Koşul Türü</label>
                                 <select id="auto-condition-type" name="condition_type" required>
@@ -842,7 +871,8 @@ class Ruh_Badge_Manager {
                     nonce: ruh_badge_ajax.nonce,
                     badge_name: $('#badge-name').val(),
                     badge_icon: $('input[name="badge_icon"]:checked').val(),
-                    badge_color: $('input[name="badge_color"]:checked').val()
+                    badge_color: $('input[name="badge_color"]:checked').val(),
+                    badge_rarity: $('#badge-rarity').val()
                 })
                 .done(function(response) {
                     if (response.success) {
@@ -927,6 +957,7 @@ class Ruh_Badge_Manager {
                 formData.append('badge_action', 'create_custom');
                 formData.append('nonce', ruh_badge_ajax.nonce);
                 formData.append('badge_name', $('#custom-badge-name').val());
+                formData.append('badge_rarity', $('#custom-badge-rarity').val() || 'common');
                 
                 var fileInput = $('#badge-image')[0];
                 if (fileInput.files.length === 0) {
@@ -976,7 +1007,8 @@ class Ruh_Badge_Manager {
                     badge_icon: $('input[name="auto_badge_icon"]:checked').val(),
                     badge_color: $('input[name="auto_badge_color"]:checked').val(),
                     condition_type: $('#auto-condition-type').val(),
-                    condition_value: $('#auto-condition-value').val()
+                    condition_value: $('#auto-condition-value').val(),
+                    badge_rarity: $('#auto-badge-rarity').val()
                 })
                 .done(function(response) {
                     if (response.success) {

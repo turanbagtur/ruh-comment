@@ -3,7 +3,7 @@
  * Plugin Name:       Ruh Comment
  * Plugin URI:        https://mangaruhu.com
  * Description:       Ultra modern glassmorphism tasarımlı yorum sistemi. Mention, markdown, GIF, syntax highlighting, analytics, REST API, seviye/rozet sistemi, gelişmiş güvenlik ve spam koruması. Manga siteleri için optimize edilmiş.
- * Version:           7.0
+ * Version:           7.1
  * Author:            Solderet
  * Author URI:        https://mangaruhu.com
  * Text Domain:       ruh-comment
@@ -16,7 +16,7 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * 
  * @package RuhComment
- * @version 7.0
+ * @version 7.1
  * @author Solderet <info@mangaruhu.com>
  * @copyright 2025 Solderet
  * @license GPL-2.0+
@@ -24,14 +24,19 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('RUH_COMMENT_VERSION', '7.0');
+define('RUH_COMMENT_VERSION', '7.1');
+define('RUH_COMMENT_DB_VERSION', '3');
 define('RUH_COMMENT_PATH', plugin_dir_path(__FILE__));
 define('RUH_COMMENT_URL', plugin_dir_url(__FILE__));
 
-// Güvenli aktivasyon fonksiyonu - SQL hatalarını düzeltilmiş
-function ruh_comment_activate() {
+/**
+ * Veritabanı tablolarını oluşturur/günceller.
+ * Hem aktivasyonda hem de sürüm değişikliğinde (plugins_loaded) çalışır,
+ * böylece mevcut kurulumlar da yeni kolonlara (ör. reports.status) sahip olur.
+ */
+function ruh_comment_install_tables() {
     global $wpdb;
-    
+
     try {
         $charset_collate = $wpdb->get_charset_collate();
         
@@ -74,7 +79,7 @@ function ruh_comment_activate() {
             KEY idx_badge (badge_id)
         ) $charset_collate;";
         
-        // Reports table - FIX: Datetime field düzeltmesi
+        // Reports table - FIX: status ve created_at kolonları eklendi (admin panel bunlara ihtiyaç duyuyor)
         $table_reports = $wpdb->prefix . 'ruh_reports';
         $sql_reports = "CREATE TABLE IF NOT EXISTS $table_reports (
             id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -82,22 +87,26 @@ function ruh_comment_activate() {
             reporter_id bigint(20) NOT NULL,
             report_time datetime DEFAULT CURRENT_TIMESTAMP,
             reason varchar(255) DEFAULT NULL,
+            status varchar(20) NOT NULL DEFAULT 'pending',
             PRIMARY KEY (id),
             UNIQUE KEY unique_report (comment_id, reporter_id),
             KEY idx_comment (comment_id),
-            KEY idx_reporter (reporter_id)
+            KEY idx_reporter (reporter_id),
+            KEY idx_status (status)
         ) $charset_collate;";
 
         // Reactions table - visitor_ip eklendi (giriş yapmamış kullanıcılar için)
+        // FIX: UNIQUE key eklendi - eşzamanlı isteklerde tekrarlı kayıt (race condition) oluşmasını önler
         $table_reactions = $wpdb->prefix . 'ruh_reactions';
         $sql_reactions = "CREATE TABLE IF NOT EXISTS $table_reactions (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             post_id bigint(20) NOT NULL,
             user_id bigint(20) NOT NULL DEFAULT 0,
-            visitor_ip varchar(45) DEFAULT NULL,
+            visitor_ip varchar(45) NOT NULL DEFAULT '',
             reaction varchar(20) NOT NULL DEFAULT 'like',
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
+            UNIQUE KEY unique_user_reaction (post_id, user_id, visitor_ip),
             KEY idx_post (post_id),
             KEY idx_user (user_id),
             KEY idx_visitor_ip (visitor_ip)
@@ -110,6 +119,21 @@ function ruh_comment_activate() {
         dbDelta($sql_badges);  
         dbDelta($sql_user_badges);
         dbDelta($sql_reports);
+
+        // Reactions tablosuna UNIQUE key eklenmeden önce mevcut kurulumlarda
+        // olası NULL visitor_ip ve mükerrer kayıtları temizle (dbDelta, veri
+        // çakışması varsa UNIQUE index'i sessizce eklemeyebilir).
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_reactions'") === $table_reactions) {
+            $wpdb->query("UPDATE $table_reactions SET visitor_ip = '' WHERE visitor_ip IS NULL");
+            $wpdb->query("
+                DELETE r1 FROM $table_reactions r1
+                INNER JOIN $table_reactions r2
+                ON r1.post_id = r2.post_id
+                AND r1.user_id = r2.user_id
+                AND r1.visitor_ip = r2.visitor_ip
+                AND r1.id < r2.id
+            ");
+        }
         dbDelta($sql_reactions);
 
         // Varsayılan ayarları ekle
@@ -122,17 +146,64 @@ function ruh_comment_activate() {
                 'xp_per_comment' => 15,
                 'spam_link_limit' => 2,
                 'auto_moderate_reports' => 3,
-                'giphy_api_key' => ''
+                'giphy_api_key' => '',
+                'tenor_api_key' => '',
+                'enable_notifications' => 1,
+                'enable_comment_search' => 1,
+                'enable_highlights' => 1,
+                'enable_spam_score' => 1,
+                'color_mode' => 'auto',
+                'discord_webhook_url' => '',
+                'telegram_bot_token' => '',
+                'telegram_chat_id' => ''
             );
             update_option('ruh_comment_options', $default_options);
         }
 
-        flush_rewrite_rules();
-        
+        $notify_table = $wpdb->prefix . 'ruh_notifications';
+        dbDelta("CREATE TABLE IF NOT EXISTS $notify_table (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) NOT NULL,
+            type varchar(20) NOT NULL DEFAULT 'reply',
+            actor_id bigint(20) NOT NULL DEFAULT 0,
+            comment_id bigint(20) NOT NULL DEFAULT 0,
+            post_id bigint(20) NOT NULL DEFAULT 0,
+            message varchar(255) NOT NULL DEFAULT '',
+            is_read tinyint(1) NOT NULL DEFAULT 0,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_user_read (user_id, is_read),
+            KEY idx_created (created_at)
+        ) $charset_collate;");
+
+        $badge_col = $wpdb->get_results("SHOW COLUMNS FROM $table_badges LIKE 'rarity'");
+        if (empty($badge_col)) {
+            $wpdb->query("ALTER TABLE $table_badges ADD rarity varchar(20) NOT NULL DEFAULT 'common'");
+        }
+
+        update_option('ruh_comment_db_version', RUH_COMMENT_DB_VERSION);
+
     } catch (Exception $e) {
-        error_log('[Ruh Comment] Activation Error: ' . $e->getMessage());
+        error_log('[Ruh Comment] DB Install Error: ' . $e->getMessage());
     }
 }
+
+// Geriye dönük uyumluluk için eski fonksiyon adı
+function ruh_comment_activate() {
+    ruh_comment_install_tables();
+    flush_rewrite_rules();
+}
+
+/**
+ * Mevcut kurulumlarda eklenti güncellendiğinde (dosyalar değişse de aktivasyon
+ * hook'u tekrar çalışmaz) tablo şemasını senkron tutar.
+ */
+function ruh_comment_maybe_upgrade_db() {
+    if (get_option('ruh_comment_db_version') !== RUH_COMMENT_DB_VERSION) {
+        ruh_comment_install_tables();
+    }
+}
+add_action('plugins_loaded', 'ruh_comment_maybe_upgrade_db', 5);
 
 function ruh_comment_deactivate() {
     wp_cache_flush();
@@ -153,6 +224,7 @@ function ruh_comment_uninstall() {
         $wpdb->prefix . 'ruh_badges',
         $wpdb->prefix . 'ruh_user_badges',
         $wpdb->prefix . 'ruh_reports',
+        $wpdb->prefix . 'ruh_notifications',
     );
     
     foreach ($custom_tables as $table) {
@@ -180,6 +252,7 @@ function ruh_comment_uninstall() {
     
     // Options'ı sil
     delete_option('ruh_comment_options');
+    delete_option('ruh_comment_db_version');
     
     // Cron job'ları temizle
     wp_clear_scheduled_hook('ruh_check_badges_cron');
@@ -194,6 +267,7 @@ require_once RUH_COMMENT_PATH . 'includes/class-options-cache.php';
 // Tüm modülleri yükle - güvenli şekilde
 $required_files = array(
     'includes/template-helpers.php',
+    'includes/community-features.php',
     'includes/auth-handler.php', 
     'includes/ajax-handlers.php',
     'includes/filters-and-actions.php',
@@ -299,6 +373,16 @@ function ruh_comment_enqueue_scripts() {
         'pinned' => $lang === 'en_US' ? 'Pinned' : 'Sabitlendi',
         'view_comment' => $lang === 'en_US' ? 'View Comment' : 'Yorumu Görüntüle',
         'comment_rules' => $lang === 'en_US' ? 'Comment Rules' : 'Yorum Kuralları',
+        'discussed' => $lang === 'en_US' ? 'Most discussed' : 'En çok tartışılan',
+        'search_comments' => $lang === 'en_US' ? 'Search comments...' : 'Yorumlarda ara...',
+        'filter_user' => $lang === 'en_US' ? 'Filter by user' : 'Kullanıcıya göre filtrele',
+        'highlights' => $lang === 'en_US' ? 'Top comments' : 'Öne çıkan yorumlar',
+        'notifications' => $lang === 'en_US' ? 'Notifications' : 'Bildirimler',
+        'no_notifications' => $lang === 'en_US' ? 'No notifications yet.' : 'Henüz bildirim yok.',
+        'mark_read' => $lang === 'en_US' ? 'Mark all read' : 'Tümünü okundu işaretle',
+        'theme_auto' => $lang === 'en_US' ? 'Auto' : 'Otomatik',
+        'theme_dark' => $lang === 'en_US' ? 'Dark' : 'Koyu',
+        'theme_light' => $lang === 'en_US' ? 'Light' : 'Açık',
     );
     
      // AJAX verilerini JS'e aktar - Giphy API key client-side'a gönderilmez
@@ -312,7 +396,10 @@ function ruh_comment_enqueue_scripts() {
          'lang' => $lang,
          'texts' => $texts,
          'max_comment_length' => $max_comment_length,
-         'gif_proxy' => admin_url('admin-ajax.php?action=ruh_gif_search') // Giphy proxy endpoint
+         'gif_proxy' => admin_url('admin-ajax.php?action=ruh_gif_search'),
+         'logged_in' => is_user_logged_in(),
+         'color_mode' => isset($options['color_mode']) ? $options['color_mode'] : 'auto',
+         'enable_notifications' => !empty($options['enable_notifications']) && is_user_logged_in() ? 1 : 0,
      ));
 }
 add_action('wp_enqueue_scripts', 'ruh_comment_enqueue_scripts');

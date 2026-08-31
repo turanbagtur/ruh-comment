@@ -261,6 +261,9 @@ jQuery(document).ready(function($) {
             this.setupSpoilers();
             this.setupCommentRules();
             this.setupPinning();
+            this.setupSearchFilter();
+            this.setupColorMode();
+            this.setupNotifications();
             this.loadInitialData();
             this.loadComments();
         },
@@ -978,6 +981,80 @@ jQuery(document).ready(function($) {
         },
         
         // SIRALAMA
+        setupSearchFilter: function() {
+            const self = this;
+            let timer = null;
+            $(document).on('input', '#ruh-comment-search, #ruh-comment-author', function() {
+                clearTimeout(timer);
+                timer = setTimeout(function() {
+                    self.loadComments(true);
+                }, 350);
+            });
+        },
+        setupColorMode: function() {
+            const $root = $('#ruh-comments');
+            if (!$root.length) return;
+            const saved = localStorage.getItem('ruh_color_mode');
+            const mode = saved || ruh_comment_ajax.color_mode || $root.data('color-mode') || 'auto';
+            $root.attr('data-color-mode', mode);
+            if (!$('#ruh-color-toggle').length) {
+                const texts = ruh_comment_ajax.texts || {};
+                const html = '<div class="ruh-color-toggle" id="ruh-color-toggle">' +
+                    '<button type="button" data-mode="auto">' + (texts.theme_auto || 'Auto') + '</button>' +
+                    '<button type="button" data-mode="dark">' + (texts.theme_dark || 'Dark') + '</button>' +
+                    '<button type="button" data-mode="light">' + (texts.theme_light || 'Light') + '</button></div>';
+                $root.find('.comments-header').first().append(html);
+            }
+            $('#ruh-color-toggle button').removeClass('active').filter('[data-mode="' + mode + '"]').addClass('active');
+            $(document).on('click', '#ruh-color-toggle button', function() {
+                const next = $(this).data('mode');
+                localStorage.setItem('ruh_color_mode', next);
+                $root.attr('data-color-mode', next);
+                $('#ruh-color-toggle button').removeClass('active');
+                $(this).addClass('active');
+            });
+        },
+        setupNotifications: function() {
+            if (!ruh_comment_ajax.enable_notifications) return;
+            const loadNotes = function(mark) {
+                $.post(ruh_comment_ajax.ajax_url, {
+                    action: 'ruh_get_notifications',
+                    nonce: ruh_comment_ajax.nonce,
+                    mark_read: mark ? 1 : 0
+                }).done(function(res) {
+                    if (!res.success) return;
+                    const unread = res.data.unread || 0;
+                    const $count = $('#ruh-notify-count');
+                    if (unread > 0) { $count.text(unread).removeAttr('hidden'); }
+                    else { $count.attr('hidden', 'hidden'); }
+                    let html = '';
+                    (res.data.items || []).forEach(function(item) {
+                        html += '<a class="ruh-notify-item' + (item.is_read ? '' : ' unread') + '" href="' + (item.link || '#') + '">' +
+                            '<span>' + $('<div>').text(item.message || '').html() + '</span>' +
+                            '<small>' + $('<div>').text(item.time || '').html() + '</small></a>';
+                    });
+                    if (!html) html = '<p class="ruh-notify-empty">' + ((ruh_comment_ajax.texts && ruh_comment_ajax.texts.no_notifications) || 'Henüz bildirim yok.') + '</p>';
+                    html += '<button type="button" class="ruh-notify-read">' + ((ruh_comment_ajax.texts && ruh_comment_ajax.texts.mark_read) || 'Okundu') + '</button>';
+                    $('#ruh-notify-panel').html(html);
+                });
+            };
+            loadNotes(false);
+            $(document).on('click', '#ruh-notify-btn', function(e) {
+                e.preventDefault();
+                const $panel = $('#ruh-notify-panel');
+                if ($panel.is('[hidden]')) { $panel.removeAttr('hidden'); loadNotes(false); }
+                else { $panel.attr('hidden', 'hidden'); }
+            });
+            $(document).on('click', '.ruh-notify-read', function(e) {
+                e.preventDefault();
+                loadNotes(true);
+            });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.ruh-notify-wrap').length) {
+                    $('#ruh-notify-panel').attr('hidden', 'hidden');
+                }
+            });
+        },
         setupSorting: function() {
             const self = this;
             
@@ -1275,6 +1352,8 @@ jQuery(document).ready(function($) {
                 page: this.currentPage,
                 sort: this.currentSort,
                 parent_id: 0,
+                search: $('#ruh-comment-search').val() || '',
+                author: $('#ruh-comment-author').val() || '',
                 current_url: window.location.href
             })
             .done(function(response) {

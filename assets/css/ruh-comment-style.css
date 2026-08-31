@@ -973,28 +973,47 @@
     min-height: 22px !important;
     line-height: 1 !important;
 }
-.action-btn:hover,
-.heart-like-btn:hover {
-    background: rgba(239,68,68,0.1) !important;
-    color: #ef4444 !important;
-    border-color: rgba(239,68,68,0.3) !important;
+.action-btn:hover {
+    background: rgba(255,255,255,0.05) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-hover) !important;
 }
-.action-btn.liked,
+.action-btn.like-btn:hover,
+.heart-like-btn:hover {
+    background: rgba(34,197,94,0.12) !important;
+    color: #22c55e !important;
+    border-color: rgba(34,197,94,0.4) !important;
+}
+.action-btn.like-btn.liked,
 .heart-like-btn.active {
+    color: #22c55e !important;
+    background: rgba(34,197,94,0.14) !important;
+    border-color: #22c55e !important;
+}
+.action-btn.like-btn.liked svg,
+.action-btn.like-btn.liked svg path,
+.action-btn.like-btn:hover svg,
+.action-btn.like-btn:hover svg path {
+    fill: #22c55e !important;
+    color: #22c55e !important;
+}
+.action-btn.dislike-btn:hover {
+    background: rgba(239,68,68,0.12) !important;
     color: #ef4444 !important;
-    background: rgba(239,68,68,0.1) !important;
-    border-color: #ef4444 !important;
+    border-color: rgba(239,68,68,0.4) !important;
 }
 .action-btn.disliked,
 .action-btn.dislike-btn.disliked {
-    color: #64748b !important;
-    background: rgba(100,116,139,0.1) !important;
-    border-color: #64748b !important;
+    color: #ef4444 !important;
+    background: rgba(239,68,68,0.14) !important;
+    border-color: #ef4444 !important;
 }
-.action-btn.dislike-btn:hover {
-    background: rgba(100,116,139,0.1) !important;
-    color: #94a3b8 !important;
-    border-color: rgba(100,116,139,0.4) !important;
+.action-btn.dislike-btn.disliked svg,
+.action-btn.dislike-btn.disliked svg path,
+.action-btn.dislike-btn:hover svg,
+.action-btn.dislike-btn:hover svg path {
+    fill: #ef4444 !important;
+    color: #ef4444 !important;
 }
 .action-btn svg,
 .heart-icon,
@@ -1003,7 +1022,7 @@
     height: 11px !important;
     flex-shrink: 0 !important;
 }
-.heart-like-btn.active .heart-icon { fill: #ef4444 !important; }
+.heart-like-btn.active .heart-icon { fill: #22c55e !important; }
 
 .like-count, .dislike-count {
     font-weight: 600 !important;
@@ -2110,6 +2129,11 @@
 
 .comment-actions .action-btn.like-btn:hover,
 .comment-actions .action-btn.like-btn.liked {
+    border-color: #22c55e;
+    color: #22c55e;
+}
+.comment-actions .action-btn.dislike-btn:hover,
+.comment-actions .action-btn.dislike-btn.disliked {
     border-color: #ef4444;
     color: #ef4444;
 }
@@ -3367,4 +3391,125 @@ body > .more-dropdown .pin-btn:hover,
     .comment-list { gap: 5px !important; }
     .ruh-comment-item, .comment-item { padding: 8px 10px !important; }
     .comment-list .children { padding-left: 14px !important; }
+}
+
+.ruh-highlights {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+}
+.ruh-highlights h4 { margin: 0 0 8px; font-size: 0.85rem; }
+.ruh-highlights ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ruh-highlights li p { margin: 4px 0 0; color: var(--text-secondary); font-size: 0.8rem; }
+.ruh-highlights .hl-likes { color: #22c55e; font-size: 0.72rem; margin-left: 6px; }
+.ruh-comment-tools {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 12px;
+    flex-wrap: wrap;
+}
+.ruh-comment-tools input {
+    flex: 1;
+    min-width: 140px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: inherit;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+.ruh-notify-wrap { position: relative; margin-left: auto; }
+.ruh-notify-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: inherit;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    position: relative;
+    cursor: pointer;
+}
+.ruh-notify-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 10px;
+    min-width: 16px;
+    padding: 1px 4px;
+}
+.ruh-notify-panel {
+    position: absolute;
+    right: 0;
+    top: 42px;
+    width: min(320px, 80vw);
+    background: #161616;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 8px;
+    z-index: 40;
+    max-height: 320px;
+    overflow: auto;
+}
+.ruh-notify-item {
+    display: block;
+    padding: 8px;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 8px;
+}
+.ruh-notify-item.unread { background: rgba(168,85,247,0.12); }
+.ruh-notify-item small { display: block; color: var(--text-muted); font-size: 11px; }
+.ruh-notify-read {
+    width: 100%;
+    margin-top: 6px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: inherit;
+    border-radius: 8px;
+    padding: 6px;
+    cursor: pointer;
+}
+.ruh-color-toggle { display: flex; gap: 4px; }
+.ruh-color-toggle button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: inherit;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.ruh-color-toggle button.active { background: rgba(168,85,247,0.2); border-color: #a855f7; }
+#ruh-comments[data-color-mode="light"] {
+    color: #1f2937;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+}
+#ruh-comments[data-color-mode="light"] .comment-item,
+#ruh-comments[data-color-mode="light"] #ruh-comment-form-wrapper,
+#ruh-comments[data-color-mode="light"] .comments-header,
+#ruh-comments[data-color-mode="light"] .ruh-highlights,
+#ruh-comments[data-color-mode="light"] .ruh-notify-panel {
+    background: rgba(255,255,255,0.72) !important;
+    border-color: rgba(0,0,0,0.08) !important;
+    color: #111827;
+}
+#ruh-comments[data-color-mode="light"] .ruh-comment-tools input,
+#ruh-comments[data-color-mode="light"] #comment {
+    color: #111827;
+    border-color: rgba(0,0,0,0.12);
+}
+@media (prefers-color-scheme: light) {
+    #ruh-comments[data-color-mode="auto"] {
+        color: #1f2937;
+        --text-primary: #111827;
+        --text-secondary: #374151;
+        --text-muted: #6b7280;
+    }
 }

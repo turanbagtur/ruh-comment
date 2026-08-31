@@ -441,6 +441,10 @@ class Ruh_Comment_Admin {
                     <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
                     Kullanıcılar
                 </button>
+                <button class="ruh-admin-tab" data-tab="integrations">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M10.59,13.41C11,13.8 11,14.4 10.59,14.81C10.2,15.2 9.6,15.2 9.19,14.81C7.22,12.84 7.22,9.16 9.19,7.19L12.71,3.66C14.68,1.69 18.36,1.69 20.33,3.66C22.3,5.63 22.3,9.31 20.33,11.28L18.83,12.78C18.42,12.37 17.81,12.37 17.4,12.78C17,13.18 17,13.79 17.4,14.2L18.9,12.7C21.27,10.33 21.27,6.6 18.9,4.24C16.54,1.87 12.81,1.87 10.44,4.24L6.91,7.78C4.54,10.14 4.54,13.87 6.91,16.24C7.32,16.65 7.93,16.65 8.33,16.24C8.74,15.84 8.74,15.23 8.33,14.83C6.76,13.26 6.76,10.74 8.33,9.17L10.59,13.41M13.41,9.17C13.81,8.76 14.41,8.76 14.81,9.17C16.78,11.14 16.78,14.82 14.81,16.79L11.29,20.32C9.32,22.29 5.64,22.29 3.67,20.32C1.7,18.35 1.7,14.67 3.67,12.7L5.17,11.2C5.58,11.61 6.19,11.61 6.6,11.2C7,10.8 7,10.19 6.6,9.78L5.1,11.28C2.73,13.65 2.73,17.38 5.1,19.74C7.46,22.11 11.19,22.11 13.56,19.74L17.09,16.2C19.46,13.84 19.46,10.11 17.09,7.74C16.68,7.33 16.07,7.33 15.67,7.74C15.26,8.14 15.26,8.75 15.67,9.15C17.24,10.72 17.24,13.24 15.67,14.81L13.41,9.17Z"/></svg>
+                    Entegrasyon
+                </button>
                 <button class="ruh-admin-tab" data-tab="design">
                     <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A1.5,1.5 0 0,0 13.5,19.5C13.5,19.11 13.35,18.76 13.11,18.5C12.88,18.23 12.73,17.88 12.73,17.5A1.5,1.5 0 0,1 14.23,16H16A5,5 0 0,0 21,11C21,6.58 16.97,3 12,3Z"/></svg>
                     Tasarım
@@ -726,6 +730,54 @@ class Ruh_Comment_Admin {
                                            class="regular-text" placeholder="API anahtarınızı girin...">
                                 </div>
                             </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label">
+                                    <label>Tenor API Key</label>
+                                    <span class="ruh-setting-desc">Giphy yoksa Tenor kullanılır. <a href="https://developers.google.com/tenor" target="_blank">Buradan alın</a></span>
+                                </div>
+                                <div class="ruh-setting-input">
+                                    <input type="text" name="ruh_comment_options[tenor_api_key]" 
+                                           value="<?php echo esc_attr($options['tenor_api_key'] ?? ''); ?>" 
+                                           class="regular-text" placeholder="Tenor API anahtarı...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="tab-integrations" class="ruh-tab-content">
+                    <div class="ruh-settings-card">
+                        <div class="ruh-card-header">
+                            <h2>Bildirim ve Entegrasyon</h2>
+                        </div>
+                        <div class="ruh-card-body">
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Site içi bildirimler</label><span class="ruh-setting-desc">Yanıt, mention ve rozet bildirimleri</span></div>
+                                <div class="ruh-setting-input"><label class="ruh-toggle"><input type="checkbox" name="ruh_comment_options[enable_notifications]" value="1" <?php checked(1, $options['enable_notifications'] ?? 1); ?>><span class="ruh-toggle-slider"></span></label></div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Yorum arama</label><span class="ruh-setting-desc">Yorum listesinde arama ve kullanıcı filtresi</span></div>
+                                <div class="ruh-setting-input"><label class="ruh-toggle"><input type="checkbox" name="ruh_comment_options[enable_comment_search]" value="1" <?php checked(1, $options['enable_comment_search'] ?? 1); ?>><span class="ruh-toggle-slider"></span></label></div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Öne çıkan yorumlar</label><span class="ruh-setting-desc">En çok beğenilen yorumları göster</span></div>
+                                <div class="ruh-setting-input"><label class="ruh-toggle"><input type="checkbox" name="ruh_comment_options[enable_highlights]" value="1" <?php checked(1, $options['enable_highlights'] ?? 1); ?>><span class="ruh-toggle-slider"></span></label></div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Spam skoru</label><span class="ruh-setting-desc">Şüpheli yorumları otomatik reddet</span></div>
+                                <div class="ruh-setting-input"><label class="ruh-toggle"><input type="checkbox" name="ruh_comment_options[enable_spam_score]" value="1" <?php checked(1, $options['enable_spam_score'] ?? 1); ?>><span class="ruh-toggle-slider"></span></label></div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Discord Webhook</label><span class="ruh-setting-desc">Yeni yorumları Discord’a gönder</span></div>
+                                <div class="ruh-setting-input"><input type="url" name="ruh_comment_options[discord_webhook_url]" value="<?php echo esc_attr($options['discord_webhook_url'] ?? ''); ?>" class="regular-text" placeholder="https://discord.com/api/webhooks/..."></div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Telegram Bot Token</label></div>
+                                <div class="ruh-setting-input"><input type="text" name="ruh_comment_options[telegram_bot_token]" value="<?php echo esc_attr($options['telegram_bot_token'] ?? ''); ?>" class="regular-text"></div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label"><label>Telegram Chat ID</label></div>
+                                <div class="ruh-setting-input"><input type="text" name="ruh_comment_options[telegram_chat_id]" value="<?php echo esc_attr($options['telegram_chat_id'] ?? ''); ?>" class="regular-text"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -770,9 +822,23 @@ class Ruh_Comment_Admin {
                                                     Sol kenar çizgisi, minimal görünüm
                                                 </div>
                                             </div>
-                                            <strong style="display:block;margin-top:8px;">Disqus Tarzı</strong>
+                                             <strong style="display:block;margin-top:8px;">Disqus Tarzı</strong>
                                         </label>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="ruh-setting-row">
+                                <div class="ruh-setting-label">
+                                    <label>Renk modu</label>
+                                    <span class="ruh-setting-desc">Otomatik sistem teması, koyu veya açık</span>
+                                </div>
+                                <div class="ruh-setting-input">
+                                    <?php $color_mode = $options['color_mode'] ?? 'auto'; ?>
+                                    <select name="ruh_comment_options[color_mode]">
+                                        <option value="auto" <?php selected($color_mode, 'auto'); ?>>Otomatik</option>
+                                        <option value="dark" <?php selected($color_mode, 'dark'); ?>>Koyu</option>
+                                        <option value="light" <?php selected($color_mode, 'light'); ?>>Açık</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -1358,7 +1424,7 @@ class Ruh_Comment_Admin {
         if (!is_array($sanitized)) $sanitized = array();
         
         // Checkbox fields
-        $checkboxes = array('enable_reactions', 'enable_likes', 'enable_sorting', 'enable_badges', 'enable_reporting', 'enable_comment_rules');
+        $checkboxes = array('enable_reactions', 'enable_likes', 'enable_sorting', 'enable_badges', 'enable_reporting', 'enable_comment_rules', 'enable_notifications', 'enable_comment_search', 'enable_highlights', 'enable_spam_score');
         foreach ($checkboxes as $key) {
             $sanitized[$key] = !empty($input[$key]) ? 1 : 0;
         }
@@ -1374,6 +1440,11 @@ class Ruh_Comment_Admin {
         
         // Text fields
         $sanitized['giphy_api_key'] = isset($input['giphy_api_key']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $input['giphy_api_key']) : '';
+        $sanitized['tenor_api_key'] = isset($input['tenor_api_key']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $input['tenor_api_key']) : '';
+        $sanitized['discord_webhook_url'] = isset($input['discord_webhook_url']) ? esc_url_raw($input['discord_webhook_url']) : '';
+        $sanitized['telegram_bot_token'] = isset($input['telegram_bot_token']) ? sanitize_text_field($input['telegram_bot_token']) : '';
+        $sanitized['telegram_chat_id'] = isset($input['telegram_chat_id']) ? sanitize_text_field($input['telegram_chat_id']) : '';
+        $sanitized['color_mode'] = isset($input['color_mode']) && in_array($input['color_mode'], array('auto','dark','light'), true) ? $input['color_mode'] : 'auto';
         $sanitized['profanity_filter_words'] = isset($input['profanity_filter_words']) ? sanitize_textarea_field($input['profanity_filter_words']) : '';
         $sanitized['comment_rules_text'] = isset($input['comment_rules_text']) ? sanitize_textarea_field($input['comment_rules_text']) : '';
         

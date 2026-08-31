@@ -19,6 +19,11 @@ $ruh_texts = array(
         'newest' => 'En Yeni',
         'oldest' => 'En Eski',
         'best' => 'En İyi',
+        'discussed' => 'En çok tartışılan',
+        'search_comments' => 'Yorumlarda ara...',
+        'filter_user' => 'Kullanıcı',
+        'highlights' => 'Öne çıkan yorumlar',
+        'notifications' => 'Bildirimler',
         'write_comment' => 'Yorumunuzu yazın...',
         'submit' => 'Gönder',
         'login_required' => 'Yorum yapmak için giriş yapmalısınız.',
@@ -65,6 +70,11 @@ $ruh_texts = array(
         'newest' => 'Newest',
         'oldest' => 'Oldest',
         'best' => 'Best',
+        'discussed' => 'Most discussed',
+        'search_comments' => 'Search comments...',
+        'filter_user' => 'User',
+        'highlights' => 'Top comments',
+        'notifications' => 'Notifications',
         'write_comment' => 'Write your comment...',
         'submit' => 'Submit',
         'login_required' => 'You must login to comment.',
@@ -168,8 +178,9 @@ if ($current_user_id) {
 // Tema seçimi
 $comment_theme = isset($options['comment_theme']) ? $options['comment_theme'] : 'modern';
 $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
+$color_mode = isset($options['color_mode']) ? $options['color_mode'] : 'auto';
 ?>
-<div id="ruh-comments" class="comments-area ruh-comments-section <?php echo esc_attr($theme_class); ?>">
+<div id="ruh-comments" class="comments-area ruh-comments-section <?php echo esc_attr($theme_class); ?>" data-color-mode="<?php echo esc_attr($color_mode); ?>">
     <?php if (isset($options['enable_reactions']) && $options['enable_reactions']) : 
         // Emoji ve label ayarlarıni al
         $reaction_settings = array(
@@ -219,6 +230,25 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     </div>
     <?php endif; ?>
 
+    <?php
+    if (!empty($options['enable_highlights']) && function_exists('ruh_get_highlight_comments')) :
+        $highlights = ruh_get_highlight_comments($post_id, 3);
+        if (!empty($highlights)) :
+    ?>
+    <div class="ruh-highlights">
+        <h4><?php echo esc_html($t['highlights']); ?></h4>
+        <ul>
+            <?php foreach ($highlights as $hl) : ?>
+            <li>
+                <strong><?php echo esc_html($hl->comment_author); ?></strong>
+                <span class="hl-likes">♥ <?php echo intval($hl->likes); ?></span>
+                <p><?php echo esc_html(wp_trim_words(wp_strip_all_tags($hl->comment_content), 16)); ?></p>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; endif; ?>
+
     <div class="ruh-comments-main">
         <div class="comments-header">
             <h3 class="comments-title">
@@ -231,9 +261,25 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
                 <button class="sort-btn active" data-sort="newest"><?php echo $t['newest']; ?></button>
                 <button class="sort-btn" data-sort="oldest"><?php echo $t['oldest']; ?></button>
                 <button class="sort-btn" data-sort="best"><?php echo $t['best']; ?></button>
+                <button class="sort-btn" data-sort="discussed"><?php echo $t['discussed']; ?></button>
+            </div>
+            <?php endif; ?>
+            <?php if (is_user_logged_in() && !empty($options['enable_notifications'])) : ?>
+            <div class="ruh-notify-wrap">
+                <button type="button" id="ruh-notify-btn" class="ruh-notify-btn" aria-label="<?php echo esc_attr($t['notifications']); ?>">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z"/></svg>
+                    <span class="ruh-notify-count" id="ruh-notify-count" hidden>0</span>
+                </button>
+                <div id="ruh-notify-panel" class="ruh-notify-panel" hidden></div>
             </div>
             <?php endif; ?>
         </div>
+        <?php if (!empty($options['enable_comment_search'])) : ?>
+        <div class="ruh-comment-tools">
+            <input type="search" id="ruh-comment-search" placeholder="<?php echo esc_attr($t['search_comments']); ?>" autocomplete="off">
+            <input type="text" id="ruh-comment-author" placeholder="<?php echo esc_attr($t['filter_user']); ?>" autocomplete="off">
+        </div>
+        <?php endif; ?>
 
         <?php 
         // Yorum Kurallari
