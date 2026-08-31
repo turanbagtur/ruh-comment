@@ -1,6 +1,6 @@
 # Ruh Comment - Ultra Modern WordPress Yorum Sistemi
 
-[![Version](https://img.shields.io/badge/version-7.0-blue.svg)](https://mangaruhu.com)
+[![Version](https://img.shields.io/badge/version-8.0-blue.svg)](https://mangaruhu.com)
 [![WordPress](https://img.shields.io/badge/wordpress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/php-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0-green.svg)](LICENSE)
@@ -15,7 +15,10 @@ Disqus benzeri, **glassmorphism tasarımlı**, tepki sistemi, seviye/rozet mekan
 - ✅ **Tepki Sistemi** - 6 farklı emoji tepkisi, yuvarlak seçim, kalıcı durum
 - ✅ **Beğeni/Beğenmeme** - Modern kalp butonu
 - ✅ **İç İçe Yanıtlar** - Sınırsız derinlikte yanıt sistemi
-- ✅ **GIF Desteği** - Giphy entegrasyonu ile GIF arama
+- ✅ **GIF Desteği** - Giphy ve Tenor entegrasyonu
+- ✅ **Yorum Arama** - Metin ve kullanıcı filtresi
+- ✅ **Öne Çıkan Yorumlar** - En çok beğenilen yorum özeti
+- ✅ **Sıralama** - En yeni, en eski, en iyi, en çok tartışılan
 - ✅ **Spoiler Sistemi** - Tıkla-göster spoiler etiketleri
 - ✅ **Mention Sistemi** - @kullaniciadi ile kullanıcıları etiketle
 - ✅ **Markdown Desteği** - Kolay metin formatlama
@@ -24,7 +27,8 @@ Disqus benzeri, **glassmorphism tasarımlı**, tepki sistemi, seviye/rozet mekan
 ### 🎮 Seviye & Rozet Sistemi
 - 🏆 **XP Sistemi** - Yorum yaptıkça XP kazan, anlık güncelleme
 - 📊 **Seviye Sistemi** - Otomatik seviye atlama
-- 🎖️ **Rozet Sistemi** - Manuel ve otomatik rozetler, ikon + isim görünümü
+- 🎖️ **Rozet Sistemi** - Manuel/otomatik rozetler, nadirlik (common/rare/legendary)
+- 🔔 **Bildirimler** - Yanıt, mention ve rozet bildirimleri
 - 🌟 **Profil Sayfası** - Kullanıcı profilleri ve istatistikler
 - 👤 **Avatar Fallback** - Profil resmi yoksa isim baş harfi
 
@@ -33,9 +37,10 @@ Disqus benzeri, **glassmorphism tasarımlı**, tepki sistemi, seviye/rozet mekan
 - ✅ **XSS Koruması** - wp_kses ile temizleme
 - ✅ **CSRF Koruması** - Nonce sistemleri
 - ✅ **Rate Limiting** - IP ve kullanıcı bazlı
-- ✅ **Spam Koruması** - Honeypot, Akismet, küfür filtresi
+- ✅ **Spam Koruması** - Honeypot, küfür filtresi, spam skoru
 - ✅ **Güvenli File Upload** - MIME type validation
-- ✅ **API Key Gizleme** - Giphy API key server-side proxy ile korunuyor
+- ✅ **API Key Gizleme** - Giphy/Tenor anahtarları sunucu tarafında
+- ✅ **Webhook** - Discord ve Telegram yeni yorum bildirimi
 - ✅ **Uninstall Script** - Eklenti kaldırıldığında tam veri temizliği
 
 ### ⚡ Performance
@@ -47,7 +52,8 @@ Disqus benzeri, **glassmorphism tasarımlı**, tepki sistemi, seviye/rozet mekan
 ### 🔧 Gelişmiş Özellikler
 - 📊 **Analytics Dashboard** - Detaylı istatistikler ve grafikler
 - 🔍 **Yorum Arama** - Gerçek zamanlı arama
-- 📱 **Responsive** - Mobil-first tasarım
+- 📱 **Responsive** - Mobil-first tasarım, koyu/açık/otomatik renk modu
+- 🎨 **Temalar** - Glassmorphism ve Disqus tarzı
 - 🌐 **REST API** - WordPress REST API desteği
 - 📥 **Import/Export** - Disqus import, CSV/JSON export
 - 🎨 **Syntax Highlighting** - Prism.js ile kod renklendirme

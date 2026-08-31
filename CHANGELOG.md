@@ -1,5 +1,107 @@
 # Changelog - Ruh Comment
 
+## [8.0] - 2026-08-31
+
+### ✨ Yeni Özellikler
+- **En çok tartışılan sıralama** — Yorumlar yanıt sayısına göre sıralanabilir.
+- **Tenor GIF** — Giphy yoksa Tenor API ile GIF arama.
+- **Site içi bildirimler** — Yanıt, mention ve rozet bildirimleri (zil paneli).
+- **Renk modu** — Otomatik / koyu / açık tema (admin + kullanıcı tercihi).
+- **Öne çıkan yorumlar** — En çok beğenilen yorumlar bölüm özeti.
+- **Spam skoru** — Şüpheli yorumları otomatik reddetme.
+- **Rozet nadirlik** — Common / Rare / Legendary / Auto, admin panelinden seçilir.
+- **Yorum arama + kullanıcı filtresi** — Liste üzerinde anlık arama.
+- **Discord / Telegram webhook** — Yeni yorumları kanala iletme.
+- **Yorum listesi cache** — HTML cache + yorum değişince invalidation.
+
+### 🎨 Arayüz
+- Yorum arka planı şeffaf; tema ile uyumlu.
+- Tepki butonları ve mobil dokunma boyutları büyütüldü.
+- Beğeni yeşil, beğenmeme kırmızı.
+- Glassmorphism ve Disqus temaları elden geçirildi.
+- Yanıt aç/kapa hatası düzeltildi.
+
+### 🛠️ Admin
+- Ayarlar, yorum, rozet, seviye, şikayet, analytics, moderasyon ve içe/dışa aktar panelleri yenilendi.
+- Moderasyon toplu işlem formu düzeltildi.
+- Disqus XML import post eşleştirmesi iyileştirildi.
+
+## [7.1] - 2026-08-17
+
+### 🔒 Kritik Güvenlik Düzeltmeleri
+
+#### 🚨 AJAX/REST Yorum Gönderiminde Spam Korumaları Bypass Ediliyordu
+- `preprocess_comment` filtresi (honeypot, IP ban, link limiti, küfür filtresi,
+  tekrarlı yorum kontrolü) sadece klasik WordPress yorum formunda (`wp_new_comment()`)
+  tetiklenir. Eklentinin asıl kullandığı AJAX (`wp_submit_comment`) ve REST API
+  akışları `wp_insert_comment()` kullandığından bu filtre **hiç çalışmıyordu**.
+- Tüm güvenlik kontrolleri `ruh_run_comment_security_checks()` fonksiyonuna
+  çıkarıldı ve artık AJAX handler ile REST API tarafından da doğrudan çağrılıyor.
+- Honeypot alanı artık AJAX isteğine de dahil ediliyor.
+
+#### 🛡️ Şikayet Yönetimi CSRF Açığı
+- Admin panelindeki "Şikayet Yönetimi" sayfasında yorum silme/şikayet reddetme
+  işlemleri nonce kontrolü olmadan çalışıyordu. `wp_nonce_field()` + 
+  `check_admin_referer()` eklendi.
+
+#### 🗄️ Veritabanı Şeması Düzeltmeleri
+- `ruh_reports` tablosuna eksik `status` kolonu eklendi (admin panel bu kolonu
+  kullanıyordu ama tablo şemasında yoktu, güncellemeler sessizce başarısız oluyordu).
+- `ruh_reactions` tablosuna `UNIQUE KEY` eklendi - eşzamanlı isteklerde (double-click,
+  bot) aynı kullanıcı için mükerrer tepki kaydı oluşabiliyordu (race condition).
+- Mevcut kurulumlar için otomatik migration eklendi (`ruh_comment_maybe_upgrade_db()`,
+  `plugins_loaded` üzerinde çalışır, `RUH_COMMENT_DB_VERSION` ile takip edilir).
+
+#### 📤 Rozet Görseli Yükleme - MIME Doğrulaması
+- Custom rozet görseli yüklerken sadece istemcinin gönderdiği `Content-Type`
+  header'ına güveniliyordu. `finfo_file()` ile gerçek dosya içeriği kontrolü eklendi.
+
+#### 🔐 Diğer Yetkilendirme/Onay Düzeltmeleri
+- "Tüm Seviyeleri Sıfırla" işlemi artık backend'de de onay kutusu kontrolü yapıyor
+  (önceden sadece JS ile devre dışı bırakılan bir butona dayanıyordu, bypass edilebilirdi).
+- Şikayet ve Seviye Yönetimi sayfalarına `current_user_can('manage_options')` kontrolü eklendi.
+
+### 🐛 Hata Düzeltmeleri
+
+- **Çift mention bildirimi**: `@kullanıcı` etiketlendiğinde e-posta bildirimi iki kez
+  gönderiliyordu (`wp_insert_comment` hook'u + manuel çağrı). Manuel çağrı kaldırıldı.
+- Admin ayarlar sayfasındaki "Bağış Yap" butonundaki bozuk SVG path (render hatası) düzeltildi.
+- `includes/activation.php` - ana dosyadaki `ruh_comment_activate()` ile çakışan,
+  hiçbir yerden kullanılmayan eski/tutarsız dosya kaldırıldı.
+- `includes/rest-api.php` içindeki mojibake (bozuk karakter kodlaması) yorum satırları düzeltildi.
+
+### ⚡ Performans İyileştirmeleri
+
+- Yorum listelemede kullanıcı seviyesi artık cache'li `ruh_get_user_level_info()`
+  ile çekiliyor (önceden her yorum için ayrı sorgu atılıyordu - N+1 sorunu).
+- Yanıt sayısı sorgusu (`ruh_get_comment_reply_count()`) object cache ile 5 dakika
+  önbelleğe alınıyor, yeni yanıt eklendiğinde otomatik invalidate ediliyor.
+- Eksik rate limit'ler eklendi: `get_comments`, `flag_comment`, `edit_comment`,
+  `delete_comment`, `load_replies`, `load_more_profile_comments`.
+- Kullanılmayan CSS/JS dosyaları kaldırıldı (hiçbir yerden enqueue edilmiyordu):
+  `ruh-comment-modern.css`, `ruh-admin-modern.css`, `ruh-comment-admin.css`,
+  `ruh-comment-admin.js` (bu son dosya ayrıca çalışmayan gömülü PHP kodu içeriyordu).
+
+### ♿ Erişilebilirlik (a11y) İyileştirmeleri
+
+- Tüm modallere (`role="dialog"`, `aria-modal="true"`) ve kapatma butonlarına
+  `aria-label` eklendi.
+- Modal açıldığında odak otomatik olarak modal içine taşınıyor, Tab/Shift+Tab
+  ile odak modal dışına çıkamıyor (focus trap), modal kapandığında odak
+  tetikleyici öğeye geri dönüyor (WCAG 2.4.3).
+- İkon-only butonlara (`like-btn`, `dislike-btn`, `more-btn`) `aria-label` eklendi.
+- `.comment-form textarea` için kaybolan focus göstergesi (outline:none) yerine
+  görünür bir box-shadow eklendi (WCAG 2.4.7).
+- `.more-btn` metin rengi (#666) WCAG AA kontrast oranını karşılamıyordu, tema
+  değişkeni (`--text-muted`) ile düzeltildi.
+
+### 🧹 Kod Kalitesi
+
+- GIF whitelist doğrulama mantığı (`ruh_is_allowed_gif_host()`) merkezileştirildi;
+  önceden `ajax-handlers.php` ve `template-helpers.php`'de birbirinden bağımsız,
+  farklı güvenlik seviyelerinde tekrarlanıyordu.
+- Ölü kod yollarına (`ruh_comment_format()`) açıklayıcı dokümantasyon eklendi.
+
 ## [7.0] - 2026-06-22
 
 ### 🚀 Yeni Özellikler
