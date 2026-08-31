@@ -15,7 +15,7 @@ class Ruh_Comment_Ajax_Handlers {
             add_action('wp_ajax_ruh_' . $action, array($this, $action . '_callback'));
             
             // Public actions (giriş yapmadan erişilebilir)
-            $public_actions = array('get_initial_data', 'get_comments', 'load_more_profile_comments', 'handle_reaction');
+            $public_actions = array('get_initial_data', 'get_comments', 'load_more_profile_comments', 'handle_reaction', 'load_replies');
             if (in_array($action, $public_actions)) {
                 add_action('wp_ajax_nopriv_ruh_' . $action, array($this, $action . '_callback'));
             }
@@ -67,7 +67,13 @@ class Ruh_Comment_Ajax_Handlers {
             'comment' => array('count' => $comment_limit, 'window' => $comment_window),
             'like' => array('count' => 30, 'window' => 60),
             'dislike' => array('count' => 30, 'window' => 60),
-            'reaction' => array('count' => 20, 'window' => 60)
+            'reaction' => array('count' => 20, 'window' => 60),
+            'get_comments' => array('count' => 60, 'window' => 60),
+            'flag_comment' => array('count' => 10, 'window' => 60),
+            'edit_comment' => array('count' => 15, 'window' => 60),
+            'delete_comment' => array('count' => 15, 'window' => 60),
+            'load_replies' => array('count' => 60, 'window' => 60),
+            'load_more_profile_comments' => array('count' => 30, 'window' => 60),
         );
         
         $limit = isset($limits[$action_type]) ? $limits[$action_type] : $limits['comment'];
@@ -198,6 +204,17 @@ class Ruh_Comment_Ajax_Handlers {
         if ($timeout_until && time() < intval($timeout_until)) {
             wp_send_json_error(array('message' => $this->msg('Geçici olarak yorum yapamazsınız.', 'You are temporarily restricted from commenting.')));
         }
+
+        // Güvenlik/spam kontrolleri (honeypot, IP ban, link limiti, küfür filtresi,
+        // tekrarlı yorum kontrolü). Bu kontroller daha önce sadece klasik WP yorum
+        // formunda (preprocess_comment) çalışıyordu ve AJAX üzerinden tamamen
+        // bypass ediliyordu - bkz. filters-and-actions.php ruh_run_comment_security_checks()
+        if (function_exists('ruh_run_comment_security_checks')) {
+            $security_check = ruh_run_comment_security_checks($comment_content, $user_id, $post_id, 'ajax');
+            if (is_wp_error($security_check)) {
+                wp_send_json_error(array('message' => $security_check->get_error_message()));
+            }
+        }
         
         // İzin verilen HTML tagleri
         $allowed_tags = array(
@@ -245,10 +262,11 @@ class Ruh_Comment_Ajax_Handlers {
             wp_schedule_single_event(time() + 5, 'ruh_check_badges_cron', array($user_id));
         }
         
-        // Mention bildirimlerini gonder (arka planda)
-        if (function_exists('ruh_process_mentions')) {
-            ruh_process_mentions($comment_id);
-        }
+        // NOT: Mention bildirimleri burada manuel tetiklenmiyor.
+        // ruh_process_mentions() zaten 'wp_insert_comment' hook'una bağlı
+        // (bkz. template-helpers.php) ve wp_insert_comment() çağrısıyla otomatik
+        // çalışır. Burada tekrar çağırmak kullanıcıya çift bildirim e-postası
+        // gönderilmesine sebep oluyordu.
         
         // Yorumu al ve HTML oluştür
         $comment = get_comment($comment_id);
@@ -287,11 +305,10 @@ class Ruh_Comment_Ajax_Handlers {
         $liked_class = ($user_vote === 'liked') ? 'liked' : '';
         $disliked_class = ($user_vote === 'disliked') ? 'disliked' : '';
         
-        // Kullanıcı seviyesi
+        // Kullanıcı seviyesi - cache'li fonksiyon kullanılıyor (N+1 sorgu önlemi)
         $user_level = 1;
-        if ($comment->user_id) {
-            $level_table = $wpdb->prefix . 'ruh_user_levels';
-            $level_data = $wpdb->get_row($wpdb->prepare("SELECT level FROM $level_table WHERE user_id = %d", $comment->user_id));
+        if ($comment->user_id && function_exists('ruh_get_user_level_info')) {
+            $level_data = ruh_get_user_level_info($comment->user_id);
             if ($level_data) {
                 $user_level = $level_data->level;
             }
@@ -312,7 +329,8 @@ class Ruh_Comment_Ajax_Handlers {
                 $fallback_svg = '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="#667eea" d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>';
                 foreach (array_slice($badges, 0, 2) as $badge) {
                     $svg = !empty($badge->badge_svg) ? $badge->badge_svg : $fallback_svg;
-                    $badges_html .= '<span class="comment-badge-item">';
+                    $rarity = function_exists('ruh_get_badge_rarity') ? ruh_get_badge_rarity($badge) : 'common';
+                    $badges_html .= '<span class="comment-badge-item" data-rarity="' . esc_attr($rarity) . '">';
                     $badges_html .= '<span class="comment-badge">' . $svg . '</span>';
                     $badges_html .= '<span class="comment-badge-name">' . esc_html($badge->badge_name) . '</span>';
                     $badges_html .= '</span>';
@@ -327,7 +345,7 @@ class Ruh_Comment_Ajax_Handlers {
         
         // Sabitlenme durumu
         $is_pinned = get_comment_meta($comment->comment_ID, 'ruh_pinned', true);
-        $pinned_class = $is_pinned ? ' pinned' : '';
+        $pinned_class = $is_pinned ? ' pinned is-pinned' : '';
         
         $html = '<li class="comment comment-item' . $pinned_class . '" id="comment-' . esc_attr($comment->comment_ID) . '" data-comment-id="' . esc_attr($comment->comment_ID) . '">';
         $html .= '<div class="comment-body">';
@@ -363,7 +381,10 @@ class Ruh_Comment_Ajax_Handlers {
         }
         
         $html .= $user_tag_html;
-        $html .= '<span class="comment-level">Lv.' . $user_level . '</span>';
+        $level_color = function_exists('ruh_get_level_color') ? ruh_get_level_color($user_level) : '#6b7280';
+        $level_tier = function_exists('ruh_get_level_tier') ? ruh_get_level_tier($user_level) : 'novice';
+        $level_title = function_exists('ruh_get_level_title') ? ruh_get_level_title($user_level) : '';
+        $html .= '<span class="comment-level level-tier-' . esc_attr($level_tier) . '" data-level="' . intval($user_level) . '" style="--level-color:' . esc_attr($level_color) . '" title="' . esc_attr($level_title) . '">Lv.' . intval($user_level) . '</span>';
         $html .= $badges_html;
         $html .= '<span class="comment-date">' . esc_html($time_ago) . '</span>';
         $html .= '</div>';
@@ -374,22 +395,22 @@ class Ruh_Comment_Ajax_Handlers {
         // Actions
         $html .= '<div class="comment-actions">';
         
+        // Dil ayarını al (aria-label'lar için erken taşındı)
+        $_opts = get_option('ruh_comment_options', array());
+        $_lang = $_opts['language'] ?? 'tr_TR';
+        $_is_en = ($_lang === 'en_US');
+
         // Beğeni butonu (thumbs up)
-        $html .= '<button class="action-btn like-btn ' . $liked_class . '" data-comment-id="' . esc_attr($comment->comment_ID) . '">';
+        $html .= '<button class="action-btn like-btn ' . $liked_class . '" data-comment-id="' . esc_attr($comment->comment_ID) . '" aria-label="' . esc_attr($_is_en ? 'Like' : 'Beğen') . '">';
         $html .= '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M23,10C23,8.89 22.1,8 21,8H14.68L15.64,3.43C15.66,3.33 15.67,3.22 15.67,3.11C15.67,2.7 15.5,2.32 15.23,2.05L14.17,1L7.59,7.58C7.22,7.95 7,8.45 7,9V19A2,2 0 0,0 9,21H18C18.83,21 19.54,20.5 19.84,19.78L22.86,12.73C22.95,12.5 23,12.26 23,12V10M1,21H5V9H1V21Z"/></svg>';
         $html .= '<span class="like-count">' . $likes . '</span>';
         $html .= '</button>';
         
         // Beğenmeme butonu (thumbs down)
-        $html .= '<button class="action-btn dislike-btn ' . $disliked_class . '" data-comment-id="' . esc_attr($comment->comment_ID) . '">';
+        $html .= '<button class="action-btn dislike-btn ' . $disliked_class . '" data-comment-id="' . esc_attr($comment->comment_ID) . '" aria-label="' . esc_attr($_is_en ? 'Dislike' : 'Beğenme') . '">';
         $html .= '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19,15H23V3H19M15,3H6C5.17,3 4.46,3.5 4.16,4.22L1.14,11.27C1.05,11.5 1,11.74 1,12V14A2,2 0 0,0 3,16H9.31L8.36,20.57C8.34,20.67 8.33,20.77 8.33,20.88C8.33,21.3 8.5,21.67 8.77,21.94L9.83,23L16.41,16.41C16.78,16.05 17,15.55 17,15V5C17,3.89 16.1,3 15,3Z"/></svg>';
         $html .= '<span class="dislike-count">' . $dislikes . '</span>';
         $html .= '</button>';
-        
-        // Dil ayarını al
-        $_opts = get_option('ruh_comment_options', array());
-        $_lang = $_opts['language'] ?? 'tr_TR';
-        $_is_en = ($_lang === 'en_US');
         
         // Yanıtla butonu
         if (is_user_logged_in()) {
@@ -402,7 +423,7 @@ class Ruh_Comment_Ajax_Handlers {
         // 3 Nokta Menü - sadece giriş yapmış kullanıcılar için göster
         if (is_user_logged_in()) {
             $html .= '<div class="comment-more-menu">';
-            $html .= '<button class="more-btn" data-comment-id="' . esc_attr($comment->comment_ID) . '">';
+            $html .= '<button class="more-btn" data-comment-id="' . esc_attr($comment->comment_ID) . '" aria-label="' . esc_attr($_is_en ? 'More options' : 'Diğer seçenekler') . '" aria-haspopup="true">';
             $html .= '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z"/></svg>';
             $html .= '</button>';
             $html .= '<div class="more-dropdown">';
@@ -449,12 +470,8 @@ class Ruh_Comment_Ajax_Handlers {
             $html .= '</div>'; // comment-more-menu
         }
         
-        $html .= '</div>';
+        $html .= '</div>'; // comment-actions
         
-        // Yanıtlar için container - template ile uyumlu
-        $html .= '<ol class="children replies-container" id="replies-' . esc_attr($comment->comment_ID) . '" style="display:none;" data-parent-id="' . esc_attr($comment->comment_ID) . '" data-loaded="false"></ol>';
-        
-        // Yanıt sayısını kontrol et — önce cache'den bak, yoksa DB'ye git
         $cid = intval($comment->comment_ID);
         if (isset($reply_counts_cache[$cid])) {
             $reply_count = $reply_counts_cache[$cid];
@@ -470,8 +487,11 @@ class Ruh_Comment_Ajax_Handlers {
             $show_text = $_is_en
                 ? $reply_count . ' ' . ($reply_count === 1 ? 'reply' : 'replies')
                 : $reply_count . ' yanıtı göster';
+            $hide_text = $_is_en
+                ? 'Hide ' . $reply_count . ' ' . ($reply_count === 1 ? 'reply' : 'replies')
+                : $reply_count . ' yanıtı gizle';
             $html .= '<div class="replies-toggle-container">';
-            $html .= '<button type="button" class="replies-toggle-btn" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-replies-count="' . esc_attr($reply_count) . '" data-parent-id="' . esc_attr($comment->comment_ID) . '">';
+            $html .= '<button type="button" class="replies-toggle-btn" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-replies-count="' . esc_attr($reply_count) . '" data-parent-id="' . esc_attr($comment->comment_ID) . '" data-show-text="' . esc_attr($show_text) . '" data-hide-text="' . esc_attr($hide_text) . '">';
             $html .= '<svg class="toggle-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/></svg>';
             $html .= '<span class="toggle-text">' . esc_html($show_text) . '</span>';
             $html .= '</button>';
@@ -480,6 +500,7 @@ class Ruh_Comment_Ajax_Handlers {
         
         $html .= '</div>'; // comment-main
         $html .= '</div>'; // comment-body
+        $html .= '<ol class="children replies-container is-collapsed" id="replies-' . esc_attr($comment->comment_ID) . '" hidden data-parent-id="' . esc_attr($comment->comment_ID) . '" data-loaded="false"></ol>';
         $html .= '</li>';
         
         return $html;
@@ -502,24 +523,13 @@ class Ruh_Comment_Ajax_Handlers {
         // Eski format desteği
         $content = preg_replace('/\[spoiler\](.*?)\[\/spoiler\]/is', '<span class="spoiler">$1</span>', $content);
         
-        // GIF
+        // GIF - güvenlik: sadece izin verilen kaynaklardan (giphy/tenor) kabul edilir.
+        // Whitelist kontrolü ortak ruh_is_allowed_gif_host() fonksiyonunda (template-helpers.php)
         $content = preg_replace_callback(
             '/!\[GIF\]\((https?:\/\/[^\)]+)\)/',
             function($matches) {
                 $url = esc_url($matches[1]);
-                // Sadece guvenilir GIF kaynaklarını kabul et
-                $allowed_hosts = array('giphy.com', 'media.giphy.com', 'i.giphy.com', 'tenor.com', 'media.tenor.com');
-                $host = parse_url($url, PHP_URL_HOST);
-                
-                $is_allowed = false;
-                foreach ($allowed_hosts as $allowed) {
-                    if (strpos($host, $allowed) !== false) {
-                        $is_allowed = true;
-                        break;
-                    }
-                }
-                
-                if ($is_allowed) {
+                if (function_exists('ruh_is_allowed_gif_host') && ruh_is_allowed_gif_host($url)) {
                     return '<div class="gif-container"><img src="' . $url . '" alt="GIF" loading="lazy" class="comment-gif"></div>';
                 }
                 return '';
@@ -532,6 +542,9 @@ class Ruh_Comment_Ajax_Handlers {
 
     // YORUMLARI GETIRME
     public function get_comments_callback() {
+        $this->verify_nonce();
+        $this->check_rate_limit('get_comments');
+
         $post_id = intval($_POST['post_id'] ?? 0);
         $page = max(1, intval($_POST['page'] ?? 1));
         $sort = sanitize_key($_POST['sort'] ?? 'newest');
@@ -784,6 +797,7 @@ class Ruh_Comment_Ajax_Handlers {
     public function edit_comment_callback() {
         $this->verify_nonce();
         $this->require_login();
+        $this->check_rate_limit('edit_comment');
         
         $comment_id = intval($_POST['comment_id']);
         $content = trim(sanitize_textarea_field($_POST['content']));
@@ -848,6 +862,7 @@ class Ruh_Comment_Ajax_Handlers {
     public function delete_comment_callback() {
         $this->verify_nonce();
         $this->require_login();
+        $this->check_rate_limit('delete_comment');
         
         $comment_id = intval($_POST['comment_id']);
         $user_id = get_current_user_id();
@@ -874,6 +889,7 @@ class Ruh_Comment_Ajax_Handlers {
     // YANITLARI YUKLE
     public function load_replies_callback() {
         $this->verify_nonce();
+        $this->check_rate_limit('load_replies');
         
         $parent_id = intval($_POST['parent_id']);
         
@@ -902,6 +918,9 @@ class Ruh_Comment_Ajax_Handlers {
 
     // ILK VERILER
     public function get_initial_data_callback() {
+        $this->verify_nonce();
+        $this->check_rate_limit('get_comments');
+
         global $wpdb;
         $post_id = intval($_POST['post_id']);
         $reactions_table = $wpdb->prefix . 'ruh_reactions';
@@ -931,6 +950,7 @@ class Ruh_Comment_Ajax_Handlers {
     public function flag_comment_callback() {
         $this->verify_nonce();
         $this->require_login();
+        $this->check_rate_limit('flag_comment');
         
         $comment_id = intval($_POST['comment_id']);
         $reason = sanitize_text_field($_POST['reason'] ?? '');
@@ -1040,6 +1060,7 @@ class Ruh_Comment_Ajax_Handlers {
      */
     public function load_more_profile_comments_callback() {
         $this->verify_nonce();
+        $this->check_rate_limit('load_more_profile_comments');
         
         $user_id = intval($_POST['user_id'] ?? 0);
         $page = intval($_POST['page'] ?? 1);

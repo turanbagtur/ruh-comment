@@ -1,362 +1,223 @@
 
-/* Ruh Comment - Modern Minimal Dark Theme - Görsele Uygun */
+/* Ruh Comment v7.1 - Kompakt Dark Theme */
 
-/* CSS Variables - Görseldeki Tam Dark Theme */
+/* ── CSS Variables ─────────────────────────────────────────────────────── */
 :root {
-    /* Ana Renkler - Görseldeki Tema */
+    /* Renkler */
     --primary: #dc3545;
     --primary-light: #e85a6a;
     --primary-dark: #b02a37;
     --secondary: #6c757d;
-    
-    /* Arkaplan Renkleri - Görseldeki Çok Koyu Tema */
-    --bg-primary: #0D0D0D;        /* Ana arkaplan - çok koyu */
-    --bg-secondary: #1A1A1A;      /* İkinci seviye - koyu gri */
-    --bg-card: #1F1F1F;          /* Kutular için - açık gri */
-    --bg-hover: #2A2A2A;         /* Hover durumu */
-    
-    /* Metin Renkleri - Görseldeki Gibi */
-    --text-primary: #FFFFFF;      /* Ana metin - tam beyaz */
-    --text-secondary: #E0E0E0;    /* İkincil metin - açık gri */
-    --text-muted: #9A9A9A;        /* Soluk metin - orta gri */
-    
-    /* Sınırlar - Görseldeki Minimal Border */
-    --border: #2D2D2D;            /* Çok ince border */
-    --border-hover: #404040;      /* Hover border */
-    
-    /* Durum Renkleri */
+
+    /* Arkaplan */
+    --bg-primary: #0D0D0D;
+    --bg-secondary: #161616;
+    --bg-card: #1C1C1C;
+    --bg-hover: #242424;
+
+    /* Metin */
+    --text-primary: #F0F0F0;
+    --text-secondary: #C8C8C8;
+    --text-muted: #9A9A9A;
+
+    /* Kenarlık */
+    --border: #272727;
+    --border-hover: #3a3a3a;
+
+    /* Durum */
     --success: #28a745;
     --error: #dc3545;
     --warning: #ffc107;
-    
-    /* Görseldeki Minimal Radius ve Shadow */
-    --radius: 12px;               /* Görseldeki yumuşak köşeler */
-    --radius-sm: 8px;
-    --shadow: 0 2px 8px rgba(0,0,0,0.15);
-    --shadow-lg: 0 4px 16px rgba(0,0,0,0.2);
-    
-    /* Optimal Spacing - Daha Kompakt */
-    --spacing-xs: 0.2rem;
-    --spacing-sm: 0.4rem;
-    --spacing-md: 0.6rem;
-    --spacing-lg: 0.8rem;
-    --spacing-xl: 1rem;
-    --spacing-2xl: 1.25rem;
-    --spacing-3xl: 1.5rem;
+
+    /* Radius */
+    --radius: 8px;
+    --radius-sm: 6px;
+    --radius-xs: 4px;
+
+    /* Shadow */
+    --shadow: 0 1px 4px rgba(0,0,0,0.3);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.45);
+
+    /* ── KOMPAKTLAŞTIRILMIŞ SPACING ── */
+    --spacing-xs: 2px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+    --spacing-xl: 16px;
+    --spacing-2xl: 20px;
+    --spacing-3xl: 24px;
+
+    /* Rozet glow renkleri */
+    --badge-glow: rgba(168, 85, 247, 0.55);
+    --badge-glow2: rgba(99, 102, 241, 0.35);
 }
 
-/* Force Dark Theme - Görseldeki Gibi */
+@media (prefers-reduced-motion: reduce) {
+    .badge-item,
+    .badge-item-with-text,
+    .comment-badge-item,
+    .pinned-badge,
+    .comment-level,
+    .user-level,
+    .user-level-oval,
+    .reaction-emoji,
+    .reaction-particle,
+    .reaction-ring {
+        animation: none !important;
+    }
+}
+
+/* Light mode'u zorla dark yap */
 @media (prefers-color-scheme: light) {
     :root {
-        --bg-primary: #121212;        /* Çok koyu ana arkaplan */
-        --bg-secondary: #1e1e1e;      /* İkinci seviye */
-        --bg-card: #1e1e1e;          /* Kutular */
-        --bg-hover: #2a2a2a;         /* Hover durumu */
-        --text-primary: #FFFFFF;      /* Tam beyaz metin */
-        --text-secondary: #E5E5E5;    /* Açık gri metin */
-        --text-muted: #8E8E8E;        /* Orta gri metin */
-        --border: #2a2a2a;            /* İnce border */
-        --border-hover: #3a3a3a;      /* Hover border */
+        --bg-primary: #111111;
+        --bg-secondary: #181818;
+        --bg-card: #1e1e1e;
+        --bg-hover: #252525;
+        --text-primary: #F0F0F0;
+        --text-secondary: #C8C8C8;
+        --text-muted: #8E8E8E;
+        --border: #2a2a2a;
+        --border-hover: #3a3a3a;
     }
 }
 
-/* Tablet için boyutları artır */
-@media (min-width: 768px) {
-    :root {
-        --radius: 8px;
-        --radius-sm: 6px;
-        --shadow-lg: none;
-        --spacing-md: 1rem;
-        --spacing-lg: 1.25rem;
-        --spacing-xl: 1.5rem;
-    }
-}
-
-/* Desktop için boyutları maksimize et */
-@media (min-width: 1024px) {
-    :root {
-        --radius: 8px;
-        --radius-sm: 6px;
-        --shadow: none;
-        --shadow-lg: none;
-        --spacing-lg: 1.5rem;
-        --spacing-xl: 2rem;
-    }
-}
-
-/* Base Styles - Modern Minimal - ARKA PLAN KALDIRILDI */
+/* ── Base ──────────────────────────────────────────────────────────────── */
 .comments-area {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.6;
+    line-height: 1.5;
     color: var(--text-primary);
     background: transparent !important;
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-xl);
     margin: 0;
-    font-size: 15px;
-    min-height: auto;
+    font-size: 13px;
 }
 
-.comments-area.modern-dark {
-    background: transparent !important;
-}
+.comments-area.modern-dark { background: transparent !important; }
+.comments-area * { box-sizing: border-box; }
 
-.comments-area * {
-    box-sizing: border-box;
-}
-
-/* Modern Box Component - Görseldeki Kutular */
 .modern-box {
     background: var(--bg-card) !important;
     border-radius: var(--radius) !important;
-    padding: var(--spacing-xl) !important;
-    margin-bottom: var(--spacing-md) !important;
+    padding: var(--spacing-lg) !important;
+    margin-bottom: var(--spacing-sm) !important;
     border: 1px solid var(--border) !important;
     box-shadow: var(--shadow) !important;
-    transition: all 0.2s ease !important;
+    transition: border-color 0.15s ease, background 0.15s ease !important;
 }
-
 .modern-box:hover {
     border-color: var(--border-hover) !important;
     background: var(--bg-hover) !important;
 }
 
-/* Tablet ve üstü için */
-@media (min-width: 768px) {
-    .comments-area {
-        font-size: 15px;
-        margin: var(--spacing-xl) 0;
-    }
-}
+/* ── 1. REACTIONS ──────────────────────────────────────────────────────── */
+.ruh-reactions-section { text-align: center; padding: var(--spacing-lg); }
 
-/* Desktop için */
-@media (min-width: 1024px) {
-    .comments-area {
-        font-size: 16px;
-        margin: 2rem 0;
-    }
-}
-
-/* 1. MODERN REACTIONS SECTION - Görseldeki Gibi */
-.ruh-reactions-section {
-    text-align: center;
-}
-
-.reactions-header {
-    margin-bottom: var(--spacing-2xl);
-}
-
+.reactions-header { margin-bottom: var(--spacing-lg); }
 .reactions-header h3 {
-    font-size: 1.25rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    margin: 0 0 var(--spacing-md);
+    margin: 0 0 var(--spacing-sm);
     color: var(--text-primary);
 }
+.total-reactions { color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
 
-.total-reactions {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* Modern Grid - Görseldeki Layout */
 .reactions.modern-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-lg);
-    max-width: 600px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    max-width: 560px;
     margin: 0 auto;
 }
 
-/* Çok küçük ekranlar için 2 kolon */
-@media (max-width: 480px) {
-    .reactions {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-xs);
-    }
-    
-    .reaction {
-        min-height: 70px;
-        padding: var(--spacing-sm) var(--spacing-xs);
-    }
-    
-    .reaction .emoji {
-        font-size: 1.5rem !important;
-    }
-    
-    .reaction span:not(.count) {
-        font-size: 0.6rem !important;
-    }
-}
-
-/* Modern Reaction Button - Kompakt */
 .reaction.modern-reaction {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 6px 12px;
+    padding: 4px 10px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     display: inline-flex;
     flex-direction: row;
     align-items: center;
-    gap: 6px;
-    min-height: auto;
+    gap: 5px;
     position: relative;
     overflow: hidden;
 }
-
 .reaction.modern-reaction:hover {
     border-color: var(--primary);
     background: var(--bg-hover);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 0 12px rgba(220,53,69,0.25);
 }
-
 .reaction.modern-reaction.selected {
     border-color: var(--primary);
     background: var(--primary);
     color: white;
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 0 14px rgba(220,53,69,0.4);
 }
 
-/* Emoji Section */
 .reaction-emoji {
-    font-size: 1rem;
+    font-size: 0.95rem;
     line-height: 1;
-    margin-bottom: 0;
-    transition: all 0.2s ease;
+    transition: transform 0.15s ease;
 }
+.reaction.modern-reaction:hover .reaction-emoji { transform: scale(1.15); }
 
-.reaction.modern-reaction:hover .reaction-emoji {
-    transform: scale(1.1);
-}
-
-/* Info Section - Name and Count */
 .reaction-info {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--spacing-sm);
-    width: 100%;
+    gap: 4px;
 }
-
 .reaction-name {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-secondary);
-    text-align: center;
     line-height: 1.2;
-    transition: all 0.3s ease;
+    transition: color 0.15s ease;
 }
+.reaction.modern-reaction.selected .reaction-name { color: rgba(255,255,255,0.95); }
+.reaction.modern-reaction:hover .reaction-name { color: var(--text-primary); }
 
-.reaction.modern-reaction.selected .reaction-name {
-    color: rgba(255, 255, 255, 0.95);
-}
-
-.reaction.modern-reaction:hover .reaction-name {
-    color: var(--text-primary);
-}
-
-/* Count Badge - Görseldeki Gibi */
 .reaction-info .count {
     background: var(--bg-primary);
-    color: var(--text-primary);
-    padding: 0.25rem 0.5rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding: 1px 5px;
+    border-radius: 12px;
+    font-size: 0.65rem;
     font-weight: 700;
-    min-width: 24px;
+    min-width: 18px;
     text-align: center;
     border: 1px solid var(--border);
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
 }
-
 .reaction.modern-reaction.selected .reaction-info .count {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255,255,255,0.2);
     color: white;
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255,255,255,0.3);
 }
 
-.reaction.modern-reaction:hover .reaction-info .count {
-    transform: scale(1.05);
-    background: var(--bg-card);
+@media (max-width: 480px) {
+    .reaction.modern-reaction { padding: 3px 8px; gap: 4px; }
+    .reaction-emoji { font-size: 0.85rem; }
+    .reaction-name { font-size: 0.6rem; }
 }
 
-/* Tablet için reactions */
-@media (min-width: 768px) {
-    .ruh-reactions-section {
-        padding: var(--spacing-xl);
-    }
-    
-    .reactions {
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-md);
-        max-width: 500px;
-    }
-    
-    .reaction {
-        padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
-        min-height: 50px; /* 70px'den 50px'e (%28 azalma) */
-    }
-    
-    .reaction .emoji {
-        font-size: 2.25rem; /* Tablet'te daha büyük */
-    }
-    
-    .reaction span:not(.count) {
-        font-size: 0.7rem;
-    }
-    
-    .reaction .count {
-        font-size: 0.7rem;
-        min-width: 22px;
-    }
-}
-
-/* Desktop için reactions */
-@media (min-width: 1024px) {
-    .ruh-reactions-section {
-        padding: 2rem;
-    }
-    
-    .reactions {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 1rem;
-        max-width: 600px;
-    }
-    
-    .reaction {
-        padding: 0.75rem 0.75rem; /* Vertical padding azaltıldı */
-        min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
-    }
-    
-    .reaction .emoji {
-        font-size: 2rem; /* Desktop'ta optimize boyut */
-    }
-    
-    .reaction span:not(.count) {
-        font-size: 0.75rem;
-    }
-    
-    .reaction .count {
-        font-size: 0.75rem;
-        min-width: 24px;
-    }
-}
-
-/* 2. COMMENTS HEADER - MODERN LAYOUT */
-.comments-header-modern {
-    background: var(--bg-card);
-    padding: var(--spacing-lg);
+/* ── 2. COMMENTS HEADER ────────────────────────────────────────────────── */
+.comments-header-modern,
+.comments-header {
+    background: transparent;
+    padding: var(--spacing-md) var(--spacing-lg);
     display: flex;
     justify-content: space-between;
     align-items: center;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
     flex-wrap: wrap;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .comments-info-section {
@@ -372,316 +233,147 @@
     flex-shrink: 0;
 }
 
-/* LEGACY SUPPORT */
-.comments-header {
-    background: var(--bg-card);
-    padding: var(--spacing-lg);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: var(--spacing-lg);
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-}
-
-/* Mobil için modern header responsive */
-@media (max-width: 480px) {
-    .comments-header-modern {
-        flex-direction: column;
-        text-align: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-md);
-    }
-    
-    .comments-info-section {
-        order: 1;
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .comment-sorting-modern {
-        order: 2;
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .sort-buttons-inline {
-        gap: 4px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .sort-btn {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-        min-width: auto;
-    }
-    
-    /* LEGACY */
-    .comments-header {
-        flex-direction: column;
-        text-align: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-md);
-    }
-    
-    .comments-title-section {
-        order: 1;
-    }
-    
-    .comment-sorting {
-        order: 2;
-        width: 100%;
-        justify-content: center;
-    }
-}
-
 .comments-title-section {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--spacing-md);
 }
 
 .comments-title {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     font-weight: 600;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
     color: var(--text-primary);
 }
 
 .comment-count {
     color: var(--text-primary);
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 
 .comments-notification-bell {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.15s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
+.comments-notification-bell:hover { opacity: 1; }
+.comments-notification-bell svg { width: 16px; height: 16px; color: var(--text-muted); }
+.comments-notification-bell:hover svg { color: var(--text-primary); }
 
-.comments-notification-bell:hover {
-    opacity: 1;
+@media (max-width: 480px) {
+    .comments-header-modern, .comments-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+    .comments-info-section, .comment-sorting-modern, .comment-sorting {
+        width: 100%;
+        justify-content: center;
+    }
+    .sort-buttons-inline { gap: 3px; flex-wrap: wrap; justify-content: center; }
+    .sort-btn { padding: 4px 10px; font-size: 0.72rem; }
 }
 
-.comments-notification-bell svg {
-    width: 20px;
-    height: 20px;
-    color: var(--text-muted);
-}
-
-.comments-notification-bell:hover svg {
-    color: var(--text-primary);
-}
-
-/* Tablet için modern header */
-@media (min-width: 768px) {
-    .comments-header-modern {
-        padding: var(--spacing-xl) var(--spacing-lg);
-        gap: var(--spacing-lg);
-    }
-    
-    .comments-info-section {
-        gap: var(--spacing-lg);
-    }
-    
-    .sort-btn {
-        padding: 8px 16px;
-        font-size: 0.85rem;
-    }
-    
-    /* LEGACY */
-    .comments-header {
-        padding: var(--spacing-xl) var(--spacing-lg);
-    }
-    
-    .comments-title {
-        font-size: 1.0625rem;
-    }
-    
-    .comment-count {
-        font-size: 0.7rem;
-        padding: 0.1875rem 0.625rem;
-    }
-}
-
-/* Desktop için modern header */
-@media (min-width: 1024px) {
-    .comments-header-modern {
-        padding: 1.5rem 2rem;
-        gap: 2rem;
-    }
-    
-    .comments-info-section {
-        gap: 1rem;
-    }
-    
-    .sort-btn {
-        padding: 10px 18px;
-        font-size: 0.875rem;
-    }
-    
-    /* LEGACY */
-    .comments-header {
-        padding: 1.5rem 2rem;
-    }
-    
-    .comments-title {
-        font-size: 1.125rem;
-    }
-    
-    .comment-count {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.75rem;
-    }
-}
-
-/* Modern Sort Buttons - Görseldeki Gibi */
-.comment-sorting-modern {
-    display: flex;
-    align-items: center;
-}
-
+/* ── Sort Buttons ──────────────────────────────────────────────────────── */
 .sort-buttons-inline.modern-sort {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 2px;
     align-items: center;
     background: var(--bg-secondary);
-    padding: var(--spacing-xs);
-    border-radius: var(--radius);
+    padding: 2px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border);
 }
 
-.sort-btn {
-    padding: var(--spacing-sm) var(--spacing-lg);
+.sort-btn, .sort-button {
+    padding: 4px 10px;
     border: none;
     background: transparent;
     color: var(--text-muted);
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+    border-radius: var(--radius-xs);
+    font-size: 0.72rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.15s, color 0.15s;
     white-space: nowrap;
     font-family: inherit;
     position: relative;
 }
-
-.sort-btn:hover {
+.sort-btn:hover, .sort-button:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
 }
-
 .sort-btn.active {
     background: var(--primary);
     color: white;
-    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    box-shadow: 0 1px 4px rgba(220,53,69,0.35);
 }
-
-.sort-btn.active:hover {
-    background: var(--primary-dark);
-}
-
-/* LEGACY SORT BUTTONS */
-.sort-button {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: var(--radius-sm);
-    position: relative;
-}
-
-.sort-button:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-}
-
 .sort-button.active {
     color: var(--text-primary);
     font-weight: 600;
     background: var(--bg-hover);
 }
-
 .sort-button.active::after {
     content: '';
     position: absolute;
-    bottom: -2px;
+    bottom: -1px;
     left: 50%;
     transform: translateX(-50%);
-    width: 20px;
+    width: 14px;
     height: 2px;
     background: var(--primary);
     border-radius: 1px;
 }
 
-.sort-dropdown {
-    position: relative;
-}
-
+.sort-dropdown { position: relative; }
 .sort-dropdown-btn {
-    background: var(--bg-primary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border);
     color: var(--text-primary);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
-    transition: all 0.2s ease;
-    min-height: 36px; /* Touch-friendly */
+    gap: 4px;
+    transition: border-color 0.15s;
+    min-height: 28px;
 }
-
-.sort-dropdown-btn:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow);
-}
-
+.sort-dropdown-btn:hover { border-color: var(--primary); }
 .sort-dropdown-btn::after {
     content: '▼';
-    font-size: 0.7rem;
+    font-size: 0.55rem;
     color: var(--text-muted);
-    transition: transform 0.2s ease;
+    transition: transform 0.15s;
 }
-
-.sort-dropdown.open .sort-dropdown-btn::after {
-    transform: rotate(180deg);
-}
+.sort-dropdown.open .sort-dropdown-btn::after { transform: rotate(180deg); }
 
 .sort-dropdown-menu {
     position: absolute;
-    top: calc(100% + 0.25rem);
+    top: calc(100% + 3px);
     left: 0;
-    right: 0;
-    background: var(--bg-primary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
     box-shadow: var(--shadow-lg);
-    z-index: 50;
+    z-index: 200;
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-0.5rem);
-    transition: all 0.2s ease;
-    min-width: 120px;
+    transform: translateY(-4px);
+    transition: opacity 0.12s, transform 0.12s, visibility 0.12s;
+    min-width: 110px;
 }
-
 .sort-dropdown.open .sort-dropdown-menu {
     opacity: 1;
     visibility: visible;
@@ -689,1251 +381,930 @@
 }
 
 .sort-option {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 6px 10px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: background 0.1s, color 0.1s;
 }
+.sort-option:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sort-option.active { background: var(--primary); color: white; }
 
-.sort-option:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.sort-option.active {
-    background: var(--primary);
-    color: white;
-}
-
-/* Tablet için sorting */
-@media (min-width: 768px) {
-    .comment-sorting label {
-        font-size: 0.85rem;
-    }
-    
-    .sort-dropdown-btn {
-        font-size: 0.85rem;
-        padding: var(--spacing-sm) var(--spacing-lg);
-    }
-    
-    .sort-option {
-        font-size: 0.85rem;
-        padding: var(--spacing-md) var(--spacing-lg);
-    }
-}
-
-/* Desktop için sorting */
-@media (min-width: 1024px) {
-    .comment-sorting {
-        gap: var(--spacing-sm);
-    }
-    
-    .comment-sorting label {
-        font-size: 0.875rem;
-    }
-    
-    .sort-dropdown-btn {
-        font-size: 0.875rem;
-        padding: 0.5rem 1rem;
-    }
-    
-    .sort-dropdown-btn::after {
-        font-size: 0.75rem;
-    }
-    
-    .sort-dropdown-menu {
-        top: calc(100% + 0.25rem);
-        min-width: 140px;
-    }
-    
-    .sort-option {
-        font-size: 0.875rem;
-        padding: 0.75rem 1rem;
-    }
-}
-
-/* 3. MODERN COMMENT FORM - Görseldeki Gibi */
+/* ── 3. COMMENT FORM ───────────────────────────────────────────────────── */
 #ruh-comment-form-wrapper {
     display: flex;
     flex-direction: row;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     align-items: flex-start;
+    padding: var(--spacing-lg);
 }
 
-.comment-user-info {
-    flex-shrink: 0;
-}
-
-.comment-user-info img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    object-fit: cover;
-    transition: all 0.3s ease;
-}
-
-.comment-user-info img:hover {
-    border-color: var(--primary);
-}
-
-.comment-form {
+.comment-form-content {
     flex: 1;
-    width: 100%;
+    min-width: 0;
 }
 
-/* Modern Editor Container - HEIGHT OPTİMİZE EDİLDİ */
+.user-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.user-info-bar .user-name {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+
+.form-hint,
+.form-shortcut {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+    letter-spacing: 0.2px;
+}
+.form-shortcut {
+    display: block;
+    margin: 4px 0 2px;
+    opacity: 0.55;
+}
+
+.form-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.toolbar-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.toolbar-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+#ruh-editor-toolbar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.comment-form textarea,
+#comment {
+    width: 100%;
+    min-height: 84px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.comment-form textarea:focus,
+#comment:focus {
+    border-color: rgba(168,85,247,0.55);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+}
+
+.submit-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
+}
+
+.comment-user-info { flex-shrink: 0; }
+.comment-user-info img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    object-fit: cover;
+    transition: border-color 0.15s;
+}
+.comment-user-info img:hover { border-color: var(--primary); }
+
+.comment-form { flex: 1; width: 100%; }
+
 #ruh-editor-container {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: border-color 0.15s, box-shadow 0.15s;
     width: 100%;
 }
-
 #ruh-editor-container:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    box-shadow: 0 0 0 2px rgba(220,53,69,0.12);
 }
 
-/* Minimal Toolbar - HEIGHT AZALTILDI */
 #ruh-editor-toolbar {
-    background: var(--bg-primary);
-    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
-    border-bottom: 1px solid var(--border);
+    background: transparent;
+    padding: 0 0 6px;
+    border-bottom: none;
     display: flex;
-    gap: var(--spacing-xs); /* sm'den xs'e azaltıldı */
+    gap: 4px;
     align-items: center;
     flex-wrap: wrap;
 }
 
 .ruh-toolbar-button {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
     color: var(--text-muted);
-    border-radius: var(--radius-sm);
-    width: 32px;
-    height: 32px;
+    border-radius: var(--radius-xs);
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
 }
-
 .ruh-toolbar-button:hover {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    transform: translateY(-1px);
 }
 
-/* Modern Textarea - HEIGHT AZALTILDI %25 */
 .comment-form textarea {
     width: 100%;
     background: transparent;
     border: none;
     color: var(--text-primary);
-    padding: var(--spacing-xl); /* 2xl'den xl'e azaltıldı */
-    min-height: 90px; /* 120px'den 90px'e (%25 azalma) */
-    font-size: 0.95rem;
-    line-height: 1.5; /* 1.6'dan 1.5'e azaltıldı */
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 72px;
+    font-size: 0.82rem;
+    line-height: 1.5;
     resize: vertical;
     outline: none;
     font-family: inherit;
 }
+.comment-form textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
+.comment-form textarea:focus { box-shadow: none; }
 
-.comment-form textarea::placeholder {
-    color: var(--text-muted);
-    opacity: 0.7;
-}
-
-/* Modern Submit Area - HEIGHT AZALTILDI */
 .form-submit {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
-    background: var(--bg-primary);
-    border-top: 1px solid var(--border);
+    padding: 6px var(--spacing-md);
+    background: transparent;
+    border-top: 1px solid rgba(255,255,255,0.08);
 }
+.form-submit-info { display: flex; align-items: center; gap: var(--spacing-md); }
 
-.form-submit-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
+.char-counter { color: var(--text-muted); font-size: 0.65rem; font-weight: 500; }
+.char-counter.warning { color: var(--warning); }
+.char-counter.danger { color: var(--error); }
 
-.char-counter {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.char-counter.warning {
-    color: var(--warning);
-}
-
-.char-counter.danger {
-    color: var(--error);
-}
-
-/* Modern Submit Button */
-.ruh-submit, #submit {
+.ruh-submit {
     background: var(--primary);
     color: white;
     border: none;
-    padding: var(--spacing-md) var(--spacing-xl);
-    border-radius: var(--radius);
-    font-size: 0.9rem;
+    padding: 5px 14px;
+    border-radius: var(--radius-xs);
+    font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    min-height: 40px;
+    transition: background 0.15s, transform 0.15s;
+    min-height: 30px;
     position: relative;
     overflow: hidden;
 }
-
-.ruh-submit:hover, #submit:hover {
+.ruh-submit:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: var(--shadow);
 }
-
-.ruh-submit:disabled, #submit:disabled {
-    opacity: 0.6;
+.ruh-submit:disabled,
+#submit:disabled,
+.submit-btn:disabled {
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
 }
 
-/* Tablet için form */
-@media (min-width: 768px) {
-    #ruh-comment-form-wrapper {
-        flex-direction: row;
-        padding: var(--spacing-xl);
-        gap: var(--spacing-lg);
-    }
-    
-    .comment-user-info img {
-        width: 42px;
-        height: 42px;
-    }
-    
-    #ruh-editor-toolbar {
-        padding: var(--spacing-md);
-        gap: var(--spacing-sm);
-    }
-    
-    .ruh-toolbar-button {
-        width: 34px;
-        height: 34px;
-        font-size: 0.8rem;
-    }
-    
-    .comment-form textarea {
-        min-height: 165px; /* 220px'den 165px'e (%25 azalma) */
-        font-size: 15px;
-        padding: 1.125rem; /* 1.5rem'den azaltıldı */
-    }
-    
-    .form-submit {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        padding: var(--spacing-lg);
-    }
-    
-    .char-counter {
-        font-size: 0.75rem;
-        order: 0;
-    }
-    
-    .ruh-submit, #submit {
-        width: auto;
-        min-height: 42px;
-        font-size: 0.9rem;
-        padding: var(--spacing-md) var(--spacing-xl);
-        order: 0;
-    }
-}
-
-/* Desktop için form */
-@media (min-width: 1024px) {
-    #ruh-comment-form-wrapper {
-        padding: 2rem;
-    }
-    
-    .comment-user-info img {
-        width: 48px;
-        height: 48px;
-    }
-    
-    #ruh-editor-container:focus-within {
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    
-    #ruh-editor-toolbar {
-        padding: 0.75rem 1rem;
-        gap: 0.5rem;
-    }
-    
-    .ruh-toolbar-button {
-        width: 32px;
-        height: 32px;
-        font-size: 0.875rem;
-    }
-    
-    .comment-form textarea {
-        min-height: 180px; /* 240px'den 180px'e (%25 azalma) */
-        font-size: 0.875rem;
-        line-height: 1.5; /* 1.6'dan 1.5'e azaltıldı */
-        padding: 1.5rem; /* 2rem'den azaltıldı */
-    }
-    
-    .form-submit {
-        padding: 1rem;
-    }
-    
-    .ruh-submit, #submit {
-        font-size: 0.875rem;
-        min-height: 38px;
-        padding: 0.75rem 1.5rem;
-    }
-}
-
-/* 4. COMMENTS LIST - Mobile First */
-.ruh-comments-main {
-    background: var(--bg-primary);
-}
-
-.comment-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
+/* ── 4. COMMENT LIST ───────────────────────────────────────────────────── */
+.ruh-comments-main { background: transparent; }
+.comment-list { list-style: none; padding: 0; margin: 0; }
 .comment-list .children {
     list-style: none;
-    padding-left: var(--spacing-lg);
+    padding-left: 28px;
     border-left: 1px solid var(--border);
-    margin-top: var(--spacing-sm);
-}
-
-.ruh-comment-item {
-    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
-    border-bottom: 1px solid var(--border);
-    transition: all 0.2s ease;
-}
-
-.ruh-comment-item:hover {
-    background: var(--bg-secondary);
-}
-
-.comment-body {
-    display: flex;
-    gap: var(--spacing-sm);
-    align-items: flex-start;
-}
-
-.comment-author img {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    border: 2px solid var(--border) !important;
-    object-fit: cover !important;
-    flex-shrink: 0 !important;
-}
-
-.comment-content {
-    flex: 1;
-}
-
-.comment-author-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-xs);
-    flex-wrap: wrap;
-}
-
-.comment-author-meta .author-name {
-    color: var(--text-primary) !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-    font-size: 0.9rem !important;
-}
-
-.comment-author-meta .author-name:hover {
-    color: var(--primary) !important;
-}
-
-/* Mobile Level Rozeti - ÇOK KÜÇÜK */
-.user-level-oval {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    padding: 2px 6px !important;
-    border-radius: 8px !important;
-    font-size: 0.5rem !important;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.25px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.125rem;
-    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    transition: all 0.2s ease;
-}
-
-.user-level-oval:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.4);
-}
-
-/* Seviye ikonu kaldırıldı */
-.user-level-oval::before {
+    margin-top: 0;
     display: none;
 }
 
-/* User Tag Badge - Editör, Çevirmen vb. */
+/* Yorum satırı - ince border, sıfır boşluk */
+.ruh-comment-item,
+.comment-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+}
+.ruh-comment-item:last-child,
+.comment-item:last-child { border-bottom: none; }
+.ruh-comment-item:hover,
+.comment-item:hover { background: var(--bg-secondary); }
+
+.comment-body {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+/* Avatar */
+.comment-avatar { flex-shrink: 0; }
+.comment-avatar img,
+.comment-author img {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    border: 1px solid var(--border) !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+    display: block;
+}
+
+.comment-main { flex: 1; min-width: 0; }
+
+/* Header: ad + rozetler + tarih */
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 3px;
+    line-height: 1;
+}
+
+.comment-author,
+.comment-author-link { text-decoration: none !important; }
+.comment-author span,
+.comment-header .comment-author {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    font-size: 0.78rem !important;
+    text-decoration: none !important;
+}
+.comment-author-link:hover span,
+.comment-header .comment-author:hover { color: var(--primary) !important; }
+
+/* Seviye rozeti */
+.comment-level,
+.user-level,
+.user-level-oval {
+    --level-color: var(--primary);
+    background: var(--level-color) !important;
+    background: linear-gradient(135deg, var(--level-color), #a855f7) !important;
+    color: white !important;
+    padding: 2px 7px !important;
+    border-radius: 999px !important;
+    font-size: 0.6rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    box-shadow: 0 0 10px rgba(168,85,247,0.35);
+    position: relative;
+    overflow: hidden;
+}
+.comment-level::after,
+.user-level::after,
+.user-level-oval::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.35) 50%, transparent 80%);
+    transform: translateX(-120%);
+    animation: ruh-level-shine 3.2s ease-in-out infinite;
+    pointer-events: none;
+}
+.comment-level:hover,
+.user-level:hover,
+.user-level-oval:hover {
+    transform: translateY(-1px) scale(1.06);
+    box-shadow: 0 4px 14px rgba(168,85,247,0.4);
+}
+.user-level-oval::before { display: none; }
+.level-tier-novice { --level-color: #6b7280; }
+.level-tier-active { --level-color: #3b82f6; }
+.level-tier-experienced { --level-color: #10b981; }
+.level-tier-uncommon { --level-color: #f59e0b; }
+.level-tier-rare { --level-color: #8b5cf6; }
+.level-tier-epic { --level-color: #ec4899; }
+.level-tier-mythic { --level-color: #a855f7; }
+.level-tier-legendary { --level-color: #ef4444; }
+@keyframes ruh-level-shine {
+    0%, 55% { transform: translateX(-120%); }
+    80%, 100% { transform: translateX(120%); }
+}
+
+/* Kullanıcı tag (Editör, Çevirmen vb.) */
 .user-tag-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
-    margin-left: 4px;
-    font-size: 0.65rem;
-    font-weight: 600;
+    padding: 1px 5px;
+    font-size: 0.55rem;
+    font-weight: 700;
     color: white;
     background: #6366f1;
-    border-radius: 10px;
+    border-radius: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    vertical-align: middle;
+    letter-spacing: 0.4px;
 }
 
-/* User Badges - Mobile First */
-.user-badges {
+/* ── ROZETLER ────────────────────────────────────────────────────────── */
+@keyframes ruh-badge-sweep {
+    0%   { left: -70%; }
+    100% { left: 130%; }
+}
+@keyframes ruh-badge-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(168,85,247,0.28), inset 0 1px 0 rgba(255,255,255,0.12); }
+    50% { box-shadow: 0 0 16px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.18); }
+}
+
+.user-badges,
+.comment-badges {
     display: inline-flex;
-    gap: 0.125rem;
+    gap: 3px;
     flex-wrap: wrap;
     align-items: center;
 }
 
-.badge-item-with-text {
+.badge-item,
+.badge-item-with-text,
+.comment-badge-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 0.125rem !important;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25)) !important;
-    padding: 0.15rem 0.4rem !important;
-    border-radius: 8px !important;
-    font-size: 0.55rem !important;
-    font-weight: 600 !important;
-    color: #c4b5fd !important;
-    transition: all 0.3s ease !important;
-    border: 1px solid rgba(168, 85, 247, 0.5) !important;
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.4), 0 0 24px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(4px) !important;
+    gap: 3px !important;
+    background: linear-gradient(135deg, rgba(99,102,241,0.22), rgba(168,85,247,0.28)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 2px 8px !important;
+    border-radius: 20px !important;
+    font-size: 0.62rem !important;
+    font-weight: 700 !important;
+    color: #e9d5ff !important;
+    border: 1px solid rgba(192,132,252,0.45) !important;
     position: relative !important;
     overflow: hidden !important;
-    text-shadow: 0 0 6px rgba(168, 85, 247, 0.5) !important;
+    text-shadow: 0 0 8px rgba(216,180,254,0.55) !important;
+    box-shadow:
+        0 0 10px rgba(168,85,247,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.12) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+    cursor: default;
+    white-space: nowrap;
+    animation: ruh-badge-pulse 3.4s ease-in-out infinite;
 }
 
-.badge-item-with-text::before {
+.badge-item::after,
+.badge-item-with-text::after,
+.comment-badge-item::after {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transform: rotate(45deg);
-    animation: badge-shine 3s ease-in-out infinite;
+    top: 0;
+    left: -70%;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-18deg);
+    animation: ruh-badge-sweep 3.6s ease-in-out infinite;
+    pointer-events: none;
 }
 
-@keyframes badge-shine {
-    0%, 100% { transform: translateX(-100%) rotate(45deg); }
-    50% { transform: translateX(100%) rotate(45deg); }
+.badge-item:hover,
+.badge-item-with-text:hover,
+.comment-badge-item:hover {
+    background: linear-gradient(135deg, rgba(99,102,241,0.38), rgba(168,85,247,0.42)) !important;
+    color: #f5d0fe !important;
+    border-color: rgba(216,180,254,0.8) !important;
+    transform: translateY(-1px) scale(1.07) !important;
+    box-shadow:
+        0 0 18px rgba(168,85,247,0.55),
+        0 4px 12px rgba(0,0,0,0.25) !important;
+    animation: none;
 }
 
-.badge-item-with-text:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4)) !important;
-    color: #e9d5ff !important;
-    border-color: rgba(168, 85, 247, 0.7) !important;
-    transform: translateY(-2px) scale(1.05) !important;
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(99, 102, 241, 0.3), 0 8px 16px rgba(0, 0, 0, 0.3) !important;
+.badge-item-with-text svg,
+.comment-badge-name + svg,
+.comment-badge svg {
+    width: 10px !important;
+    height: 10px !important;
+    opacity: 0.9;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 3px rgba(216,180,254,0.8));
 }
 
-.badge-item-with-text svg {
-    width: 8px;
-    height: 8px;
-    opacity: 0.8;
-}
+.comment-badge-name { font-size: 0.62rem !important; font-weight: 700 !important; }
 
 .badge-more {
-    background: var(--bg-card);
+    background: rgba(255,255,255,0.04);
     color: var(--text-muted);
-    padding: 0.0625rem 0.1875rem;
-    border-radius: 6px;
-    font-size: 0.45rem;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-size: 0.55rem;
     font-weight: 600;
     border: 1px solid var(--border);
 }
 
-.comment-metadata {
-    color: var(--text-muted) !important;
-    font-size: 0.7rem !important;
+/* Sabitlenme rozeti */
+.pinned-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    color: #1a1400;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border: 1px solid rgba(251,191,36,0.55);
+    border-radius: 999px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    box-shadow: 0 0 12px rgba(251,191,36,0.35);
+    animation: ruh-pin-glow 2.4s ease-in-out infinite;
+}
+.pinned-badge svg { width: 10px; height: 10px; }
+@keyframes ruh-pin-glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(251,191,36,0.28); }
+    50% { box-shadow: 0 0 16px rgba(251,191,36,0.55); }
 }
 
+/* Tarih */
+.comment-date,
+.comment-metadata {
+    color: var(--text-muted) !important;
+    font-size: 0.62rem !important;
+    white-space: nowrap;
+}
 .comment-metadata .comment-time {
     color: var(--text-muted) !important;
     text-decoration: none !important;
 }
+.comment-metadata .comment-time:hover { color: var(--primary) !important; }
 
-.comment-metadata .comment-time:hover {
-    color: var(--primary) !important;
-}
-
+/* Yorum metni */
 .comment-text {
     color: var(--text-secondary) !important;
-    line-height: 1.6 !important;
-    margin: var(--spacing-md) 0 !important;
-    font-size: 0.85rem !important;
+    line-height: 1.55 !important;
+    margin: 4px 0 !important;
+    font-size: 0.8rem !important;
     word-break: break-word !important;
 }
+.comment-text a { color: var(--primary); text-decoration: none; }
+.comment-text a:hover { text-decoration: underline; }
 
-.comment-text a {
-    color: var(--primary);
-    text-decoration: none;
+/* İçe girmiş yanıtlar - daha dar */
+.comment-list .children .ruh-comment-item,
+.comment-list .children .comment-item {
+    padding: 6px 8px;
+}
+.comment-list .children .comment-avatar img,
+.comment-list .children .comment-author img {
+    width: 24px !important;
+    height: 24px !important;
+}
+.comment-list .children .comment-text {
+    font-size: 0.76rem !important;
 }
 
-.comment-text a:hover {
-    text-decoration: underline;
-}
-
-/* Tablet için comments */
-@media (min-width: 768px) {
-    .comment-list .children {
-        padding-left: 2rem;
-        border-left-width: 2px;
-        margin-top: var(--spacing-md);
-    }
-    
-    .ruh-comment-item {
-        padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
-    }
-    
-    .comment-body {
-        gap: var(--spacing-md);
-    }
-    
-    .comment-author img {
-        width: 38px;
-        height: 38px;
-    }
-    
-    .comment-author-meta {
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-sm);
-    }
-    
-    .comment-author-meta .author-name {
-        font-size: 0.85rem;
-    }
-    
-    .user-level-oval {
-        padding: 3px 8px !important;
-        font-size: 0.6rem !important;
-        border-radius: 10px !important;
-        letter-spacing: 0.3px;
-    }
-    
-    .user-badges {
-        gap: 0.1875rem;
-    }
-    
-    .badge-item-with-text {
-        padding: 0.0875rem 0.375rem;
-        font-size: 0.525rem;
-        border-radius: 10px;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2)) !important;
-        color: #c4b5fd !important;
-        border: 1px solid rgba(168, 85, 247, 0.4) !important;
-        box-shadow: 0 0 10px rgba(168, 85, 247, 0.3), 0 0 20px rgba(99, 102, 241, 0.15) !important;
-    }
-    
-    .badge-item-with-text svg {
-        width: 10px;
-        height: 10px;
-    }
-    
-    .comment-metadata {
-        font-size: 0.7rem;
-    }
-    
-    .comment-text {
-        font-size: 0.85rem;
-        margin: var(--spacing-md) 0;
-    }
-}
-
-/* Desktop için comments */
-@media (min-width: 1024px) {
-    .comment-list .children {
-        padding-left: 3rem;
-        margin-top: 1rem;
-    }
-    
-    .ruh-comment-item {
-        padding: 1.125rem 2rem; /* Vertical padding %25 azaltıldı */
-    }
-    
-    .comment-body {
-        gap: 1rem;
-    }
-    
-    .comment-author img {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .comment-author-meta {
-        gap: 0.75rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .comment-author-meta .author-name {
-        font-size: 0.875rem;
-    }
-    
-    .user-level-oval {
-        padding: 0.25rem 0.75rem !important;
-        font-size: 0.625rem !important;
-        border-radius: 20px !important;
-        letter-spacing: 0.05em;
-        gap: 0.25rem;
-    }
-    
-    .user-badges {
-        gap: 0.25rem;
-    }
-    
-    .badge-item-with-text {
-        padding: 0.125rem 0.5rem;
-        font-size: 0.625rem;
-        border-radius: 16px;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2)) !important;
-        color: #c4b5fd !important;
-        border: 1px solid rgba(168, 85, 247, 0.4) !important;
-        box-shadow: 0 0 12px rgba(168, 85, 247, 0.35), 0 0 24px rgba(99, 102, 241, 0.2) !important;
-    }
-    
-    .badge-item-with-text svg {
-        width: 12px;
-        height: 12px;
-    }
-    
-    .badge-more {
-        padding: 0.125rem 0.375rem;
-        font-size: 0.625rem;
-        border-radius: 12px;
-    }
-    
-    .comment-metadata {
-        font-size: 0.75rem;
-    }
-    
-    .comment-text {
-        font-size: 0.875rem;
-        line-height: 1.6;
-        margin: 0.75rem 0;
-    }
-}
-
-/* 5. COMMENT ACTIONS - Mobile First Modern */
+/* ── 5. COMMENT ACTIONS ────────────────────────────────────────────────── */
+.comment-actions,
 .comment-actions-modern {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border);
-    gap: var(--spacing-xs);
+    margin-top: 4px;
+    padding-top: 4px;
+    gap: 4px;
     flex-wrap: wrap;
 }
 
 .comment-interaction-buttons {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 4px;
     align-items: center;
 }
 
-/* Modern Icon'lu Butonlar - Mobile First */
+/* Like / Dislike butonları */
+.action-btn,
 .heart-like-btn {
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
-    gap: 0.25rem !important;
+    gap: 3px !important;
     background: transparent !important;
     border: 1px solid var(--border) !important;
-    padding: 0.375rem 0.5rem !important;
-    border-radius: 16px !important;
+    padding: 2px 7px !important;
+    border-radius: 12px !important;
     cursor: pointer !important;
-    font-size: 0.75rem !important;
-    transition: all 0.2s ease !important;
+    font-size: 0.65rem !important;
+    transition: background 0.12s, color 0.12s, border-color 0.12s !important;
     color: var(--text-muted) !important;
     font-family: inherit !important;
-    min-height: 32px !important;
+    min-height: 22px !important;
+    line-height: 1 !important;
 }
-
+.action-btn:hover,
 .heart-like-btn:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
+    background: rgba(239,68,68,0.1) !important;
     color: #ef4444 !important;
-    border-color: rgba(239, 68, 68, 0.3) !important;
-    transform: translateY(-1px) !important;
+    border-color: rgba(239,68,68,0.3) !important;
 }
-
+.action-btn.liked,
 .heart-like-btn.active {
     color: #ef4444 !important;
-    background: rgba(239, 68, 68, 0.1) !important;
+    background: rgba(239,68,68,0.1) !important;
     border-color: #ef4444 !important;
 }
-
-.heart-icon {
-    width: 14px !important;
-    height: 14px !important;
+.action-btn.disliked,
+.action-btn.dislike-btn.disliked {
+    color: #64748b !important;
+    background: rgba(100,116,139,0.1) !important;
+    border-color: #64748b !important;
+}
+.action-btn.dislike-btn:hover {
+    background: rgba(100,116,139,0.1) !important;
+    color: #94a3b8 !important;
+    border-color: rgba(100,116,139,0.4) !important;
+}
+.action-btn svg,
+.heart-icon,
+.reply-icon {
+    width: 11px !important;
+    height: 11px !important;
     flex-shrink: 0 !important;
 }
+.heart-like-btn.active .heart-icon { fill: #ef4444 !important; }
 
-.heart-like-btn.active .heart-icon {
-    fill: #ef4444 !important;
-}
-
-.like-count {
+.like-count, .dislike-count {
     font-weight: 600 !important;
-    font-size: 0.65rem !important;
-    min-width: 14px !important;
+    font-size: 0.62rem !important;
+    min-width: 10px !important;
 }
 
+/* Reply butonu */
+.action-btn.reply-btn,
 .reply-btn-modern {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.25rem !important;
-    background: transparent !important;
     border: none !important;
-    padding: 0.375rem 0.5rem !important;
-    border-radius: 0 !important;
-    cursor: pointer !important;
-    font-size: 0.75rem !important;
-    transition: all 0.2s ease !important;
+    background: transparent !important;
     color: var(--text-muted) !important;
-    font-family: inherit !important;
-    min-height: 32px !important;
+    padding: 2px 5px !important;
+    gap: 3px !important;
 }
-
+.action-btn.reply-btn:hover,
 .reply-btn-modern:hover {
     background: transparent !important;
-    color: var(--primary) !important;
     border: none !important;
-    transform: none !important;
+    color: var(--primary) !important;
+    border-color: transparent !important;
 }
 
-.reply-icon {
-    width: 14px !important;
-    height: 14px !important;
-    flex-shrink: 0 !important;
-}
+.reply-text { font-size: 0.62rem !important; font-weight: 500 !important; }
 
-.reply-text {
-    font-size: 0.65rem !important;
-    font-weight: 500 !important;
-}
-
-/* Tablet için action buttons */
-@media (min-width: 768px) {
-    .comment-actions-modern {
-        margin-top: var(--spacing-md);
-        padding-top: var(--spacing-md);
-        gap: var(--spacing-sm);
-    }
-    
-    .comment-interaction-buttons {
-        gap: var(--spacing-md);
-    }
-    
-    .heart-like-btn,
-    .reply-btn-modern {
-        gap: 0.3125rem !important;
-        padding: 0.4375rem 0.625rem !important;
-        font-size: 0.8125rem !important;
-        min-height: 36px !important;
-    }
-    
-    .heart-icon, .reply-icon {
-        width: 16px !important;
-        height: 16px !important;
-    }
-    
-    .like-count {
-        font-size: 0.7rem !important;
-        min-width: 15px !important;
-    }
-    
-    .reply-text {
-        font-size: 0.7rem !important;
-    }
-}
-
-/* Desktop için action buttons */
-@media (min-width: 1024px) {
-    .comment-actions-modern {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        gap: var(--spacing-md);
-    }
-    
-    .comment-interaction-buttons {
-        gap: 1rem;
-    }
-    
-    .heart-like-btn,
-    .reply-btn-modern {
-        gap: 0.375rem !important;
-        padding: 0.5rem 0.75rem !important;
-        border-radius: 20px !important;
-        font-size: 0.875rem !important;
-        min-height: 38px !important;
-    }
-    
-    .heart-icon, .reply-icon {
-        width: 18px !important;
-        height: 18px !important;
-    }
-    
-    .like-count {
-        font-size: 0.75rem !important;
-        min-width: 16px !important;
-    }
-    
-    .reply-text {
-        font-size: 0.75rem !important;
-    }
-}
-
-/* Dropdown Menu - Mobile First + PC Desktop DÜZELTMELERİ */
-.comment-menu-dropdown {
+/* ── More Dropdown ─────────────────────────────────────────────────────── */
+.comment-menu-dropdown,
+.comment-more-menu {
     position: relative;
     z-index: 100;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
-.menu-trigger {
+.menu-trigger,
+.more-btn {
     background: transparent !important;
     border: 1px solid var(--border) !important;
-    padding: var(--spacing-sm) !important;
-    border-radius: var(--radius-sm) !important;
+    padding: 0 !important;
+    border-radius: var(--radius-xs) !important;
     cursor: pointer !important;
-    color: var(--text-muted) !important;
-    font-size: 0.875rem !important;
-    transition: all 0.2s ease !important;
-    width: 32px !important;
-    height: 32px !important;
+    color: var(--text-muted, #9A9A9A) !important;
+    transition: background 0.12s, border-color 0.12s, color 0.12s !important;
+    width: 22px !important;
+    height: 22px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
     z-index: 101 !important;
-    backdrop-filter: blur(10px) !important;
 }
-
-.menu-trigger:hover {
+.menu-trigger:hover,
+.more-btn:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
     border-color: var(--primary) !important;
-    transform: translateY(-1px) !important;
-    box-shadow: var(--shadow) !important;
 }
+.menu-trigger .dots { font-weight: bold; line-height: 1; user-select: none; font-size: 0.85rem; }
+.more-btn svg { width: 14px !important; height: 14px !important; }
 
-.menu-trigger .dots {
-    font-weight: bold;
-    line-height: 1;
-    user-select: none;
-    font-size: 1rem;
-}
-
+/* Genel sort dropdown - glassmorphism */
 .dropdown-menu {
     position: absolute !important;
-    top: calc(100% + 0.25rem) !important;
+    top: calc(100% + 3px) !important;
     right: 0 !important;
     left: auto !important;
-    background: var(--bg-primary) !important;
-    border: 1px solid var(--border) !important;
+    background: rgba(18,18,18,0.82) !important;
+    backdrop-filter: blur(18px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
     border-radius: var(--radius-sm) !important;
-    box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1) !important;
-    min-width: 120px !important;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07) !important;
+    min-width: 130px !important;
     max-width: 180px !important;
-    z-index: 999999 !important; /* Mobilde çok yüksek */
-    display: none !important;
+    z-index: 9999 !important;
     overflow: hidden !important;
-    margin-top: 0 !important;
     opacity: 0 !important;
     visibility: hidden !important;
-    transform: translateY(-0.5rem) scale(0.95) !important;
-    transition: all 0.15s ease !important;
+    transform: translateY(-5px) scale(0.95) !important;
+    transition: opacity 0.14s, transform 0.14s, visibility 0.14s !important;
     pointer-events: none !important;
 }
-
 .dropdown-menu.show {
-    display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
     transform: translateY(0) scale(1) !important;
     pointer-events: all !important;
 }
 
-.dropdown-item {
+/* more-dropdown: JS body'ye taşır; burada gizle */
+
+.dropdown-item,
+.more-dropdown a,
+.more-dropdown button,
+.edit-btn, .delete-btn, .report-btn, .pin-btn, .view-comment-btn {
     display: flex !important;
     align-items: center !important;
-    gap: 0.75rem !important;
+    gap: 6px !important;
     width: 100% !important;
-    padding: 0.75rem 1rem !important;
+    padding: 5px 10px !important;
     border: none !important;
     background: none !important;
-    color: var(--text-primary) !important;
-    font-size: 0.8rem !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.7rem !important;
     cursor: pointer !important;
     text-decoration: none !important;
-    transition: all 0.2s ease !important;
+    transition: background 0.1s, color 0.1s !important;
     font-family: inherit !important;
     text-align: left !important;
     font-weight: 500 !important;
-    border-radius: var(--radius-sm) !important;
-    margin: 0 var(--spacing-xs) !important;
+    box-sizing: border-box !important;
+}
+.dropdown-item:hover,
+.more-dropdown a:hover,
+.more-dropdown button:hover,
+.edit-btn:hover, .delete-btn:hover, .report-btn:hover, .pin-btn:hover, .view-comment-btn:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+.delete-btn:hover { color: #ef4444 !important; }
+.report-btn:hover { color: #f59e0b !important; }
+
+.dropdown-item .icon { font-size: 0.85rem !important; width: 13px !important; flex-shrink: 0 !important; }
+.more-dropdown svg { width: 13px !important; height: 13px !important; flex-shrink: 0; }
+
+.dropdown-divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+/* ── Reply Form ────────────────────────────────────────────────────────── */
+.reply-form-container,
+.inline-reply-form {
+    margin: 4px 0 4px 16px;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: none;
 }
 
-.dropdown-item:hover {
-    background: var(--primary) !important;
-    color: white !important;
-    transform: translateX(2px) !important;
+.reply-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
-.dropdown-item .icon {
-    font-size: 1rem !important;
-    opacity: 1 !important;
-    width: 16px !important;
-    flex-shrink: 0 !important;
+.inline-toolbar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
 }
 
-.dropdown-divider {
-    height: 1px;
-    background: var(--border);
-    margin: var(--spacing-xs) 0;
+.inline-toolbar-btn {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
 }
 
-/* Tablet için dropdown */
-@media (min-width: 768px) {
-    .menu-trigger {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 1rem !important;
-    }
-    
-    .dropdown-menu {
-        min-width: 140px !important;
-        max-width: 200px !important;
-        box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    .dropdown-item {
-        padding: 0.625rem 0.875rem !important;
-        font-size: 0.8rem !important;
-        gap: 0.625rem !important;
-    }
-    
-    .dropdown-item .icon {
-        width: 15px !important;
-    }
-}
-
-/* Desktop için dropdown - PC DÜZELTMELERİ */
-@media (min-width: 1024px) {
-    .menu-trigger {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 1rem !important;
-    }
-    
-    .dropdown-menu {
-        right: 0 !important;
-        min-width: 180px !important;
-        max-width: 220px !important;
-        top: calc(100% + 0.75rem) !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        z-index: 1000 !important; /* PC'de makul z-index */
-    }
-    
-    .dropdown-item {
-        padding: 0.875rem 1.125rem !important;
-        font-size: 0.875rem !important;
-        gap: 0.75rem !important;
-    }
-    
-    .dropdown-item .icon {
-        width: 16px !important;
-    }
-    
-    .dropdown-divider {
-        margin: 0.5rem 0;
-    }
-}
-
-/* Dark mode uyumluluğu */
-@media (prefers-color-scheme: dark) {
-    .dropdown-menu {
-        background: var(--bg-secondary) !important;
-        border-color: var(--border) !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
-    }
-}
-
-/* Yanıt Formu Tasarımı - Mobile First */
-.reply-form-container {
-    margin: var(--spacing-sm) 0 0 var(--spacing-lg); /* Top margin azaltıldı */
-    background: var(--bg-secondary);
-    border-radius: var(--radius);
-    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
+.inline-toolbar-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
 }
 
 .reply-form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
-.reply-form textarea {
+.reply-form textarea,
+.inline-reply-textarea {
     width: 100%;
-    min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
-    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg-primary);
+    min-height: 52px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-xs);
+    background: transparent;
     color: var(--text-primary);
     font-family: inherit;
-    font-size: 0.8rem;
-    line-height: 1.3; /* 1.4'ten 1.3'e azaltıldı */
+    font-size: 0.76rem;
+    line-height: 1.4;
     resize: vertical;
-    transition: all 0.2s ease;
-}
-
-.reply-form textarea:focus {
+    transition: border-color 0.15s;
     outline: none;
+}
+.reply-form textarea:focus,
+.inline-reply-textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 2px rgba(220,53,69,0.1);
 }
-
-.reply-form textarea::placeholder {
-    color: var(--text-muted);
-}
+.reply-form textarea::placeholder,
+.inline-reply-textarea::placeholder { color: var(--text-muted); }
 
 .reply-form-actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: flex-end;
     gap: var(--spacing-sm);
-    align-items: stretch;
+    align-items: center;
 }
 
-.reply-cancel, .reply-submit {
-    padding: var(--spacing-md) var(--spacing-lg);
+.reply-cancel, .reply-submit,
+.cancel-inline-reply, .submit-inline-reply {
+    padding: 4px 10px;
     border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.8rem;
+    border-radius: var(--radius-xs);
+    font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.12s, transform 0.12s;
     font-family: inherit;
-    min-height: 36px; /* 44px'den 36px'e (%18 azalma) */
-    width: 100%;
+    min-height: 26px;
 }
-
-.reply-cancel {
+.reply-cancel, .cancel-inline-reply {
     background: var(--bg-hover);
     color: var(--text-secondary);
     border: 1px solid var(--border);
 }
-
-.reply-cancel:hover {
+.reply-cancel:hover, .cancel-inline-reply:hover {
     background: var(--border);
     color: var(--text-primary);
 }
-
-.reply-submit {
+.reply-submit, .submit-inline-reply {
     background: var(--primary);
     color: white;
 }
-
-.reply-submit:hover {
+.reply-submit:hover, .submit-inline-reply:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
 }
-
-.reply-submit:disabled {
-    opacity: 0.6;
+.reply-submit:disabled, .submit-inline-reply:disabled {
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
 }
 
-/* Tablet için reply form */
-@media (min-width: 768px) {
-    .reply-form-container {
-        margin: var(--spacing-lg) 0 0 2rem;
-        padding: var(--spacing-xl);
-    }
-    
-    .reply-form textarea {
-        min-height: 68px; /* 90px'den 68px'e (%24 azalma) */
-        font-size: 0.85rem;
-        padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
-    }
-    
-    .reply-form-actions {
-        flex-direction: row;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        align-items: center;
-    }
-    
-    .reply-cancel, .reply-submit {
-        width: auto;
-        min-height: 40px;
-        font-size: 0.85rem;
-    }
-}
-
-/* Desktop için reply form */
-@media (min-width: 1024px) {
-    .reply-form-container {
-        margin: 1rem 0 0 3rem;
-        padding: 1.5rem;
-    }
-    
-    .reply-form {
-        gap: 1rem;
-    }
-    
-    .reply-form textarea {
-        min-height: 75px; /* 100px'den 75px'e (%25 azalma) */
-        font-size: 0.875rem;
-        line-height: 1.4; /* 1.5'ten 1.4'e azaltıldı */
-        padding: 0.75rem; /* 1rem'den azaltıldı */
-    }
-    
-    .reply-form textarea:focus {
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    
-    .reply-form-actions {
-        gap: 0.75rem;
-    }
-    
-    .reply-cancel, .reply-submit {
-        padding: 0.75rem 1.5rem;
-        font-size: 0.875rem;
-        min-height: 38px;
-    }
-}
-
-/* YORUM DÜZENLEME FORMU - Mobile First - HEIGHT AZALTILDI */
+/* ── Edit Form ─────────────────────────────────────────────────────────── */
 .comment-edit-form {
-    margin-top: var(--spacing-sm); /* md'den sm'e azaltıldı */
-    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
-    background: var(--bg-secondary);
-    border-radius: var(--radius);
-    border: 2px solid var(--border);
-    box-shadow: var(--shadow);
-    animation: slideDown 0.3s ease;
+    margin-top: 4px;
+    padding: var(--spacing-md);
+    background: transparent;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: none;
+    animation: slideDown 0.2s ease;
 }
 
 .comment-edit-toolbar {
     display: flex;
-    gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-md);
-    padding: var(--spacing-sm);
-    background: var(--bg-card);
-    border-radius: var(--radius-sm);
-    border-bottom: 1px solid var(--border);
+    gap: 2px;
+    margin-bottom: var(--spacing-sm);
+    padding: 3px 4px;
+    background: transparent;
+    border-radius: var(--radius-xs);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     flex-wrap: wrap;
 }
-
 .comment-edit-toolbar .ruh-toolbar-button {
     background: var(--bg-primary);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    border-radius: var(--radius-sm);
-    width: 28px;
-    height: 28px;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    border-radius: var(--radius-xs);
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.12s, color 0.12s;
     font-weight: 600;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
 }
-
 .comment-edit-toolbar .ruh-toolbar-button:hover {
     background: var(--primary);
     color: white;
-    border-color: var(--primary);
-    transform: translateY(-1px);
 }
 
 .comment-edit-form textarea {
     width: 100%;
-    min-height: 60px; /* 80px'den 60px'e (%25 azalma) */
-    padding: var(--spacing-sm); /* md'den sm'e azaltıldı */
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg-primary);
+    min-height: 54px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-xs);
+    background: transparent;
     color: var(--text-primary);
     font-family: inherit;
-    font-size: 0.8rem;
-    line-height: 1.4; /* 1.5'ten 1.4'e azaltıldı */
+    font-size: 0.76rem;
+    line-height: 1.4;
     resize: vertical;
-    transition: all 0.2s ease;
+    transition: border-color 0.15s;
+    outline: none;
     box-sizing: border-box;
 }
-
 .comment-edit-form textarea:focus {
-    outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 2px rgba(220,53,69,0.1);
 }
-
-.comment-edit-form textarea::placeholder {
-    color: var(--text-muted);
-}
+.comment-edit-form textarea::placeholder { color: var(--text-muted); }
 
 .comment-edit-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
     border-top: 1px solid var(--border);
     flex-wrap: wrap;
     gap: var(--spacing-sm);
 }
-
-.comment-edit-actions > div:first-child {
-    flex: 1;
-}
-
+.comment-edit-actions > div:first-child { flex: 1; }
 .comment-edit-actions > div:last-child {
     display: flex;
     gap: var(--spacing-sm);
@@ -1941,24 +1312,22 @@
 }
 
 .comment-edit-cancel, .comment-edit-save {
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 4px 10px;
     border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.8rem;
+    border-radius: var(--radius-xs);
+    font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.12s, transform 0.12s;
     font-family: inherit;
-    min-height: 36px; /* 44px'den 36px'e (%18 azalma) */
-    min-width: 80px;
+    min-height: 26px;
+    min-width: 60px;
 }
-
 .comment-edit-cancel {
     background: var(--bg-hover);
     color: var(--text-secondary);
     border: 1px solid var(--border);
 }
-
 .comment-edit-cancel:hover {
     background: var(--border);
     color: var(--text-primary);
@@ -2333,77 +1702,35 @@
     }
 }
 
-/* 9. MISC ELEMENTS - Mobile First */
+/* ── Misc ──────────────────────────────────────────────────────────────── */
 #load-more-comments {
     width: 100%;
     background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-    padding: var(--spacing-md); /* lg'den md'ye azaltıldı */
+    color: var(--text-muted);
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 8px;
     cursor: pointer;
     font-weight: 500;
-    transition: all 0.2s ease;
-    font-size: 0.8rem;
+    transition: background 0.12s, color 0.12s;
+    font-size: 0.72rem;
     font-family: inherit;
-    min-height: 36px; /* 48px'den 36px'e (%25 azalma) */
+    min-height: 32px;
+    border-radius: 0 0 var(--radius) var(--radius);
 }
-
-#load-more-comments:hover {
-    background: var(--bg-hover);
-    border-color: var(--primary);
-}
+#load-more-comments:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 .no-comments {
-    padding: 1.5rem var(--spacing-lg); /* Vertical padding %25 azaltıldı */
+    padding: var(--spacing-xl) var(--spacing-lg);
     text-align: center;
     color: var(--text-muted);
-    background: var(--bg-secondary);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
-
 .comments-closed {
-    padding: var(--spacing-lg) var(--spacing-lg); /* xl'den lg'ye azaltıldı */
+    padding: var(--spacing-lg);
     text-align: center;
     color: var(--text-muted);
-    background: var(--bg-secondary);
-    font-size: 0.8rem;
-}
-
-/* Tablet için misc */
-@media (min-width: 768px) {
-    #load-more-comments {
-        font-size: 0.85rem;
-        min-height: 33px; /* 44px'den 33px'e (%25 azalma) */
-    }
-    
-    .no-comments {
-        padding: 1.88rem var(--spacing-xl); /* Vertical padding %25 azaltıldı */
-        font-size: 0.85rem;
-    }
-    
-    .comments-closed {
-        padding: var(--spacing-lg); /* xl'den lg'ye azaltıldı */
-        font-size: 0.85rem;
-    }
-}
-
-/* Desktop için misc */
-@media (min-width: 1024px) {
-    #load-more-comments {
-        padding: 1rem;
-        font-size: 0.875rem;
-        min-height: 40px;
-    }
-    
-    .no-comments {
-        padding: 3rem 2rem;
-        font-size: 0.875rem;
-    }
-    
-    .comments-closed {
-        padding: 2rem;
-        font-size: 0.875rem;
-    }
+    font-size: 0.75rem;
 }
 
 /* 10. NOTIFICATIONS - Mobile First */
@@ -2777,7 +2104,7 @@
 }
 
 .comment-more-menu {
-    position: static; /* overflow: hidden'dan kaçmak için static konumlama */
+    position: static;
     margin-left: auto;
     flex-shrink: 0;
 }
@@ -2786,99 +2113,120 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 6px;
-    color: #666;
+    width: 22px;
+    height: 22px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
     cursor: pointer;
     position: relative;
     z-index: 1;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
-
 .comment-more-menu .more-btn:hover {
-    background: #333;
-    color: #fff;
+    background: rgba(220,53,69,0.15);
+    border-color: rgba(220,53,69,0.4);
+    color: var(--text-primary);
+    box-shadow: 0 0 8px rgba(220,53,69,0.2);
 }
 
+/* ── More Dropdown: Glassmorphism + body portal (JS taşır) ── */
+body > .more-dropdown,
 .comment-more-menu .more-dropdown {
-    position: fixed;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 10px;
-    min-width: 165px;
-    z-index: 99999;
+    position: fixed !important;
+    /* Glassmorphism cam */
+    background: rgba(18,18,18,0.75) !important;
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 10px !important;
+    min-width: 150px !important;
+    z-index: 999999 !important;
+    /* Gizli hal - display:none kullanıyoruz (JS toggle) */
     display: none;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-    overflow: hidden;
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    overflow: hidden !important;
+    /* Açılış animasyonu - class eklenmesi sonrası */
+    transform-origin: top right;
 }
-
+body > .more-dropdown.show,
 .comment-more-menu .more-dropdown.show {
-    display: block;
+    display: block !important;
+    animation: ruh-dropdown-in 0.15s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-/* Hem button hem a için ortak stiller */
+@keyframes ruh-dropdown-in {
+    from { opacity: 0; transform: scale(0.88) translateY(-6px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+body > .more-dropdown button,
+body > .more-dropdown a,
 .comment-more-menu .more-dropdown button,
 .comment-more-menu .more-dropdown a {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    padding: 10px 14px;
-    background: none;
-    border: none;
-    border-bottom: 1px solid #252525;
-    color: #bbb;
-    font-size: 13px;
-    cursor: pointer;
-    text-align: left;
-    text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease;
-    box-sizing: border-box;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    width: 100% !important;
+    padding: 7px 12px !important;
+    background: none !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    color: rgba(220,220,220,0.9) !important;
+    font-size: 0.72rem !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    text-decoration: none !important;
+    transition: background 0.12s, color 0.12s !important;
+    box-sizing: border-box !important;
+    font-family: inherit !important;
+    font-weight: 500 !important;
 }
-
+body > .more-dropdown button:last-child,
+body > .more-dropdown a:last-child,
 .comment-more-menu .more-dropdown button:last-child,
 .comment-more-menu .more-dropdown a:last-child {
-    border-bottom: none;
+    border-bottom: none !important;
 }
-
+body > .more-dropdown button:hover,
+body > .more-dropdown a:hover,
 .comment-more-menu .more-dropdown button:hover,
 .comment-more-menu .more-dropdown a:hover {
-    background: #252525;
-    color: #fff;
+    background: rgba(255,255,255,0.08) !important;
+    color: #fff !important;
 }
-
+body > .more-dropdown button.delete-btn,
 .comment-more-menu .more-dropdown button.delete-btn {
-    color: #ef4444;
+    color: #fca5a5 !important;
 }
-
+body > .more-dropdown button.delete-btn:hover,
 .comment-more-menu .more-dropdown button.delete-btn:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ff6b6b;
+    background: rgba(239,68,68,0.15) !important;
+    color: #ef4444 !important;
 }
-
+body > .more-dropdown button svg,
+body > .more-dropdown a svg,
 .comment-more-menu .more-dropdown button svg,
 .comment-more-menu .more-dropdown a svg {
-    width: 15px;
-    height: 15px;
-    flex-shrink: 0;
-    opacity: 0.75;
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0 !important;
+    opacity: 0.7 !important;
 }
-
+body > .more-dropdown button:hover svg,
+body > .more-dropdown a:hover svg,
 .comment-more-menu .more-dropdown button:hover svg,
-.comment-more-menu .more-dropdown a:hover svg {
-    opacity: 1;
-}
-
-/* Pin butonu stili */
-.comment-more-menu .more-dropdown .pin-btn {
-    color: #a0a0ff;
-}
-
+.comment-more-menu .more-dropdown a:hover svg { opacity: 1 !important; }
+body > .more-dropdown .pin-btn,
+.comment-more-menu .more-dropdown .pin-btn { color: #a5b4fc !important; }
+body > .more-dropdown .pin-btn:hover,
 .comment-more-menu .more-dropdown .pin-btn:hover {
-    background: rgba(100, 100, 255, 0.1);
-    color: #b0b0ff;
+    background: rgba(99,102,241,0.12) !important;
+    color: #c7d2fe !important;
 }
 
 /* Image previews - Mobile First */
@@ -2954,152 +2302,53 @@
     }
 }
 
-/* Yanıtları Göster/Gizle Butonu - Mobile First */
-.replies-toggle-container {
-    margin-top: var(--spacing-sm);
-}
+/* ── Replies Toggle ────────────────────────────────────────────────────── */
+.replies-toggle-container { margin-top: 3px; }
 
 .replies-toggle-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    color: var(--primary);
+    padding: 2px 5px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.62rem;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    transition: all 0.2s ease;
+    gap: 3px;
+    transition: background 0.12s, color 0.12s;
     font-family: inherit;
-    min-height: auto;
 }
-
-/* Yanıt butonunun yanında olduğunda */
-.comment-interaction-buttons .replies-toggle-btn {
-    margin-left: 0.5rem;
-    color: var(--primary);
-}
-
-.replies-toggle-btn:hover {
-    background: rgba(37, 99, 235, 0.1);
-    color: var(--primary);
-    border-color: rgba(37, 99, 235, 0.3);
-    transform: translateY(-1px);
-}
-
+.comment-interaction-buttons .replies-toggle-btn { margin-left: 2px; }
+.replies-toggle-btn:hover { background: rgba(220,53,69,0.1); color: var(--primary-dark); }
 .replies-toggle-btn .toggle-icon {
-    width: 14px;
-    height: 14px;
-    transition: transform 0.3s ease;
-    color: #9ca3af;
+    width: 11px; height: 11px;
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
 }
+.replies-toggle-btn.expanded .toggle-icon { transform: rotate(180deg); }
+.replies-toggle-btn.ruh-btn-loading .toggle-icon { animation: spin 1s linear infinite; }
+.replies-toggle-btn.error { color: var(--error); }
+.replies-toggle-btn .toggle-text { font-size: 0.62rem; font-weight: 600; }
 
-.replies-toggle-btn.expanded .toggle-icon {
-    transform: rotate(180deg);
-}
-
-.replies-toggle-btn.ruh-btn-loading .toggle-icon {
-    animation: spin 1s linear infinite;
-}
-
-.replies-toggle-btn.error {
-    border-color: var(--error);
-    color: var(--error);
-}
-
-.replies-toggle-btn.error .toggle-icon {
-    color: var(--error);
-}
-
-.replies-toggle-btn .toggle-text {
-    font-size: 0.7rem;
-    font-weight: 500;
-}
-
-/* Tablet için toggle */
-@media (min-width: 768px) {
-    .replies-toggle-container {
-        margin-top: var(--spacing-md);
-    }
-    
-    .replies-toggle-btn {
-        font-size: 0.725rem;
-        padding: var(--spacing-sm) var(--spacing-md);
-        gap: 0.3125rem;
-    }
-    
-    .replies-toggle-btn .toggle-icon {
-        width: 15px;
-        height: 15px;
-    }
-    
-    .replies-toggle-btn .toggle-text {
-        font-size: 0.725rem;
-    }
-}
-
-/* Desktop için toggle */
-@media (min-width: 1024px) {
-    .replies-toggle-container {
-        margin-top: 0.75rem;
-    }
-    
-    .replies-toggle-btn {
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        gap: 0.375rem;
-        min-height: 36px;
-    }
-    
-    .replies-toggle-btn .toggle-icon {
-        width: 16px;
-        height: 16px;
-    }
-    
-    .replies-toggle-btn .toggle-text {
-        font-size: 0.75rem;
-    }
-}
-
-/* Yanıtlar Konteyneri - Mobile First */
+/* Yanıtlar Konteyneri */
 .replies-container {
-    margin-top: var(--spacing-sm);
+    margin-top: 2px;
     border-left: 2px solid var(--primary);
-    border-radius: 0;
-    animation: slideDown 0.3s ease;
+    animation: slideDown 0.2s ease;
 }
-
-.replies-container.hiding {
-    animation: slideUp 0.3s ease;
-}
+.replies-container.hiding { animation: slideUp 0.2s ease; }
 
 @keyframes slideUp {
-    from {
-        opacity: 1;
-        max-height: 500px;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        max-height: 0;
-        transform: translateY(-0.5rem);
-    }
-}
-
-/* Tablet için replies container */
-@media (min-width: 768px) {
-    .replies-container {
-        margin-top: var(--spacing-md);
-    }
+    from { opacity: 1; max-height: 500px; transform: translateY(0); }
+    to   { opacity: 0; max-height: 0;   transform: translateY(-4px); }
 }
 
 /* Desktop için replies container */
 @media (min-width: 1024px) {
     .replies-container {
-        margin-top: 0.75rem;
+        margin-top: 2px;
     }
 }
 
@@ -3182,622 +2431,228 @@
     word-break: break-all !important;
 }
 
-/* MINIMAL BOX DESIGN UPDATE - Görseldeki gibi tasarım */
+/* ── GLASSMORPHISM LAYOUT ──────────────────────────────────────────────── */
 
-/* Ana container güncellemeleri */
+/* Ana alan: tema arka planına karışsın */
 .comments-area {
-    background: var(--bg-primary);
-    padding: var(--spacing-lg);
-    border: none; /* Dış border kaldır */
-    box-shadow: none; /* Dış shadow kaldır */
-}
-
-/* Reactions section kutu tasarımı - BÜYÜK */
-.ruh-reactions-section {
-    background: var(--bg-card) !important;
-    border-radius: var(--radius) !important;
-    margin-bottom: var(--spacing-lg) !important;
-    box-shadow: none !important; /* Minimal */
-    border: 1px solid var(--border) !important;
-    padding: 3rem !important; /* Daha da büyük */
-}
-
-/* Comments header kutu tasarımı - KÜÇÜLTÜLMÜŞ */
-.comments-header {
-    background: var(--bg-card) !important;
-    border-radius: var(--radius) !important;
-    margin-bottom: var(--spacing-lg) !important;
-    box-shadow: none !important; /* Minimal */
-    border: 1px solid var(--border) !important;
-    padding: 1.5rem !important; /* KÜÇÜLTÜLMÜŞ PADDING */
-}
-
-/* Comment form kutu tasarımı - KÜÇÜLTÜLMÜŞ */
-#ruh-comment-form-wrapper {
-    background: var(--bg-card) !important;
-    border-radius: var(--radius) !important;
-    margin-bottom: var(--spacing-lg) !important;
+    background: transparent !important;
+    padding: var(--spacing-md) !important;
+    border: none !important;
     box-shadow: none !important;
-    border: 1px solid var(--border) !important;
-    padding: 1.5rem !important; /* KÜÇÜLTÜLMÜŞ PADDING */
 }
 
-/* Main comments area */
+/* Reactions */
+.ruh-reactions-section {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-radius: var(--radius) !important;
+    margin-bottom: var(--spacing-md) !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: var(--spacing-lg) var(--spacing-xl) !important;
+}
+
+/* Header */
+.comments-header,
+.comments-header-modern {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-radius: var(--radius) !important;
+    margin-bottom: var(--spacing-md) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow: none !important;
+    padding: var(--spacing-md) var(--spacing-lg) !important;
+}
+
+/* Form */
+#ruh-comment-form-wrapper {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-radius: 14px !important;
+    margin-bottom: var(--spacing-md) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    box-shadow: none !important;
+    padding: 14px !important;
+}
+
 .ruh-comments-main {
     background: transparent !important;
     padding: 0 !important;
 }
 
-/* Comment list - ayrı kutular */
+/* ── Glassmorphism Yorum Kartları ──────────────────────────────────────── */
+/* Her yorum ayrı bir cam kart - liste değil, kartlar dizisi */
 .comment-list {
     display: flex !important;
     flex-direction: column !important;
-    gap: var(--spacing-lg) !important;
+    gap: 6px !important;          /* kartlar arası boşluk */
     list-style: none !important;
     padding: 0 !important;
     margin: 0 !important;
-}
-
-/* Her comment bir kutu - MINIMAL - KÜÇÜLTÜLMÜŞ YÜKSEKLİK */
-.ruh-comment-item {
-    background: var(--bg-card) !important;
-    border-radius: var(--radius) !important;
-    box-shadow: none !important; /* Minimal */
-    border: 1px solid var(--border) !important;
-    padding: 1.125rem !important; /* 1.5rem'den %25 azaltıldı */
-    transition: all 0.2s ease !important;
-    margin: 0 !important;
-}
-
-.ruh-comment-item:hover {
-    box-shadow: none !important; /* Minimal */
-    transform: none !important; /* Minimal */
-    border-color: var(--border-hover) !important;
-    background: var(--bg-hover) !important;
-}
-
-/* Children comments - yanıt kutularına özel stil */
-.comment-list .children {
-    padding-left: 0 !important;
-    border-left: none !important;
-    margin-top: var(--spacing-lg) !important;
-    gap: var(--spacing-md) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    list-style: none !important;
-    padding: 0 !important;
-}
-
-.comment-list .children .ruh-comment-item {
-    background: var(--bg-secondary) !important;
-    margin-left: var(--spacing-xl) !important;
-    position: relative !important;
-}
-
-/* Yanıt yorumları için indicator çizgisi */
-.comment-list .children .ruh-comment-item::before {
-    content: '';
-    position: absolute;
-    left: calc(-1 * var(--spacing-xl) + var(--spacing-sm));
-    top: 50%;
-    width: 3px;
-    height: 24px;
-    background: var(--primary);
-    border-radius: 2px;
-    transform: translateY(-50%);
-}
-
-/* Comment body düzenlemeleri */
-.comment-body {
-    display: flex !important;
-    gap: var(--spacing-lg) !important;
-    align-items: flex-start !important;
-}
-
-.comment-author img {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    border: 2px solid var(--border) !important;
-    object-fit: cover !important;
-    flex-shrink: 0 !important;
-}
-
-.comment-content {
-    flex: 1 !important;
-    min-width: 0 !important;
-}
-
-.comment-author-meta {
-    display: flex !important;
-    align-items: center !important;
-    gap: var(--spacing-md) !important;
-    margin-bottom: var(--spacing-sm) !important;
-    flex-wrap: wrap !important;
-}
-
-.comment-author-meta .author-name {
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-}
-
-.comment-text {
-    line-height: 1.6 !important;
-    margin: var(--spacing-md) 0 !important;
-    font-size: 0.85rem !important;
-    word-break: break-word !important;
-}
-
-/* Tablet için güncellemeler */
-@media (min-width: 768px) {
-    .comments-area {
-        padding: var(--spacing-xl);
-    }
-    
-    .comment-body {
-        gap: var(--spacing-xl) !important;
-    }
-    
-    .comment-author img {
-        width: 48px !important;
-        height: 48px !important;
-    }
-    
-    .comment-author-meta .author-name {
-        font-size: 1rem !important;
-    }
-    
-    .comment-text {
-        font-size: 0.9rem !important;
-    }
-    
-    .comment-list .children .ruh-comment-item {
-        margin-left: 2rem !important;
-    }
-    
-    .comment-list .children .ruh-comment-item::before {
-        left: calc(-2rem + var(--spacing-md));
-    }
-}
-
-/* TEPKİ KISMI - GÖRSELDEKI GİBİ MODERN MİNİMAL */
-.ruh-reactions-section {
-    background: var(--bg-card) !important;
-    padding: 2rem !important;
-    text-align: center !important;
-    border-radius: 12px !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    border: 1px solid var(--border) !important;
-    margin-bottom: 1.5rem !important;
-}
-
-.reactions-header {
-    margin-bottom: 1.5rem !important;
-}
-
-.reactions-header h3 {
-    font-size: 1.1rem !important;
-    font-weight: 600 !important;
-    margin: 0 0 0.5rem !important;
-    color: var(--text-primary) !important;
-}
-
-.total-reactions {
-    color: var(--text-muted) !important;
-    font-size: 0.9rem !important;
-    font-weight: 500 !important;
-}
-
-.reactions {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important; /* Mobilde 3 kolon */
-    gap: 1rem !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-}
-
-/* Çok küçük ekranlar için reactions */
-@media (max-width: 480px) {
-    .ruh-reactions-section {
-        padding: 1.5rem !important;
-    }
-    
-    .reactions {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.5rem !important;
-    }
-    
-    .reaction {
-        min-height: 70px !important;
-        padding: 0.75rem 0.5rem !important;
-    }
-    
-    .reaction .emoji {
-        font-size: 1.75rem !important;
-    }
-    
-    .reaction span:not(.count) {
-        font-size: 0.6rem !important;
-    }
-    
-    .reaction .count {
-        font-size: 0.6rem !important;
-        padding: 0.1rem 0.3rem !important;
-        min-width: 16px !important;
-        top: -4px !important;
-        right: -4px !important;
-    }
-}
-
-.reaction {
-    background: var(--bg-primary) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    padding: 1.25rem 0.75rem !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    min-height: 90px !important;
-    position: relative !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
     overflow: visible !important;
 }
 
-.reaction:hover {
-    background: var(--bg-secondary) !important;
-    border-color: var(--primary) !important;
-    transform: translateY(-1px) !important;
+.ruh-comment-item,
+.comment-item {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: none !important;
+    padding: 8px 12px !important;
+    transition: background 0.18s ease, border-color 0.18s ease !important;
+    margin: 0 !important;
+    position: relative;
+    overflow: visible !important;
+}
+.ruh-comment-item:last-child,
+.comment-item:last-child { border-bottom: 1px solid rgba(255,255,255,0.07) !important; }
+
+.ruh-comment-item:hover,
+.comment-item:hover {
+    background: rgba(255,255,255,0.03) !important;
+    border-color: rgba(255,255,255,0.14) !important;
 }
 
-.reaction.selected {
-    background: var(--primary) !important;
-    border-color: var(--primary) !important;
-    border-width: 2px !important;
+/* Pinned yorum */
+.ruh-comment-item.is-pinned,
+.comment-item.is-pinned {
+    border-color: rgba(251,191,36,0.45) !important;
+    background: rgba(251,191,36,0.06) !important;
+    box-shadow: 0 0 0 1px rgba(251,191,36,0.12) !important;
 }
 
-/* YENİ GÖRSELE GÖRE EMOJİLER - SAYILAR ALTTA */
+/* Children: yanıt kartları */
+.comment-list .children,
+.comment-list .replies-container {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    list-style: none;
+    padding: 4px 0 0 16px;
+    margin: 4px 0 0 0;
+    border-left: 2px solid rgba(220,53,69,0.25);
+    background: none;
+    border-top: none;
+}
+.comment-list .children.is-open,
+.comment-list .replies-container.is-open {
+    display: flex;
+}
+.comment-list .children.is-collapsed,
+.comment-list .replies-container.is-collapsed,
+.comment-list .children[hidden],
+.comment-list .replies-container[hidden] {
+    display: none !important;
+}
+.comment-item > .replies-container,
+.comment-item > .inline-reply-form {
+    width: 100%;
+}
+.comment-list .children .ruh-comment-item,
+.comment-list .children .comment-item {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: rgba(255,255,255,0.06) !important;
+    box-shadow: none !important;
+    padding-left: 10px !important;
+    position: static !important;
+}
+.comment-list .children .ruh-comment-item::before,
+.comment-list .children .comment-item::before {
+    display: none !important;
+}
+.comment-list .children .ruh-comment-item:hover,
+.comment-list .children .comment-item:hover {
+    background: rgba(255,255,255,0.05) !important;
+}
+
+.comment-body {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+}
+
+/* avatar */
+.comment-author img {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+}
+.comment-content { flex: 1 !important; min-width: 0 !important; }
+.comment-author-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+    flex-wrap: wrap !important;
+}
+.comment-author-meta .author-name { font-size: 0.78rem !important; font-weight: 600 !important; }
+.comment-text {
+    line-height: 1.5 !important;
+    margin: 3px 0 !important;
+    font-size: 0.78rem !important;
+    word-break: break-word !important;
+}
+
+/* Reaction emoji / count - kompakt */
 .reaction .emoji {
-    font-size: 2.25rem !important; /* Görsele uygun boyut */
+    font-size: 1rem !important;
     display: block !important;
     line-height: 1 !important;
-    margin-bottom: 0.5rem !important;
+    transition: transform 0.15s !important;
 }
+.reaction:hover .emoji { transform: scale(1.15) !important; }
 
-/* SAYILAR ALTTA - YENİ TASARIM */
 .reaction .count {
-    position: relative !important; /* Absolute değil, normal akış */
-    top: auto !important;
-    right: auto !important;
-    background: rgba(255,255,255,0.1) !important;
-    color: var(--text-primary) !important;
-    padding: 0.25rem 0.5rem !important;
-    border-radius: 12px !important;
-    font-size: 0.75rem !important;
+    position: relative !important;
+    top: auto !important; right: auto !important;
+    background: rgba(255,255,255,0.08) !important;
+    color: var(--text-muted) !important;
+    padding: 1px 5px !important;
+    border-radius: 8px !important;
+    font-size: 0.6rem !important;
     font-weight: 700 !important;
-    min-width: 24px !important;
+    min-width: 16px !important;
     text-align: center !important;
     border: none !important;
-    z-index: auto !important;
     display: inline-block !important;
-    margin-top: 0.25rem !important;
 }
-
 .reaction.selected .count {
-    background: rgba(255, 255, 255, 0.2) !important;
-    color: rgba(255, 255, 255, 0.95) !important;
-    border: none !important;
+    background: rgba(255,255,255,0.2) !important;
+    color: white !important;
 }
 
-/* EMOJİ İSİMLERİ GERİ EKLENDİ - SAYILAR VE İSİMLER ALTTA */
-.reaction .reaction-name {
-    display: block !important; /* İsimleri göster */
-    font-size: 0.65rem !important;
-    font-weight: 500 !important;
-    color: var(--text-muted) !important;
-    text-align: center !important;
-    line-height: 1.2 !important;
-    margin-top: 0.25rem !important;
-}
-
-.reaction.selected .reaction-name {
-    color: rgba(255, 255, 255, 0.9) !important;
-    font-weight: 600 !important;
-}
-
-/* Eski selectorları da destekle */
+.reaction .reaction-name,
 .reaction span:not(.count):not(.emoji) {
-    display: block !important;
-    font-size: 0.65rem !important;
+    font-size: 0.58rem !important;
     font-weight: 500 !important;
     color: var(--text-muted) !important;
     text-align: center !important;
     line-height: 1.2 !important;
-    margin-top: 0.25rem !important;
 }
-
+.reaction.selected .reaction-name,
 .reaction.selected span:not(.count):not(.emoji) {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: rgba(255,255,255,0.9) !important;
     font-weight: 600 !important;
-}
-
-/* Pulse animasyonu güncellendi */
-@keyframes countPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-/* Tablet için tepki güncellemeleri - RESPONSIVE */
-@media (min-width: 768px) {
-    .ruh-reactions-section {
-        padding: 2.5rem !important;
-        margin-bottom: 2rem !important;
-    }
-    
-    .reactions {
-        grid-template-columns: repeat(6, 1fr) !important; /* Tablet'te 6 kolon */
-        gap: 1.25rem !important;
-        max-width: 100% !important;
-    }
-    
-    .reaction {
-        min-height: 75px !important; /* 100px'den 75px'e (%25 azalma) */
-        padding: 1.125rem 1rem !important; /* Vertical padding azaltıldı */
-    }
-    
-    .reaction .emoji {
-        font-size: 2.5rem !important;
-    }
-    
-    .reaction span:not(.count) {
-        font-size: 0.7rem !important;
-    }
-    
-    .reaction .count {
-        font-size: 0.75rem !important;
-        padding: 0.3rem 0.6rem !important;
-        min-width: 24px !important;
-    }
-}
-
-/* Desktop için tepki güncellemeleri - DAHA DA KÜÇÜLTÜLMÜŞ EMOJİLER PC İÇİN */
-@media (min-width: 1024px) {
-    .ruh-reactions-section {
-        padding: 1.5rem !important; /* Daha da küçültülmüş padding */
-        margin-bottom: 1.5rem !important;
-        max-width: 800px !important; /* Daha da küçük genişlik */
-        margin-left: auto !important;
-        margin-right: auto !important;
-    }
-    
-    .reactions {
-        grid-template-columns: repeat(6, 1fr) !important;
-        gap: 0.75rem !important; /* Daha küçük boşluk */
-        max-width: 100% !important;
-    }
-    
-    .reactions-header {
-        margin-bottom: 1rem !important;
-    }
-    
-    .reactions-header h3 {
-        font-size: 1rem !important; /* Daha küçük başlık */
-        font-weight: 600 !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .total-reactions {
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-    }
-    
-    .reaction {
-        min-height: 55px !important; /* Daha da küçük yükseklik - PC'de kompakt */
-        padding: 0.5rem 0.5rem !important; /* Minimal padding */
-        border-radius: 6px !important;
-        background: var(--bg-primary) !important;
-        border: 1px solid var(--border) !important;
-        transition: all 0.2s ease !important;
-        position: relative !important;
-        overflow: visible !important;
-        box-shadow: none !important;
-    }
-    
-    .reaction:hover {
-        transform: translateY(-1px) !important;
-        border-color: var(--primary) !important;
-        background: var(--bg-secondary) !important;
-    }
-    
-    .reaction.selected {
-        background: var(--primary) !important;
-        border-color: var(--primary) !important;
-        transform: none !important;
-    }
-    
-    .reaction.selected:hover {
-        transform: translateY(-1px) !important;
-    }
-    
-    .reaction .emoji {
-        font-size: 1rem !important; /* PC'de çok küçük emoji - 16px gibi */
-        margin-bottom: 0.25rem !important;
-        transition: all 0.2s ease !important;
-        display: block !important;
-        line-height: 1 !important;
-    }
-    
-    .reaction:hover .emoji {
-        transform: scale(1.05) !important; /* Küçük hover scale */
-    }
-    
-    /* SAYILAR VE İSİMLER - PC'DE ÇOK KÜÇÜK TASARIM */
-    .reaction .count {
-        position: relative !important;
-        top: auto !important;
-        right: auto !important;
-        background: rgba(255,255,255,0.1) !important;
-        color: var(--text-primary) !important;
-        padding: 0.1rem 0.3rem !important;
-        border-radius: 8px !important;
-        font-size: 0.6rem !important; /* Çok küçük sayı boyutu - PC'de */
-        font-weight: 700 !important;
-        min-width: 16px !important;
-        text-align: center !important;
-        border: none !important;
-        z-index: auto !important;
-        display: inline-block !important;
-        margin: 0.2rem 0 0.1rem 0 !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .reaction:hover .count {
-        transform: scale(1.05) !important;
-    }
-    
-    .reaction.selected .count {
-        background: rgba(255, 255, 255, 0.2) !important;
-        color: rgba(255, 255, 255, 0.95) !important;
-        border: none !important;
-        font-weight: 800 !important;
-    }
-    
-    .reaction .reaction-name,
-    .reaction span:not(.count):not(.emoji) {
-        font-size: 0.55rem !important; /* PC'de çok küçük isim boyutu */
-        font-weight: 500 !important;
-        color: var(--text-muted) !important;
-        text-align: center !important;
-        line-height: 1.1 !important;
-        margin-top: 0.1rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .reaction:hover .reaction-name,
-    .reaction:hover span:not(.count):not(.emoji) {
-        color: var(--text-primary) !important;
-    }
-    
-    .reaction.selected .reaction-name,
-    .reaction.selected span:not(.count):not(.emoji) {
-        color: rgba(255, 255, 255, 0.9) !important;
-        font-weight: 600 !important;
-    }
-}
-
-/* Çok büyük ekranlar için ekstra iyileştirmeler (1440px+) */
-@media (min-width: 1440px) {
-    .ruh-reactions-section {
-        padding: 5rem 4rem !important;
-        max-width: 1400px !important;
-    }
-    
-    .reactions {
-        gap: 2.5rem !important; /* Daha da geniş */
-    }
-    
-    .reactions-header h3 {
-        font-size: 1.75rem !important;
-    }
-    
-    .reaction {
-        min-height: 160px !important; /* Daha da yüksek */
-        padding: 2.5rem 2rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .reaction .emoji {
-        font-size: 4rem !important; /* Dev emoji */
-        margin-bottom: 1.25rem !important;
-    }
-    
-    .reaction .count {
-        font-size: 1.5rem !important; /* Dev sayılar */
-        margin: 0.75rem 0 0.5rem 0 !important;
-    }
-    
-    .reaction .reaction-name,
-    .reaction span:not(.count):not(.emoji) {
-        font-size: 1rem !important; /* Daha büyük isimler */
-    }
-}
-
-/* Hover efektleri güçlendirildi */
-.reaction:active {
-    transform: translateY(0) !important;
-}
-
-.reaction.selected {
-    animation: reactionSelected 0.4s ease !important;
 }
 
 @keyframes reactionSelected {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.06); }
 }
-
-/* Desktop için güncellemeler */
-@media (min-width: 1024px) {
-    .comments-area {
-        padding: 2rem;
-    }
-    
-    .comment-author img {
-        width: 50px !important;
-        height: 50px !important;
-    }
-    
-    .comment-author-meta .author-name {
-        font-size: 1.1rem !important;
-    }
-    
-    .comment-text {
-        font-size: 1rem !important;
-        margin: 1rem 0 !important;
-    }
-    
-    .comment-list .children .ruh-comment-item {
-        margin-left: 3rem !important;
-    }
-    
-    .comment-list .children .ruh-comment-item::before {
-        left: calc(-3rem + var(--spacing-lg));
-        height: 32px;
-    }
-}
-
-/* Dark mode için görseldeki renk ayarları */
-@media (prefers-color-scheme: dark) {
-    .ruh-comment-item {
-        background: var(--bg-card) !important;
-        border-color: var(--border) !important;
-    }
-    
-    .ruh-comment-item:hover {
-        background: var(--bg-hover) !important;
-        border-color: var(--border-hover) !important;
-    }
-    
-    .comment-list .children .ruh-comment-item {
-        background: var(--bg-secondary) !important;
-    }
-    
-    .ruh-reactions-section,
-    .comments-header,
-    #ruh-comment-form-wrapper {
-        background: var(--bg-card) !important;
-        border-color: var(--border) !important;
-    }
-    
-    .ruh-auth-required-message {
-        background: var(--bg-card) !important;
-        border-color: var(--border) !important;
-    }
-}
+.reaction.selected { animation: reactionSelected 0.3s ease !important; }
 
 /* PROFILE PAGE STYLES - Daha önce eklenenler korunuyor */
 .ruh-user-profile {
@@ -4007,91 +2862,181 @@
     }
 }
 
-/* ===== TEPKI STILLERI - GORSELDEKI GIBI ===== */
+/* ===== TEPKI STILLERI ===== */
 .ruh-reactions-section {
-    background: #1F1F1F !important;
+    background: transparent !important;
     border-radius: 12px !important;
-    padding: 20px !important;
+    padding: 12px 8px 18px !important;
     text-align: center !important;
 }
 
 .reactions-header h3 {
-    font-size: 16px !important;
-    color: #fff !important;
+    font-size: 15px !important;
+    color: var(--text-primary) !important;
     margin: 0 0 4px 0 !important;
+    letter-spacing: 0.2px;
 }
 
 .total-reactions {
-    font-size: 13px !important;
-    color: #888 !important;
+    font-size: 12px !important;
+    color: var(--text-muted) !important;
 }
 
-/* Tepki stilleri - Ornek Gibi */
 .content-reactions {
     display: flex !important;
     justify-content: center !important;
     flex-wrap: wrap !important;
-    gap: 20px !important;
+    gap: 10px 14px !important;
+    margin-top: 14px !important;
 }
 
 .reaction-item {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
+    min-width: 64px;
+    padding: 8px 6px 6px;
+    border-radius: 16px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.reaction-item:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+.reaction-item.is-active {
+    background: rgba(168,85,247,0.1);
 }
 
 .content-reaction-btn {
-    background: transparent !important;
-    border: none !important;
-    padding: 8px !important;
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    padding: 10px !important;
+    width: 56px;
+    height: 56px;
     border-radius: 50% !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 .content-reaction-btn:hover {
-    transform: scale(1.1) !important;
+    transform: translateY(-3px) scale(1.08) !important;
+    border-color: rgba(168,85,247,0.45) !important;
+    box-shadow: 0 8px 20px rgba(168,85,247,0.18) !important;
 }
 
 .content-reaction-btn.active {
-    outline: 3px solid #667EEA !important;
-    outline-offset: 2px !important;
+    outline: none !important;
+    background: linear-gradient(145deg, rgba(102,126,234,0.22), rgba(168,85,247,0.28)) !important;
+    border-color: rgba(168,85,247,0.7) !important;
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.18), 0 8px 18px rgba(102,126,234,0.25) !important;
+}
+
+.reaction-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    pointer-events: none;
+}
+
+.content-reaction-btn.active .reaction-ring {
+    border-color: rgba(168,85,247,0.55);
+    animation: reactionRing 0.55s ease-out;
+}
+
+@keyframes reactionRing {
+    0% { transform: scale(0.7); opacity: 0; }
+    60% { opacity: 1; }
+    100% { transform: scale(1.15); opacity: 0; }
 }
 
 .reaction-emoji {
-    font-size: 32px !important;
+    font-size: 28px !important;
     line-height: 1 !important;
     display: block !important;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+}
+
+.reaction-emoji.reaction-pop {
+    animation: reactionPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes reactionPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35) rotate(-8deg); }
+    100% { transform: scale(1); }
+}
+
+.reaction-particle {
+    position: absolute;
+    font-size: 14px;
+    pointer-events: none;
+    animation: particleFly 0.6s ease-out forwards;
+    z-index: 10;
+}
+
+@keyframes particleFly {
+    0% { opacity: 1; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(0.4); }
 }
 
 .reaction-label {
     font-size: 11px !important;
-    color: #888 !important;
+    color: var(--text-muted) !important;
     white-space: nowrap !important;
+    font-weight: 600;
+}
+
+.reaction-item.is-active .reaction-label {
+    color: #e9d5ff !important;
 }
 
 .reaction-count {
-    font-size: 14px !important;
-    color: #fff !important;
-    font-weight: 500 !important;
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+    font-weight: 700 !important;
+    min-width: 22px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
 }
 
-/* Mobil - 3x2 Grid */
+.reaction-count.count-bump {
+    animation: countBump 0.28s ease;
+}
+
+@keyframes countBump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
 @media (max-width: 768px) {
     .ruh-reactions-section {
-        padding: 16px !important;
+        padding: 8px 4px 12px !important;
     }
     
     .content-reactions {
         display: grid !important;
         grid-template-columns: repeat(3, 1fr) !important;
-        gap: 16px 10px !important;
+        gap: 10px 8px !important;
         justify-items: center !important;
     }
     
+    .content-reaction-btn {
+        width: 48px;
+        height: 48px;
+        padding: 8px !important;
+    }
+    
     .reaction-emoji {
-        font-size: 30px !important;
+        font-size: 24px !important;
     }
     
     .reaction-label {
@@ -4099,7 +3044,7 @@
     }
     
     .reaction-count {
-        font-size: 13px !important;
+        font-size: 11px !important;
     }
 }
 
@@ -4241,12 +3186,13 @@
 }
 
 /* ===================================================
-   SABİTLENMİŞ YORUM YENİ TASARIMI
+   SABİTLENMİŞ YORUM
    =================================================== */
 .comment-item.pinned,
+.comment-item.is-pinned,
 .comment-card.pinned {
-    border: 1px solid rgba(255, 200, 50, 0.35) !important;
-    background: linear-gradient(135deg, rgba(255, 200, 50, 0.06) 0%, rgba(30, 30, 30, 0) 60%) !important;
+    border: 1px solid rgba(251, 191, 36, 0.4) !important;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, transparent 62%) !important;
     position: relative !important;
 }
 
@@ -4254,15 +3200,15 @@
     display: inline-flex !important;
     align-items: center !important;
     gap: 5px !important;
-    background: linear-gradient(135deg, #b8860b, #ffd700) !important;
-    color: #1a1a00 !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+    color: #1a1400 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
     padding: 3px 9px !important;
     border-radius: 20px !important;
-    letter-spacing: 0.3px !important;
+    letter-spacing: 0.4px !important;
     text-transform: uppercase !important;
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3) !important;
+    box-shadow: 0 2px 10px rgba(251, 191, 36, 0.4) !important;
     vertical-align: middle !important;
     margin-left: 6px !important;
 }
@@ -4273,15 +3219,108 @@
     flex-shrink: 0 !important;
 }
 
-/* Pinned yorum sol kenar şeridi */
 .comment-item.pinned::before,
+.comment-item.is-pinned::before,
 .comment-card.pinned::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 0;
-    bottom: 0;
+    top: 8px;
+    bottom: 8px;
     width: 3px;
-    background: linear-gradient(180deg, #ffd700, #b8860b);
-    border-radius: 10px 0 0 10px;
+    background: linear-gradient(180deg, #fbbf24, #d97706);
+    border-radius: 99px;
+}
+
+/* ── MOBİL RESPONSIVE OVERRIDE ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+    .comments-area { padding: 6px !important; }
+
+    /* Kartlar arası boşluk daha sıkı */
+    .comment-list { gap: 4px !important; }
+
+    .ruh-comment-item,
+    .comment-item {
+        padding: 7px 9px !important;
+        border-radius: 8px !important;
+    }
+
+    /* Yanıtlar - daha az indent */
+    .comment-list .children {
+        padding-left: 10px !important;
+        gap: 3px !important;
+    }
+
+    /* Avatar küçük */
+    .comment-author img,
+    .comment-avatar img { width: 26px !important; height: 26px !important; }
+
+    /* Yorum metni */
+    .comment-text { font-size: 0.75rem !important; }
+    .comment-header .comment-author,
+    .comment-author span { font-size: 0.72rem !important; }
+    .comment-date, .comment-metadata { font-size: 0.58rem !important; }
+
+    /* Rozet daha küçük */
+    .badge-item-with-text, .comment-badge-item {
+        font-size: 0.55rem !important;
+        padding: 1px 5px !important;
+    }
+    .comment-level, .user-level-oval {
+        font-size: 0.5rem !important;
+        padding: 1px 4px !important;
+    }
+
+    /* Action butonları */
+    .action-btn, .heart-like-btn {
+        padding: 2px 5px !important;
+        font-size: 0.58rem !important;
+        min-height: 18px !important;
+    }
+    .comment-more-menu .more-btn {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    /* Form */
+    #ruh-comment-form-wrapper { padding: 6px !important; }
+    .comment-form textarea { min-height: 56px !important; font-size: 0.78rem !important; }
+    #ruh-editor-toolbar { padding: 3px 4px !important; }
+    .ruh-toolbar-button { width: 22px !important; height: 22px !important; }
+    .ruh-submit, #submit { padding: 4px 10px !important; font-size: 0.7rem !important; }
+
+    /* Header */
+    .comments-header, .comments-header-modern {
+        flex-direction: column !important;
+        gap: 5px !important;
+        padding: 8px !important;
+    }
+    .sort-btn, .sort-button { padding: 3px 7px !important; font-size: 0.65rem !important; }
+
+    /* Reactions */
+    .ruh-reactions-section { padding: 8px !important; }
+    .reactions.modern-grid { gap: 4px !important; }
+    .reaction.modern-reaction { padding: 3px 7px !important; }
+    .reaction-emoji { font-size: 0.85rem !important; }
+
+    /* Reply form */
+    .reply-form-container, .inline-reply-form {
+        margin-left: 8px !important;
+        padding: 6px !important;
+    }
+
+    /* More dropdown boyut */
+    .comment-more-menu .more-dropdown { min-width: 130px !important; }
+    .comment-more-menu .more-dropdown button,
+    .comment-more-menu .more-dropdown a {
+        padding: 6px 10px !important;
+        font-size: 0.68rem !important;
+    }
+}
+
+/* Orta ekran (tablet) */
+@media (min-width: 601px) and (max-width: 900px) {
+    .comment-list { gap: 5px !important; }
+    .ruh-comment-item, .comment-item { padding: 8px 10px !important; }
+    .comment-list .children { padding-left: 14px !important; }
 }

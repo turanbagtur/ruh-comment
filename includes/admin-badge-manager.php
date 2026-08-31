@@ -202,12 +202,20 @@ class Ruh_Badge_Manager {
             wp_send_json_error('Dosya boyutu 512KB\'dan büyük olamaz!');
         }
         
-        // Dosya tipi kontrolü
+        // Dosya tipi kontrolü - güvenlik: gerçek dosya içeriği finfo ile doğrulanır
+        // (istemcinin gönderdiği $_FILES['type'] header'ına güvenilmez, kolayca sahtelenebilir)
         $allowed_types = array('image/jpeg', 'image/png', 'image/gif');
         $file_type = wp_check_filetype($file['name']);
-        $mime_type = $file['type'];
-        
-        if (!in_array($mime_type, $allowed_types)) {
+
+        if (!function_exists('finfo_open')) {
+            wp_send_json_error('Sunucu yapılandırması dosya kontrolüne uygun değil (fileinfo eksik).');
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!in_array($mime_type, $allowed_types, true) || empty($file_type['ext'])) {
             wp_send_json_error('Sadece JPG, PNG ve GIF dosyaları kabul edilir!');
         }
         
@@ -1220,11 +1228,12 @@ class Ruh_Badge_Manager {
         }
         
         .ruh-badge-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5b6eea 0%, #7c3aed 100%);
             color: white;
-            padding: 30px;
-            border-radius: 16px;
+            padding: 28px 30px;
+            border-radius: 18px;
             margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(91, 110, 234, 0.25);
         }
         
         .ruh-badge-logo {
@@ -1265,8 +1274,9 @@ class Ruh_Badge_Manager {
         .ruh-badge-card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
             overflow: hidden;
+            border: 1px solid #eef0f6;
         }
         
         .ruh-badge-card-header {

@@ -2,6 +2,29 @@
 if (!defined('ABSPATH')) exit;
 
 /**
+ * Bir GIF URL'sinin izin verilen (güvenilir) kaynaklardan geldiğini doğrular.
+ * Kod tekrarını önlemek için ajax-handlers.php ve template-helpers.php
+ * tarafından ortak kullanılır.
+ *
+ * @since 7.1
+ * @param string $url
+ * @return bool
+ */
+function ruh_is_allowed_gif_host($url) {
+    $allowed_hosts = array('giphy.com', 'media.giphy.com', 'i.giphy.com', 'tenor.com', 'media.tenor.com');
+    $host = parse_url($url, PHP_URL_HOST);
+    if (!$host) return false;
+
+    foreach ($allowed_hosts as $allowed) {
+        // Sadece host'un sonu eşleşmeli (subdomain izinli), ör: "evilgiphy.com" kabul edilmemeli
+        if ($host === $allowed || substr($host, -(strlen($allowed) + 1)) === '.' . $allowed) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Yorum içeriğini render eder - GIF markdown'ını HTML'ye çevirir
  * 
  * @since 5.0
@@ -12,10 +35,14 @@ function ruh_render_comment_content($content) {
     if (empty($content)) return '';
     
     // GIF markdown'ını HTML'ye çevir: ![GIF](url) -> <div class="gif-container"><img src="url" alt="GIF" loading="lazy"></div>
+    // Güvenlik: sadece güvenilir GIF kaynaklarına (giphy/tenor) izin verilir.
     $content = preg_replace_callback(
         '/!\[GIF\]\((https?:\/\/[^\)]+)\)/',
         function($matches) {
             $gif_url = esc_url($matches[1]);
+            if (!ruh_is_allowed_gif_host($gif_url)) {
+                return '';
+            }
             return '<div class="gif-container"><img src="' . $gif_url . '" alt="GIF" loading="lazy" class="comment-gif"></div>';
         },
         $content
@@ -216,6 +243,13 @@ function ruh_get_dynamic_post_id_from_url($url) {
 
 /**
  * Yorum HTML'ini oluşturan ana callback fonksiyonu - TÜM ÖZELLİKLER İLE
+ *
+ * NOT: Bu fonksiyon klasik WordPress wp_list_comments() callback'i olarak
+ * tasarlanmıştır. Eklentinin aktif yorum sistemi (comment-template.php) tamamen
+ * AJAX tabanlıdır ve yorumları ajax-handlers.php içindeki generate_comment_html()
+ * ile üretir; bu fonksiyon şu an hiçbir yerden çağrılmamaktadır. Geriye dönük
+ * uyumluluk (bir temanın doğrudan wp_list_comments(['callback' => 'ruh_comment_format'])
+ * çağırması ihtimaline) için korunmuştur.
  */
 function ruh_comment_format($comment, $args, $depth) {
     if (!$comment) return '';
@@ -305,12 +339,8 @@ function ruh_comment_format($comment, $args, $depth) {
                         <?php endif; ?>
                         
                         <?php 
-                        // Yanıt sayısını al - buton için
-                        $reply_count = get_comments(array(
-                            'parent' => $comment->comment_ID,
-                            'status' => 'approve',
-                            'count' => true
-                        ));
+                        // Yanıt sayısını al - buton için (cache'li, tekrarlı sorgu maliyetini azaltır)
+                        $reply_count = ruh_get_comment_reply_count($comment->comment_ID);
                         if ($reply_count > 0) : ?>
                             <!-- Yanıtları Göster Butonu - Yanıtla butonunun yanında -->
                             <button type="button" class="replies-toggle-btn" 
@@ -373,9 +403,9 @@ function ruh_comment_format($comment, $args, $depth) {
         </div>
         
         <!-- Yanıtlar Konteyneri - HER ZAMAN OLUŞTUR -->
-        <ol class="children replies-container"
+        <ol class="children replies-container is-collapsed"
             id="replies-<?php echo esc_attr($comment->comment_ID); ?>"
-            style="display: none;"
+            hidden
             data-parent-id="<?php echo esc_attr($comment->comment_ID); ?>"
             data-loaded="false">
             <!-- AJAX ile yüklenecek -->
@@ -560,6 +590,34 @@ function ruh_update_user_xp_and_level($user_id) {
  */
 function ruh_calculate_xp_for_level($level) {
     return (int)(pow($level, 1.8) * 100);
+}
+
+/**
+ * Bir yorumun onaylı yanıt sayısını cache'li şekilde döndürür.
+ * Doğrudan get_comments(['count' => true]) çağrısı her seferinde DB'ye gider;
+ * bu wrapper kısa süreli object cache kullanarak tekrarlı sorguları azaltır.
+ *
+ * @since 7.1
+ * @param int $comment_id
+ * @return int
+ */
+function ruh_get_comment_reply_count($comment_id) {
+    $comment_id = intval($comment_id);
+    if (!$comment_id) return 0;
+
+    $cache_key = 'ruh_reply_count_' . $comment_id;
+    $count = wp_cache_get($cache_key, 'ruh_comment');
+
+    if (false === $count) {
+        $count = get_comments(array(
+            'parent' => $comment_id,
+            'status' => 'approve',
+            'count' => true
+        ));
+        wp_cache_set($cache_key, $count, 'ruh_comment', 300); // 5 dakika
+    }
+
+    return intval($count);
 }
 
 /**
@@ -853,7 +911,8 @@ function ruh_get_user_level_badge($user_id) {
     $level_title = ruh_get_level_title($level_info->level);
     
     $html = sprintf(
-        '<span class="user-level-oval" style="background: %s;" title="%s - %d XP" data-level="%d">Seviye %d</span>',
+        '<span class="user-level-oval level-tier-%s" style="--level-color: %s;" title="%s - %d XP" data-level="%d">Lv.%d</span>',
+        esc_attr(ruh_get_level_tier($level_info->level)),
         esc_attr($level_color),
         esc_attr($level_title),
         intval($level_info->xp),
@@ -912,6 +971,32 @@ function ruh_get_level_title($level) {
     return 'Yeni Başlayan';
 }
 
+function ruh_get_level_tier($level) {
+    $level = intval($level);
+    if ($level >= 100) return 'legendary';
+    if ($level >= 75) return 'mythic';
+    if ($level >= 50) return 'epic';
+    if ($level >= 30) return 'rare';
+    if ($level >= 20) return 'uncommon';
+    if ($level >= 10) return 'experienced';
+    if ($level >= 5) return 'active';
+    return 'novice';
+}
+
+function ruh_get_badge_rarity($badge) {
+    $name = mb_strtolower(isset($badge->badge_name) ? $badge->badge_name : '');
+    if (preg_match('/efsane|legend|vip|owner|kurucu|admin|kral|queen|king/u', $name)) {
+        return 'legendary';
+    }
+    if (preg_match('/nadir|rare|mod|çevirmen|cevirmen|editor|editör|staff|yönetici/u', $name)) {
+        return 'rare';
+    }
+    if (!empty($badge->is_automated)) {
+        return 'auto';
+    }
+    return 'common';
+}
+
 /**
  * Kullanıcının özel rozetlerini HTML olarak döndürür - YAZILI VERSİYON
  */
@@ -924,7 +1009,8 @@ function ruh_get_user_custom_badges($user_id) {
     $output = '<span class="user-badges">';
     foreach (array_slice($badges, 0, 3) as $badge) {
         $output .= sprintf(
-            '<span class="badge-item-with-text" title="%s">%s <span class="badge-text">%s</span></span>',
+            '<span class="badge-item-with-text" data-rarity="%s" title="%s">%s <span class="badge-text">%s</span></span>',
+            esc_attr(ruh_get_badge_rarity($badge)),
             esc_attr($badge->badge_name),
             $badge->badge_svg,
             esc_html($badge->badge_name)

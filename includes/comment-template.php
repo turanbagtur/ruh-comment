@@ -206,9 +206,10 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
         </div>
         <div class="content-reactions">
             <?php foreach ($reaction_settings as $key => $reaction) : ?>
-            <div class="reaction-item">
-                <button class="content-reaction-btn" data-reaction="<?php echo esc_attr($key); ?>">
+            <div class="reaction-item" data-reaction="<?php echo esc_attr($key); ?>">
+                <button class="content-reaction-btn" data-reaction="<?php echo esc_attr($key); ?>" type="button" aria-label="<?php echo esc_attr($reaction['label']); ?>">
                     <span class="reaction-emoji"><?php echo esc_html($reaction['emoji']); ?></span>
+                    <span class="reaction-ring"></span>
                 </button>
                 <span class="reaction-label"><?php echo esc_html($reaction['label']); ?></span>
                 <span class="reaction-count">0</span>
@@ -275,12 +276,12 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
                     <div class="comment-form-content">
                         <div class="user-info-bar">
                             <span class="user-name"><?php echo esc_html(wp_get_current_user()->display_name); ?></span>
-                            <span class="user-level">Lv.<?php echo $user_level; ?></span>
+                            <span class="user-level comment-level level-tier-<?php echo esc_attr(function_exists('ruh_get_level_tier') ? ruh_get_level_tier($user_level) : 'novice'); ?>" data-level="<?php echo intval($user_level); ?>">Lv.<?php echo intval($user_level); ?></span>
                             <?php if (!empty($user_badges)) : ?>
                                 <span class="user-badges">
                                     <?php foreach (array_slice($user_badges, 0, 3) as $badge) : ?>
-                                        <span class="badge-item">
-                                            <span class="badge-icon">
+                                        <span class="badge-item comment-badge-item" data-rarity="<?php echo esc_attr(function_exists('ruh_get_badge_rarity') ? ruh_get_badge_rarity($badge) : 'common'); ?>">
+                                            <span class="badge-icon comment-badge">
                                                 <?php 
                                                 if (!empty($badge->badge_svg)) {
                                                     echo $badge->badge_svg;
@@ -289,7 +290,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
                                                 }
                                                 ?>
                                             </span>
-                                            <span class="badge-name"><?php echo esc_html($badge->badge_name); ?></span>
+                                            <span class="badge-name comment-badge-name"><?php echo esc_html($badge->badge_name); ?></span>
                                         </span>
                                     <?php endforeach; ?>
                                 </span>
@@ -312,8 +313,10 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
                             </div>
                             <?php $max_comment_length = isset($options['max_comment_length']) ? intval($options['max_comment_length']) : 1000; ?>
                             <textarea id="comment" name="comment" placeholder="<?php echo $t['write_comment']; ?>" required maxlength="<?php echo $max_comment_length; ?>"></textarea>
+                            <span class="form-shortcut"><?php echo $ruh_lang === 'en_US' ? 'Ctrl+Enter to send' : 'Göndermek için Ctrl+Enter'; ?></span>
                             <div class="form-footer">
-                                <span class="char-counter"><span id="char-count">0</span>/<?php echo $max_comment_length; ?></span>
+                                <span class="char-counter" id="char-counter"><span id="char-count">0</span>/<?php echo $max_comment_length; ?></span>
+                                <span class="form-hint"><?php echo $ruh_lang === 'en_US' ? '**bold**  *italic*  ||spoiler||  @mention' : '**kalın**  *italik*  ||spoiler||  @etiket'; ?></span>
                                 <span id="reply-indicator" style="display:none;">
                                     <span id="reply-to-name"></span>
                                     <button type="button" id="cancel-reply">✕</button>
@@ -390,11 +393,11 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     </div>
 
     <!-- GIF Modal -->
-    <div id="gif-modal" class="ruh-modal" style="display:none;">
+    <div id="gif-modal" class="ruh-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="gif-modal-title">
         <div class="ruh-modal-content">
             <div class="ruh-modal-header">
-                <h4><?php echo $t['search_gif']; ?></h4>
-                <button class="ruh-modal-close">&times;</button>
+                <h4 id="gif-modal-title"><?php echo $t['search_gif']; ?></h4>
+                <button class="ruh-modal-close" aria-label="<?php echo esc_attr($t['close'] ?? 'Kapat'); ?>">&times;</button>
             </div>
             <input type="text" id="gif-search" placeholder="<?php echo $t['search_gif_placeholder']; ?>">
             <div id="gif-results"></div>
@@ -402,11 +405,11 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     </div>
 
     <!-- Şikayet Modal -->
-    <div id="report-modal" class="ruh-modal" style="display:none;">
+    <div id="report-modal" class="ruh-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
         <div class="ruh-modal-content report-modal-content">
             <div class="ruh-modal-header">
-                <h4><?php echo $t['report_comment']; ?></h4>
-                <button class="ruh-modal-close">&times;</button>
+                <h4 id="report-modal-title"><?php echo $t['report_comment']; ?></h4>
+                <button class="ruh-modal-close" aria-label="<?php echo esc_attr($t['close'] ?? 'Kapat'); ?>">&times;</button>
             </div>
             <form id="report-form">
                 <input type="hidden" id="report-comment-id" value="">
@@ -435,11 +438,11 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     </div>
 
     <!-- Silme Onay Modal -->
-    <div id="delete-confirm-modal" class="ruh-modal" style="display:none;">
+    <div id="delete-confirm-modal" class="ruh-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
         <div class="ruh-modal-content delete-modal-content">
             <div class="ruh-modal-header">
-                <h4><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg> <?php echo $ruh_lang === 'en_US' ? 'Delete Comment' : 'Yorumu Sil'; ?></h4>
-                <button class="ruh-modal-close">&times;</button>
+                <h4 id="delete-modal-title"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg> <?php echo $ruh_lang === 'en_US' ? 'Delete Comment' : 'Yorumu Sil'; ?></h4>
+                <button class="ruh-modal-close" aria-label="<?php echo esc_attr($t['close'] ?? 'Kapat'); ?>">&times;</button>
             </div>
             <div class="delete-modal-body">
                 <div class="delete-icon">
@@ -457,14 +460,14 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     </div>
 
     <!-- Auth Modal (Login/Register Popup) -->
-    <div id="ruh-auth-modal" class="ruh-modal" style="display:none;">
+    <div id="ruh-auth-modal" class="ruh-modal" style="display:none;" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($t['login']); ?>">
         <div class="ruh-modal-content ruh-auth-modal-content">
             <div class="ruh-modal-header">
                 <div class="ruh-auth-tabs">
                     <button type="button" class="ruh-auth-tab active" data-tab="login"><?php echo $t['login']; ?></button>
                     <button type="button" class="ruh-auth-tab" data-tab="register"><?php echo $t['register']; ?></button>
                 </div>
-                <button class="ruh-modal-close">&times;</button>
+                <button class="ruh-modal-close" aria-label="<?php echo esc_attr($t['close'] ?? 'Kapat'); ?>">&times;</button>
             </div>
             
             <!-- Login Form -->
@@ -552,11 +555,12 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     max-width: 100%;
     margin: 20px 0;
     color: #e0e0e0;
+    background: transparent !important;
 }
 
-/* Tepkiler - Örnek Gibi */
+/* Tepkiler */
 .ruh-reactions-section {
-    background: #1F1F1F;
+    background: transparent;
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 16px;
@@ -594,8 +598,8 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 }
 
 .content-reaction-btn {
-    background: transparent;
-    border: none;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
     padding: 8px;
     border-radius: 50%;
     cursor: pointer;
@@ -604,7 +608,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 }
 
 .content-reaction-btn:hover {
-    transform: scale(1.15);
+    transform: scale(1.1);
 }
 
 .content-reaction-btn:active {
@@ -612,9 +616,8 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 }
 
 .content-reaction-btn.active {
-    outline: 3px solid #667EEA;
-    outline-offset: 2px;
-    background: rgba(102, 126, 234, 0.1);
+    outline: none;
+    background: rgba(168, 85, 247, 0.18);
 }
 
 .reaction-emoji {
@@ -695,7 +698,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 
 /* Ana Bölüm */
 .ruh-comments-main {
-    background: #1a1a1a;
+    background: transparent;
     border-radius: 12px;
     padding: 16px;
 }
@@ -761,7 +764,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     gap: 12px;
     margin-bottom: 20px;
     padding: 12px;
-    background: #222;
+    background: transparent;
     border-radius: 10px;
 }
 
@@ -800,7 +803,6 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 
 .user-level {
     padding: 2px 8px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
     border-radius: 10px;
     font-size: 11px;
     color: #fff;
@@ -817,7 +819,6 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: rgba(102, 126, 234, 0.15);
     padding: 3px 8px 3px 4px;
     border-radius: 12px;
 }
@@ -854,7 +855,6 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    background: rgba(102, 126, 234, 0.12);
     padding: 2px 6px 2px 3px;
     border-radius: 10px;
 }
@@ -875,7 +875,6 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 
 .comment-badge-name {
     font-size: 10px;
-    color: #667eea;
     font-weight: 500;
 }
 
@@ -933,9 +932,9 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #333;
-    border: 1px solid #444;
-    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
     color: #aaa;
     cursor: pointer;
     transition: all 0.2s;
@@ -951,9 +950,9 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     width: 100%;
     min-height: 80px;
     padding: 10px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 8px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
     color: #e0e0e0;
     font-size: 14px;
     resize: vertical;
@@ -962,7 +961,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 
 #comment:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #a855f7;
 }
 
 .form-footer {
@@ -1026,7 +1025,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 .ruh-auth-required {
     text-align: center;
     padding: 30px 20px;
-    background: #222;
+    background: transparent;
     border-radius: 12px;
     margin-bottom: 16px;
     position: relative;
@@ -1098,54 +1097,20 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     color: #fff !important;
 }
 
-/* Yorum Listesi */
+/* Yorum Listesi — kart stilleri ruh-comment-style.css'te */
 .comment-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.comment {
-    margin-bottom: 8px;
-}
-
-.comment-body {
-    display: flex;
-    gap: 10px;
-    padding: 12px;
-    background: #1F1F1F;
-    border-radius: 8px;
-}
-
 .comment-avatar {
     flex-shrink: 0;
-}
-
-.comment-avatar img,
-.comment-avatar .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
 }
 
 .comment-main {
     flex: 1;
     min-width: 0;
-}
-
-.comment-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-}
-
-.comment-author {
-    font-weight: 600;
-    color: #fff;
-    font-size: 13px;
 }
 
 .comment-author-link,
@@ -1154,20 +1119,8 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     transition: opacity 0.2s;
 }
 
-.comment-author-link:hover .comment-author {
-    color: #667eea;
-}
-
 .comment-avatar-link:hover {
     opacity: 0.8;
-}
-
-.comment-level {
-    padding: 1px 6px;
-    background: #667eea;
-    border-radius: 8px;
-    font-size: 10px;
-    color: #fff;
 }
 
 .comment-badges {
@@ -1185,15 +1138,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     height: 100%;
 }
 
-.comment-date {
-    font-size: 11px;
-    color: #666;
-}
-
 .comment-text {
-    font-size: 14px;
-    line-height: 1.5;
-    color: #ccc;
     word-wrap: break-word;
 }
 
@@ -1230,40 +1175,11 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
     color: #fff;
 }
 
-/* Yorum Aksiyonlari */
-.comment-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 12px;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 6px;
-    font-size: 12px;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.action-btn:hover {
-    background: #333;
-    color: #fff;
-    border-color: #444;
-}
-
-/* Like/Dislike butonları - kutu yok, sadece ok */
+/* Like/Dislike — boyutlar ruh-comment-style.css'te */
 .action-btn.like-btn,
 .action-btn.dislike-btn {
     background: transparent;
     border: none;
-    padding: 4px 8px;
 }
 
 .action-btn.like-btn:hover,
@@ -1318,15 +1234,15 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 }
 
 .comment-replies .comment-body {
-    background: #252525;
+    background: transparent;
 }
 
 /* Inline Yanıt Formu */
 .inline-reply-form {
-    margin: 8px 0 8px 0;
-    padding: 12px;
-    background: #1f1f1f;
-    border: 1px solid #333;
+    margin: 6px 0 6px 0;
+    padding: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 8px;
     box-sizing: border-box;
     width: 100%;
@@ -1572,420 +1488,237 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 .ruh-modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.72);
     z-index: 99999;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(2px);
 }
-
-.ruh-modal[style*="block"] {
-    display: flex !important;
-}
+.ruh-modal[style*="block"] { display: flex !important; }
 
 .ruh-modal-content {
-    background: #1a1a1a;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
+    background: #1C1C1C;
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+    width: 92%;
+    max-width: 420px;
+    max-height: 82vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+    animation: ruh-modal-in 0.18s ease;
+}
+@keyframes ruh-modal-in {
+    from { opacity: 0; transform: scale(0.94) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .ruh-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #333;
+    padding: 10px 14px;
+    border-bottom: 1px solid #2d2d2d;
+    flex-shrink: 0;
 }
-
 .ruh-modal-header h4 {
     margin: 0;
-    color: #fff;
+    color: #f0f0f0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
+.ruh-modal-header h4 svg { width: 15px; height: 15px; flex-shrink: 0; }
 
 .ruh-modal-close {
     background: none;
     border: none;
-    color: #888;
-    font-size: 24px;
+    color: #777;
+    font-size: 20px;
     cursor: pointer;
+    line-height: 1;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: color 0.12s, background 0.12s;
 }
+.ruh-modal-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
 
 #gif-search {
-    margin: 12px;
-    padding: 10px;
-    background: #2a2a2a;
-    border: 1px solid #333;
+    margin: 8px 10px;
+    padding: 6px 8px;
+    background: #242424;
+    border: 1px solid #2d2d2d;
     border-radius: 6px;
-    color: #fff;
-    font-size: 14px;
+    color: #f0f0f0;
+    font-size: 0.75rem;
+    outline: none;
+    transition: border-color 0.15s;
 }
+#gif-search:focus { border-color: #dc3545; }
 
 #gif-results {
-    padding: 12px;
+    padding: 8px 10px;
     overflow-y: auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 5px;
 }
-
 #gif-results img {
     width: 100%;
     border-radius: 4px;
     cursor: pointer;
+    transition: opacity 0.12s;
 }
+#gif-results img:hover { opacity: 0.82; }
 
-/* 3 Nokta Menü */
-.comment-more-menu {
-    position: relative;
-    margin-left: auto;
-    flex-shrink: 0;
-}
-
-.more-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 6px;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.more-btn:hover {
-    background: #333;
-    color: #fff;
-    border-color: #444;
-}
-
-.more-dropdown {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background: #2a2a2a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    min-width: 160px;
-    z-index: 9999;
-    display: none;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-.more-dropdown.show {
-    display: block;
-}
-
-.more-dropdown button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 14px;
-    background: none;
-    border: none;
-    color: #ccc;
-    font-size: 13px;
-    cursor: pointer;
-    text-align: left;
-}
-
-.more-dropdown button:hover {
-    background: #333;
-}
-
-.more-dropdown button.delete-btn {
-    color: #ef4444;
-}
-
-.more-dropdown button svg {
-    width: 16px;
-    height: 16px;
-}
+/* 3 Nokta menü stilleri ruh-comment-style.css (glassmorphism + body portal) */
 
 /* Silme Onay Modal */
 .delete-modal-content {
-    max-width: 380px;
-    background: #1F1F1F;
-    border: 1px solid #333;
+    max-width: 340px;
+    background: #1C1C1C;
+    border: 1px solid #2d2d2d;
 }
-
 .delete-modal-content .ruh-modal-header {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    padding: 16px 20px;
-    border-radius: 10px 10px 0 0;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    padding: 10px 14px;
+    border-radius: 9px 9px 0 0;
 }
-
-.delete-modal-content .ruh-modal-header h4 {
-    margin: 0;
-    color: #fff;
-    font-size: 16px;
-}
-
-.delete-modal-body {
-    padding: 24px 20px;
-    text-align: center;
-}
-
-.delete-modal-body .delete-icon {
-    margin-bottom: 16px;
-}
-
-.delete-modal-body p {
-    margin: 0 0 8px;
-    color: #ccc;
-    font-size: 14px;
-}
-
-.delete-modal-body .delete-warning {
-    color: #ef4444;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.delete-modal-actions {
-    display: flex;
-    gap: 12px;
-    padding: 0 20px 20px;
-    justify-content: center;
-}
-
+.delete-modal-content .ruh-modal-header h4 { font-size: 0.8rem; }
+.delete-modal-body { padding: 14px 16px; text-align: center; }
+.delete-modal-body .delete-icon { margin-bottom: 8px; }
+.delete-modal-body p { margin: 0 0 5px; color: #ccc; font-size: 0.76rem; }
+.delete-modal-body .delete-warning { color: #ef4444; font-size: 0.68rem; font-weight: 500; }
+.delete-modal-actions { display: flex; gap: 8px; padding: 0 16px 14px; justify-content: center; }
 .delete-modal-actions .btn-cancel {
-    padding: 10px 24px;
-    background: #333;
-    border: 1px solid #444;
-    border-radius: 8px;
-    color: #fff;
+    padding: 6px 16px;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    color: #ccc;
     cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
+    font-size: 0.72rem;
+    transition: background 0.12s;
 }
-
-.delete-modal-actions .btn-cancel:hover {
-    background: #444;
-}
-
+.delete-modal-actions .btn-cancel:hover { background: #333; color: #fff; }
 .delete-modal-actions .btn-delete {
-    padding: 10px 24px;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     color: #fff;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-size: 0.72rem;
+    font-weight: 600;
+    transition: transform 0.12s, box-shadow 0.12s;
 }
-
 .delete-modal-actions .btn-delete:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 3px 10px rgba(239,68,68,0.4);
 }
 
-/* Şikayet Modal - Güncel Tasarım */
+/* Şikayet Modal */
 .report-modal-content {
-    max-width: 420px;
-    background: #1F1F1F;
-    border: 1px solid #333;
+    max-width: 380px;
+    background: #1C1C1C;
+    border: 1px solid #2d2d2d;
 }
-
 .report-modal-content .ruh-modal-header {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    padding: 16px 20px;
-    border-radius: 10px 10px 0 0;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    padding: 10px 14px;
+    border-radius: 9px 9px 0 0;
 }
+.report-modal-content .ruh-modal-header h4 { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+.report-modal-content .ruh-modal-header h4::before { content: "⚠️"; font-size: 0.85rem; }
 
-.report-modal-content .ruh-modal-header h4 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+#report-form { padding: 12px 14px; }
 
-.report-modal-content .ruh-modal-header h4::before {
-    content: "⚠️";
-}
-
-#report-form {
-    padding: 20px;
-}
-
-#report-form .form-group {
-    margin-bottom: 18px;
-}
-
+#report-form .form-group { margin-bottom: 10px; }
 #report-form label {
     display: block;
-    margin-bottom: 8px;
-    font-size: 13px;
+    margin-bottom: 4px;
+    font-size: 0.72rem;
     font-weight: 500;
-    color: #e0e0e0;
+    color: #c8c8c8;
 }
-
 #report-form select,
 #report-form textarea {
     width: 100%;
-    padding: 12px 14px;
+    padding: 6px 8px;
     background: #141414;
-    border: 2px solid #333;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 14px;
-    transition: border-color 0.2s;
-}
-
-#report-form select:focus,
-#report-form textarea:focus {
+    border: 1px solid #2d2d2d;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 0.72rem;
+    transition: border-color 0.15s;
     outline: none;
-    border-color: #ef4444;
+    font-family: inherit;
 }
-
-#report-form textarea {
-    min-height: 90px;
-    resize: vertical;
-}
+#report-form select:focus,
+#report-form textarea:focus { border-color: #ef4444; }
+#report-form textarea { min-height: 62px; resize: vertical; }
 
 .form-actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     justify-content: flex-end;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid #333;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #2d2d2d;
 }
-
 .btn-cancel {
-    padding: 12px 24px;
+    padding: 5px 14px;
     background: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    color: #ccc;
-    font-size: 14px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 0.7rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.12s, color 0.12s;
+    font-family: inherit;
 }
-
-.btn-cancel:hover {
-    background: #333;
-    color: #fff;
-}
-
+.btn-cancel:hover { background: #333; color: #fff; }
 .btn-submit {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    padding: 5px 14px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     color: #fff;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 0.7rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.12s, box-shadow 0.12s;
+    font-family: inherit;
 }
-
-.btn-submit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(239,68,68,0.35); }
 
 /* Mobil Uyumluluk */
 @media (max-width: 768px) {
-    .ruh-reactions-section {
-        padding: 16px 12px;
-    }
-    
-    .reactions {
-        gap: 12px;
-    }
-    
-    .reaction {
-        padding: 8px 10px;
-        min-width: 60px;
-    }
-    
-    .reaction-emoji {
-        font-size: 28px;
-    }
-    
-    .reaction-name {
-        font-size: 9px;
-    }
-    
-    .reaction .count {
-        font-size: 12px;
-    }
-    
-    .comments-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .sort-buttons {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    
-    #ruh-comment-form-wrapper {
-        padding: 10px;
-    }
-    
-    .comment-form-content {
-        width: 100%;
-    }
-    
-    #comment {
-        min-height: 70px;
-        font-size: 14px;
-    }
-    
-    .comment-body {
-        padding: 10px;
-    }
-    
-    .comment-avatar img {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .comment-replies {
-        margin-left: 8px;
-        padding-left: 8px;
-    }
-    
-    .form-footer {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    
-    .submit-btn {
-        margin-left: 0;
-        justify-content: center;
-    }
-    
-    #gif-results {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .comment-actions {
-        flex-wrap: wrap;
-    }
-    
-    .action-btn {
-        padding: 4px 8px;
-        font-size: 11px;
-    }
-    
+    .ruh-reactions-section { padding: 10px 8px; }
+    .reactions { gap: 4px; }
+    .reaction { padding: 4px 6px; min-width: 50px; }
+    .reaction-emoji { font-size: 1rem; }
+    .reaction-name { font-size: 0.55rem; }
+    .reaction .count { font-size: 0.55rem; }
+    .comments-header { flex-direction: column; align-items: flex-start; }
+    .sort-buttons { width: 100%; justify-content: flex-start; }
+    #ruh-comment-form-wrapper { padding: 8px; }
+    .comment-form-content { width: 100%; }
+    #comment { min-height: 56px; font-size: 0.78rem; }
+    .comment-body { padding: 6px 8px; }
+    .comment-avatar img { width: 26px; height: 26px; }
+    .comment-replies { margin-left: 6px; padding-left: 6px; }
+    .form-footer { flex-direction: column; align-items: stretch; gap: 5px; }
+    .submit-btn { margin-left: 0; justify-content: center; }
+    #gif-results { grid-template-columns: repeat(2, 1fr); }
+    .comment-actions { flex-wrap: wrap; }
+    .action-btn { padding: 2px 6px; font-size: 0.62rem; }
     .user-info-bar {
-        font-size: 12px;
+        font-size: 0.65rem;
     }
     
     .user-level {
@@ -2412,11 +2145,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 
 /* ========== SABITLENMIS YORUM STILI ========== */
 .comment-item.pinned {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.04)) !important;
-    border: 1px solid rgba(102, 126, 234, 0.3) !important;
-    border-left: 3px solid #667eea !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.1);
+    border-left: 3px solid #dc3545 !important;
 }
 
 .pinned-badge {
@@ -2543,11 +2272,7 @@ $theme_class = ($comment_theme === 'disqus') ? 'theme-disqus' : 'theme-modern';
 
 /* ========== GELISMIS HOVER EFEKTLERI ========== */
 .comment-item {
-    transition: all 0.3s ease;
-}
-
-.comment-item:hover {
-    background: rgba(255, 255, 255, 0.02);
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .action-btn {

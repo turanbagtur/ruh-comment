@@ -6,6 +6,10 @@ if (!defined('ABSPATH')) exit;
  */
 function render_level_manager_page_content() {
     global $wpdb;
+
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Bu sayfaya erişim izniniz yok.', 'ruh-comment'));
+    }
     
     // AJAX işlemleri
     if (isset($_POST['action'])) {
@@ -47,6 +51,13 @@ function render_level_manager_page_content() {
                 break;
                 
             case 'reset_all_levels':
+                // Güvenlik: frontend'deki checkbox JS ile devre dışı bırakılıyor
+                // ama form doğrudan submit edilirse bypass edilebilir. Backend'de
+                // de aynı onayı zorunlu kılıyoruz.
+                if (empty($_POST['confirm_reset'])) {
+                    echo '<div class="notice notice-error"><p>Onay kutusu işaretlenmeden sıfırlama işlemi yapılamaz!</p></div>';
+                    break;
+                }
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}ruh_user_levels");
                 echo '<div class="notice notice-success"><p>Tüm kullanıcı seviyeleri sıfırlandı!</p></div>';
                 break;
@@ -95,7 +106,7 @@ function render_level_manager_page_content() {
     $total_pages = ceil($total_users / $per_page);
     
     ?>
-    <div class="wrap">
+    <div class="wrap ruh-admin-wrap">
         <h1 class="wp-heading-inline">
             <span class="dashicons dashicons-chart-line" style="color: #2271b1; margin-right: 8px;"></span>
             Seviye Yönetimi
@@ -130,7 +141,7 @@ function render_level_manager_page_content() {
                 <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Kullanıcı ara...">
                 <input type="submit" class="button" value="Ara">
                 <?php if ($search): ?>
-                    <a href="<?php echo admin_url('admin.php?page=' . $_GET['page']); ?>" class="button">Temizle</a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=' . sanitize_key($_GET['page']))); ?>" class="button">Temizle</a>
                 <?php endif; ?>
             </form>
             
@@ -278,7 +289,7 @@ function render_level_manager_page_content() {
                     <p>Tüm kullanıcıların seviye ve XP bilgileri silinecek. Bu işlemi yapmak istediğinizden emin misiniz?</p>
                     
                     <label>
-                        <input type="checkbox" id="confirm_reset" required> 
+                        <input type="checkbox" id="confirm_reset" name="confirm_reset" value="1" required> 
                         Evet, tüm seviyeleri sıfırlamak istiyorum
                     </label>
                 </div>
@@ -305,10 +316,11 @@ function render_level_manager_page_content() {
     .ruh-stat-card {
         background: white;
         padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.06);
         text-align: center;
-        min-width: 120px;
+        min-width: 140px;
+        border: 1px solid #eef0f6;
     }
     .stat-number {
         font-size: 24px;
@@ -325,9 +337,11 @@ function render_level_manager_page_content() {
         justify-content: space-between;
         align-items: center;
         margin: 20px 0;
-        padding: 15px;
-        background: #f9f9f9;
-        border-radius: 6px;
+        padding: 16px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #eef0f6;
+        box-shadow: 0 4px 14px rgba(15,23,42,0.04);
     }
     .search-form input[type="search"] {
         width: 200px;

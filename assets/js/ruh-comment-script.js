@@ -227,6 +227,16 @@ jQuery(document).ready(function($) {
         }
     };
     
+    function ruhCloseMoreMenus() {
+        $('.more-dropdown.show').removeClass('show').each(function() {
+            const $d = $(this);
+            const origin = $d.data('ruh-origin');
+            if (origin && origin.length) {
+                $d.appendTo(origin).css({ top: '', left: '', right: '', position: '', zIndex: '', display: '', visibility: '' });
+            }
+        });
+    }
+
     // Auth sistemı her zaman başlatilsin
     RuhAuth.init();
     
@@ -287,15 +297,16 @@ jQuery(document).ready(function($) {
                     post_id: ruh_comment_ajax.post_id,
                     comment_post_ID: ruh_comment_ajax.post_id,
                     comment_parent: parentId,
-                    current_url: window.location.href
+                    current_url: window.location.href,
+                    ruh_honeypot: $('input[name="ruh_honeypot"]').val() || ''
                 })
                 .done(function(response) {
                     if (response.success) {
                         if (response.data.html) {
                             if (parseInt(parentId) > 0) {
-                                // Yanıt - parent yorumun altına ekle
                                 const $parentReplies = $('#replies-' + parentId);
                                 $parentReplies.append(response.data.html);
+                                $parentReplies.removeClass('is-collapsed').addClass('is-open').removeAttr('hidden').css('display', '');
                             } else {
                                 // Ana yorum - sabitlenmiş yorumların altına ekle
                                 const $pinnedComments = $('.comment-list > .comment-item.pinned');
@@ -356,12 +367,12 @@ jQuery(document).ready(function($) {
                 
                 isProcessing = true;
                 
-                // Hemen görsel güncelle (optimıstik UI)
                 const wasActive = $btn.hasClass('active');
                 $('.content-reaction-btn').removeClass('active');
+                $('.reaction-item').removeClass('is-active');
                 if (!wasActive) {
                     $btn.addClass('active');
-                    // Animasyon efekti
+                    $btn.closest('.reaction-item').addClass('is-active');
                     self.animateReaction($btn);
                 }
                 
@@ -386,9 +397,17 @@ jQuery(document).ready(function($) {
             let total = 0;
             $('.content-reaction-btn').each(function() {
                 const $this = $(this);
+                const $item = $this.closest('.reaction-item');
                 const reaction = $this.data('reaction');
                 const count = counts && counts[reaction] ? parseInt(counts[reaction].count) : 0;
-                $this.closest('.reaction-item').find('.reaction-count').text(count);
+                const $countEl = $item.find('.reaction-count');
+                const prev = parseInt($countEl.text()) || 0;
+                $countEl.text(count);
+                if (count !== prev) {
+                    $countEl.addClass('count-bump');
+                    setTimeout(function() { $countEl.removeClass('count-bump'); }, 280);
+                }
+                $item.toggleClass('has-votes', count > 0);
                 total += count;
             });
             $('#total-reaction-count').text(total);
@@ -502,7 +521,7 @@ jQuery(document).ready(function($) {
                 }
                 
                 const commentId = $(this).data('comment-id');
-                const authorName = $(this).data('author');
+                const authorName = $('<div>').text($(this).data('author') || '').html();
                 const $comment = $('#comment-' + commentId);
                 
                 // Mevcut inline formlari kaldır
@@ -536,9 +555,8 @@ jQuery(document).ready(function($) {
                     </div>
                 `;
                 
-                // Formu comment-body'den sonra ekle
-                $comment.find('.comment-body').after(inlineForm);
-                $comment.find('.inline-reply-textarea').focus();
+                $comment.children('.comment-body').first().after(inlineForm);
+                $comment.children('.inline-reply-form').find('.inline-reply-textarea').focus();
             });
             
             // Inline yanıt iptal
@@ -572,8 +590,8 @@ jQuery(document).ready(function($) {
                     if (response.success && response.data.html) {
                         const $repliesContainer = $('#replies-' + commentId);
                         $repliesContainer.append(response.data.html);
-                        $repliesContainer.slideDown(200); // Animasyonlu göster
-                        $repliesContainer.data('loaded', true); // Loaded olarak işaretle
+                        $repliesContainer.removeClass('is-collapsed').addClass('is-open').removeAttr('hidden').css('display', '');
+                        $repliesContainer.data('loaded', true);
                         $form.remove();
                         self.showMessage(ruh_comment_ajax.texts.reply_sent || 'Yanıt gönderildi!', 'success');
                         const $count = $('.comment-count');
@@ -581,33 +599,43 @@ jQuery(document).ready(function($) {
                         
                         // Yanıt sayısını güncelle veya toggle butonu oluştur
                         const $comment = $('#comment-' + commentId);
-                        let $toggleBtn = $comment.find('.replies-toggle-btn');
+                        let $toggleBtn = $comment.find('> .comment-body .replies-toggle-btn').first();
+                        if (!$toggleBtn.length) {
+                            $toggleBtn = $comment.children('.replies-toggle-container').find('.replies-toggle-btn');
+                        }
                         
-                        if ($toggleBtn.length) {
-                            // Mevcut butonu güncelle
+                         if ($toggleBtn.length) {
                             const currentCount = parseInt($toggleBtn.data('replies-count')) || 0;
-                            $toggleBtn.data('replies-count', currentCount + 1);
-                            $toggleBtn.find('.toggle-text').text((currentCount + 1) + ' yanıtı gizle');
+                            const nextCount = currentCount + 1;
+                            $toggleBtn.data('replies-count', nextCount);
+                            $toggleBtn.attr('data-replies-count', nextCount);
+                            const hideLabel = self.getReplyToggleLabel(nextCount, true);
+                            const showLabel = self.getReplyToggleLabel(nextCount, false);
+                            $toggleBtn.attr('data-hide-text', hideLabel);
+                            $toggleBtn.attr('data-show-text', showLabel);
+                            $toggleBtn.find('.toggle-text').text(hideLabel);
                             $toggleBtn.addClass('expanded');
                         } else {
-                            // Toggle butonu yoksa oluştur - comment-interaction-buttons içine ekle
+                            const hideLabel = self.getReplyToggleLabel(1, true);
+                            const showLabel = self.getReplyToggleLabel(1, false);
                             const toggleBtn = `<button type="button" class="replies-toggle-btn expanded" 
                                         data-comment-id="${commentId}" 
                                         data-replies-count="1" 
-                                        data-parent-id="${commentId}">
+                                        data-parent-id="${commentId}"
+                                        data-show-text="${showLabel}"
+                                        data-hide-text="${hideLabel}">
                                     <svg class="toggle-icon" viewBox="0 0 24 24" width="16" height="16">
                                         <path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
                                     </svg>
-                                    <span class="toggle-text">1 yanıtı gizle</span>
+                                    <span class="toggle-text">${hideLabel}</span>
                                 </button>`;
                             
                             // Önce comment-interaction-buttons içine eklemeyi dene
-                            const $interactionBtns = $comment.find('.comment-interaction-buttons');
-                            if ($interactionBtns.length) {
-                                $interactionBtns.append(toggleBtn);
+                            const $actions = $comment.find('> .comment-body .comment-actions').first();
+                            if ($actions.length) {
+                                $actions.after('<div class="replies-toggle-container">' + toggleBtn + '</div>');
                             } else {
-                                // Fallback - container'dan sonra ekle
-                                $repliesContainer.after('<div class="replies-toggle-container">' + toggleBtn + '</div>');
+                                $repliesContainer.before('<div class="replies-toggle-container">' + toggleBtn + '</div>');
                             }
                         }
                     } else {
@@ -626,8 +654,7 @@ jQuery(document).ready(function($) {
                 e.preventDefault();
                 e.stopPropagation();
                 const commentId = $(this).data('comment-id');
-                // Menüyu kapat
-                $(this).closest('.more-dropdown').removeClass('show');
+                ruhCloseMoreMenus();
                 self.editComment(commentId);
             });
             
@@ -639,9 +666,7 @@ jQuery(document).ready(function($) {
                 const commentId = $(this).data('comment-id');
                 $('#delete-comment-id').val(commentId);
                 $('#delete-confirm-modal').show();
-                
-                // Menüyu kapat
-                $(this).closest('.more-dropdown').removeClass('show');
+                ruhCloseMoreMenus();
             });
             
             // Silme Modal - İptal
@@ -665,111 +690,123 @@ jQuery(document).ready(function($) {
                 self.deleteComment(commentId);
             });
             
-            // Yanıtları Göster/Gizle Toggle
             $(document).on('click', '.replies-toggle-btn', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopImmediatePropagation();
                 
                 const $btn = $(this);
                 const parentId = $btn.data('parent-id') || $btn.data('comment-id');
                 const $container = $('#replies-' + parentId);
-                const count = $btn.data('replies-count') || 0;
-                
-                // Butonun expanded durumunu kontrol et
+                const count = parseInt($btn.attr('data-replies-count') || $btn.data('replies-count') || 0, 10);
                 const isExpanded = $btn.hasClass('expanded');
                 
                 if (isExpanded) {
-                    // Gizle - CSS ile
-                    $container.css('display', 'none');
+                    $container.addClass('is-collapsed').removeClass('is-open');
+                    $container.attr('hidden', 'hidden').css('display', '');
                     $btn.removeClass('expanded');
-                    $btn.find('.toggle-text').text(count + ' ' + (ruh_comment_ajax.texts.replies_count || 'replies'));
+                    $btn.find('.toggle-text').text($btn.attr('data-show-text') || self.getReplyToggleLabel(count, false));
                     $btn.find('.toggle-icon').css('transform', 'rotate(0deg)');
-                } else {
-                    // Göster
-                    const isLoaded = $container.data('loaded') === true || $container.data('loaded') === 'true';
-                    const hasContent = $container.children().length > 0;
+                    return;
+                }
+                
+                const isLoaded = $container.data('loaded') === true || $container.data('loaded') === 'true';
+                const hasContent = $container.children().length > 0;
+                
+                const openReplies = function() {
+                    $container.removeClass('is-collapsed').addClass('is-open').removeAttr('hidden').css('display', '');
+                    $btn.addClass('expanded');
+                    $btn.find('.toggle-text').text($btn.attr('data-hide-text') || self.getReplyToggleLabel(count, true));
+                    $btn.find('.toggle-icon').css('transform', 'rotate(180deg)');
+                };
+                
+                if (!isLoaded && !hasContent) {
+                    $btn.prop('disabled', true);
+                    $btn.find('.toggle-text').text(ruh_comment_ajax.texts.sending || 'Loading...');
                     
-                    if (!isLoaded && !hasContent) {
-                        // AJAX ile yükle
-                        $btn.prop('disabled', true);
-                        $btn.find('.toggle-text').text(ruh_comment_ajax.texts.sending || 'Loading...');
-                        
-                        $.post(ruh_comment_ajax.ajax_url, {
-                            action: 'ruh_load_replies',
-                            nonce: ruh_comment_ajax.nonce,
-                            parent_id: parentId
-                        })
-                        .done(function(response) {
-                            if (response.success && response.data.html) {
-                                $container.html(response.data.html);
-                                $container.data('loaded', true);
+                    $.post(ruh_comment_ajax.ajax_url, {
+                        action: 'ruh_load_replies',
+                        nonce: ruh_comment_ajax.nonce,
+                        parent_id: parentId
+                    })
+                    .done(function(response) {
+                        if (response.success && response.data.html) {
+                            $container.html(response.data.html);
+                            $container.data('loaded', true);
+                            const newCount = parseInt(response.data.count || count, 10);
+                            if (newCount) {
+                                $btn.data('replies-count', newCount);
+                                $btn.attr('data-replies-count', newCount);
+                                $btn.attr('data-show-text', self.getReplyToggleLabel(newCount, false));
+                                $btn.attr('data-hide-text', self.getReplyToggleLabel(newCount, true));
                             }
-                            $container.css('display', 'block');
-                            $btn.addClass('expanded');
-                            const newCount = $btn.data('replies-count') || response.data.count || 0;
-                            $btn.find('.toggle-text').text(newCount + ' ' + (ruh_comment_ajax.texts.hide_replies || 'hide replies'));
-                            $btn.find('.toggle-icon').css('transform', 'rotate(180deg)');
-                        })
-                        .fail(function() {
-                            self.showMessage(ruh_comment_ajax.texts.reply_failed || 'Yanıtlar yüklenemedi.', 'error');
-                            $btn.find('.toggle-text').text(count + ' ' + (ruh_comment_ajax.texts.replies_count || 'yanıt'));
-                        })
-                        .always(function() {
-                            $btn.prop('disabled', false);
-                        });
-                    } else {
-                        // Zaten yüklü veya içerik var, sadece göster
-                        $container.css('display', 'block');
-                        $btn.addClass('expanded');
-                        $btn.find('.toggle-text').text(count + ' ' + (ruh_comment_ajax.texts.hide_replies || 'hide replies'));
-                        $btn.find('.toggle-icon').css('transform', 'rotate(180deg)');
-                    }
+                        }
+                        openReplies();
+                    })
+                    .fail(function() {
+                        self.showMessage(ruh_comment_ajax.texts.reply_failed || 'Yanıtlar yüklenemedi.', 'error');
+                        $btn.find('.toggle-text').text($btn.attr('data-show-text') || self.getReplyToggleLabel(count, false));
+                    })
+                    .always(function() {
+                        $btn.prop('disabled', false);
+                    });
+                } else {
+                    openReplies();
                 }
             });
             
-            // 3 Nokta Menü Toggle - position:fixed ile konumlandır (overflow:hidden sorununun çözümü)
+            // 3 Nokta Menü - body'ye taşı (kart overflow/stacking menüyü kesmesin)
             $(document).on('click', '.more-btn', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 const $btn = $(this);
-                const $dropdown = $btn.siblings('.more-dropdown');
-                const isOpen = $dropdown.hasClass('show');
+                let $dropdown = $btn.siblings('.more-dropdown');
+                if (!$dropdown.length) {
+                    $dropdown = $('.more-dropdown').filter(function() {
+                        return $(this).data('ruh-origin') && $(this).data('ruh-origin')[0] === $btn.parent()[0];
+                    });
+                }
+                const isOpen = $dropdown.hasClass('show') && $dropdown.parent().is('body');
                 
-                // Diger acik menüleri kapat
-                $('.more-dropdown').removeClass('show');
+                ruhCloseMoreMenus();
                 
-                if (!isOpen) {
+                if (!isOpen && $dropdown.length) {
+                    if (!$dropdown.data('ruh-origin')) {
+                        $dropdown.data('ruh-origin', $btn.parent());
+                    }
                     const btnRect = this.getBoundingClientRect();
-                    const dropWidth = 165;
-                    const dropHeight = 170;
+                    const dropWidth = Math.min(180, window.innerWidth - 16);
                     let left = btnRect.right - dropWidth;
-                    let top = btnRect.bottom + 4;
+                    let top = btnRect.bottom + 6;
                     
-                    // Sağdan taşmayı engelle
                     if (left < 8) left = 8;
                     if (left + dropWidth > window.innerWidth - 8) left = window.innerWidth - dropWidth - 8;
                     
-                    // Alt ekrandan taşarsa yukarı aç
+                    $dropdown.appendTo('body').css({
+                        position: 'fixed',
+                        top: top + 'px',
+                        left: left + 'px',
+                        right: 'auto',
+                        zIndex: 2147483646,
+                        visibility: 'hidden',
+                        display: 'block'
+                    });
+                    const dropHeight = $dropdown.outerHeight() || 180;
                     if (top + dropHeight > window.innerHeight - 8) {
-                        top = btnRect.top - dropHeight - 4;
+                        top = Math.max(8, btnRect.top - dropHeight - 6);
                     }
-                    if (top < 8) top = 8;
-                    
-                    $dropdown.css({ top: top + 'px', left: left + 'px' }).addClass('show');
+                    $dropdown.css({ top: top + 'px', visibility: '' }).addClass('show');
                 }
             });
             
-            // Disari tiklaninca menüleri kapat
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.comment-more-menu').length) {
-                    $('.more-dropdown').removeClass('show');
+                if (!$(e.target).closest('.comment-more-menu, .more-dropdown').length) {
+                    ruhCloseMoreMenus();
                 }
             });
             
-            // Scroll veya resize'da açık dropdown'ı kapat
             $(window).on('scroll resize', function() {
-                $('.more-dropdown.show').removeClass('show');
+                ruhCloseMoreMenus();
             });
             
             // Şikayet - Modal ac
@@ -782,9 +819,7 @@ jQuery(document).ready(function($) {
                 $('#report-type').val('');
                 $('#report-reason').val('');
                 $('#report-modal').show();
-                
-                // Menüyu kapat
-                $(this).closest('.more-dropdown').removeClass('show');
+                ruhCloseMoreMenus();
             });
             
             // Report modal kapat (X butonu)
@@ -965,6 +1000,38 @@ jQuery(document).ready(function($) {
         // TOOLBAR
         setupToolbar: function() {
             const self = this;
+            
+            $(document).on('keydown', '#comment', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#commentform').trigger('submit');
+                    return;
+                }
+            });
+            $(document).on('keydown', '.inline-reply-textarea', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    $(this).closest('.inline-reply-form').find('.submit-inline-reply').trigger('click');
+                    return;
+                }
+            });
+            
+            $(document).on('keydown', '#comment, .inline-reply-textarea', function(e) {
+                if (!(e.ctrlKey || e.metaKey)) return;
+                const key = (e.key || '').toLowerCase();
+                let action = '';
+                if (key === 'b') action = 'bold';
+                else if (key === 'i') action = 'italic';
+                else if (key === 's' && e.shiftKey) action = 'spoiler';
+                if (!action) return;
+                e.preventDefault();
+                const $field = $(this);
+                if ($field.is('#comment')) {
+                    $('.toolbar-btn[data-action="' + action + '"]').first().trigger('click');
+                } else {
+                    $field.closest('.inline-reply-form').find('.inline-toolbar-btn[data-action="' + action + '"]').first().trigger('click');
+                }
+            });
             
             $(document).on('click', '.toolbar-btn', function(e) {
                 e.preventDefault();
@@ -1157,9 +1224,34 @@ jQuery(document).ready(function($) {
             });
         },
         
+        getReplyToggleLabel: function(count, hide) {
+            const n = parseInt(count, 10) || 0;
+            const isEn = (ruh_comment_ajax.lang || '') === 'en_US';
+            if (hide) {
+                if (isEn) {
+                    return 'Hide ' + n + ' ' + (n === 1 ? 'reply' : 'replies');
+                }
+                return n + ' yanıtı gizle';
+            }
+            if (isEn) {
+                return n + ' ' + (n === 1 ? 'reply' : 'replies');
+            }
+            return n + ' yanıtı göster';
+        },
+        
         updateCharCount: function() {
-            const len = $('#comment').val().length;
+            const $textarea = $('#comment');
+            if (!$textarea.length) return;
+            const len = $textarea.val().length;
+            const max = parseInt($textarea.attr('maxlength') || ruh_comment_ajax.max_comment_length || 1000, 10);
             $('#char-count').text(len);
+            const $counter = $('#char-counter, .char-counter').first();
+            $counter.removeClass('warning danger');
+            if (len >= max) {
+                $counter.addClass('danger');
+            } else if (len >= max * 0.85) {
+                $counter.addClass('warning');
+            }
         },
         
         // YORUMLARI YUKLE
@@ -1254,7 +1346,9 @@ jQuery(document).ready(function($) {
                         self.updateReactionCounts(response.data.counts);
                     }
                     if (response.data.user_reaction) {
-                        $('.content-reaction-btn[data-reaction="' + response.data.user_reaction + '"]').addClass('active');
+                        const $activeBtn = $('.content-reaction-btn[data-reaction="' + response.data.user_reaction + '"]');
+                        $activeBtn.addClass('active');
+                        $activeBtn.closest('.reaction-item').addClass('is-active');
                     }
                 }
             });
@@ -1309,24 +1403,22 @@ jQuery(document).ready(function($) {
                     if (response.success) {
                         self.showMessage(response.data.message, 'success');
                         
-                        const $comment = $btn.closest('.comment-item');
+                        const $comment = $btn.closest('li.comment-item');
                         
                         if (response.data.pinned) {
-                            $comment.addClass('pinned');
+                            $comment.addClass('pinned is-pinned');
                             $btn.addClass('pinned');
                             $btn.find('.pin-text').text(ruh_comment_ajax.texts.unpin || 'Unpin');
                             
-                            // Pinned badge ekle
                             if (!$comment.find('.pinned-badge').length) {
                                 const pinnedLabel = ruh_comment_ajax.texts.pinned || 'Pinned';
-                                $comment.find('.comment-author').after('<span class="pinned-badge"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/></svg> ' + pinnedLabel + '</span>');
+                                $comment.find('.comment-author').first().after('<span class="pinned-badge"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/></svg> ' + pinnedLabel + '</span>');
                             }
                             
-                            // En üste taşı
                             const $list = $('#comment-list');
                             $comment.prependTo($list);
                         } else {
-                            $comment.removeClass('pinned');
+                            $comment.removeClass('pinned is-pinned');
                             $btn.removeClass('pinned');
                             $btn.find('.pin-text').text(ruh_comment_ajax.texts.pin || 'Pin');
                             $comment.find('.pinned-badge').remove();
@@ -1509,7 +1601,63 @@ jQuery(document).ready(function($) {
         RuhMention.init();
     }
     // ========== MENTION SONU ==========
-    
+
+    // ========== A11Y: MODAL FOCUS TRAP ==========
+    // Klavye kullanıcıları Tab ile modal dışına çıkamasın (WCAG 2.4.3).
+    // Modal açıldığında ilk odaklanabilir öğeye focus verilir, Tab/Shift+Tab
+    // döngüsü modal içinde tutulur, modal kapanınca focus tetikleyici öğeye döner.
+    let ruhLastFocusedEl = null;
+
+    function ruhGetFocusable($modal) {
+        return $modal.find('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])').filter(':visible');
+    }
+
+    $(document).on('keydown', function(e) {
+        if (e.key !== 'Tab') return;
+        const $openModal = $('.ruh-modal:visible').first();
+        if (!$openModal.length) return;
+
+        const $focusable = ruhGetFocusable($openModal);
+        if (!$focusable.length) return;
+
+        const first = $focusable[0];
+        const last = $focusable[$focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    });
+
+    // Modal görünürlük değişimini gözlemleyip odağı yönet
+    const ruhModalObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            if (m.attributeName !== 'style') return;
+            const $modal = $(m.target);
+            const isVisible = $modal.is(':visible');
+
+            if (isVisible && !$modal.data('ruh-was-visible')) {
+                ruhLastFocusedEl = document.activeElement;
+                const $focusable = ruhGetFocusable($modal);
+                if ($focusable.length) $focusable[0].focus();
+                $modal.data('ruh-was-visible', true);
+            } else if (!isVisible && $modal.data('ruh-was-visible')) {
+                $modal.data('ruh-was-visible', false);
+                if (ruhLastFocusedEl && document.body.contains(ruhLastFocusedEl)) {
+                    ruhLastFocusedEl.focus();
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.ruh-modal').forEach(function(modal) {
+        ruhModalObserver.observe(modal, { attributes: true, attributeFilter: ['style', 'class'] });
+    });
+    // ========== A11Y MODAL FOCUS TRAP SONU ==========
+
     // Başlat
     RuhComments.init();
 });

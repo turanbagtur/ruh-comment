@@ -463,27 +463,27 @@ function render_comment_manager_page_content() {
     $list_table = new Ruh_Comments_List_Table();
     $list_table->prepare_items();
     ?>
-    <div class="wrap">
+    <div class="wrap ruh-admin-wrap">
         <h1 class="wp-heading-inline ruh-admin-title"><?php _e('Yorum Yönetimi', 'ruh-comment'); ?></h1>
         
-        <div class="ruh-comment-manager-stats" style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 6px;">
+        <div class="ruh-comment-manager-stats" style="margin: 20px 0; padding: 18px 20px; background: #fff; border-radius: 14px; box-shadow: 0 6px 18px rgba(15,23,42,.06);">
             <?php
             $total_comments = wp_count_comments();
             global $wpdb;
             $total_reports = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ruh_reports");
             $banned_users = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->usermeta} WHERE meta_key = 'ruh_ban_status' AND meta_value = 'banned'");
             ?>
-            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
-                <div><strong>Toplam Yorum:</strong> <?php echo number_format_i18n($total_comments->total_comments); ?></div>
-                <div><strong>Onay Bekleyen:</strong> <span style="color:#e67e22;"><?php echo number_format_i18n($total_comments->moderated); ?></span></div>
-                <div><strong>Toplam Şikayet:</strong> <span style="color:#d63638;"><?php echo number_format_i18n($total_reports); ?></span></div>
-                <div><strong>Engellenmiş Kullanıcı:</strong> <span style="color:#d63638;"><?php echo number_format_i18n($banned_users); ?></span></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                <div style="padding:12px 14px;background:#f8fafc;border-radius:10px;"><strong>Toplam Yorum</strong><div style="font-size:22px;margin-top:4px;"><?php echo number_format_i18n($total_comments->total_comments); ?></div></div>
+                <div style="padding:12px 14px;background:#fff7ed;border-radius:10px;"><strong>Onay Bekleyen</strong><div style="font-size:22px;margin-top:4px;color:#c2410c;"><?php echo number_format_i18n($total_comments->moderated); ?></div></div>
+                <div style="padding:12px 14px;background:#fef2f2;border-radius:10px;"><strong>Toplam Şikayet</strong><div style="font-size:22px;margin-top:4px;color:#dc2626;"><?php echo number_format_i18n($total_reports); ?></div></div>
+                <div style="padding:12px 14px;background:#f1f5f9;border-radius:10px;"><strong>Engellenmiş Kullanıcı</strong><div style="font-size:22px;margin-top:4px;color:#334155;"><?php echo number_format_i18n($banned_users); ?></div></div>
             </div>
         </div>
         
         <?php $list_table->views(); ?>
         <form id="comments-filter" method="get">
-            <input type="hidden" name="page" value="<?php echo $_REQUEST['page']; ?>" />
+            <input type="hidden" name="page" value="<?php echo esc_attr($_REQUEST['page'] ?? ''); ?>" />
             <?php if (isset($_GET['comment_status'])) : ?>
                 <input type="hidden" name="comment_status" value="<?php echo esc_attr($_GET['comment_status']); ?>" />
             <?php endif; ?>

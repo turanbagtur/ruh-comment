@@ -135,38 +135,49 @@ class Ruh_Comment_Admin {
     
     public function render_reports_page() {
         global $wpdb;
+
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Bu sayfaya erişim izniniz yok.', 'ruh-comment'));
+        }
+
         $reports_table = $wpdb->prefix . 'ruh_reports';
         
-        // Şikayet işlemleri
+        // Şikayet işlemleri - CSRF koruması: nonce zorunlu
         if (isset($_POST['report_action']) && isset($_POST['report_id'])) {
+            check_admin_referer('ruh_report_action', 'ruh_report_nonce');
+
             $report_id = intval($_POST['report_id']);
-            $action = sanitize_text_field($_POST['report_action']);
+            $action = sanitize_text_field(wp_unslash($_POST['report_action']));
             
             if ($action === 'dismiss') {
-                $wpdb->update($reports_table, array('status' => 'dismissed'), array('id' => $report_id));
+                $wpdb->update($reports_table, array('status' => 'dismissed'), array('id' => $report_id), array('%s'), array('%d'));
             } elseif ($action === 'delete_comment') {
                 $report = $wpdb->get_row($wpdb->prepare("SELECT comment_id FROM $reports_table WHERE id = %d", $report_id));
                 if ($report) {
                     wp_delete_comment($report->comment_id, true);
-                    $wpdb->update($reports_table, array('status' => 'resolved'), array('id' => $report_id));
+                    $wpdb->update($reports_table, array('status' => 'resolved'), array('id' => $report_id), array('%s'), array('%d'));
                 }
             }
+
+            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('İşlem başarıyla tamamlandı.', 'ruh-comment') . '</p></div>';
         }
         
-        // Sikayetleri getir
+        // Sikayetleri getir (çözülmüş/reddedilmiş olanları listenin sonuna at)
         $reports = $wpdb->get_results("
             SELECT r.*, c.comment_content, c.comment_author, u.display_name as reporter_name
             FROM $reports_table r
             LEFT JOIN {$wpdb->comments} c ON r.comment_id = c.comment_ID
             LEFT JOIN {$wpdb->users} u ON r.reporter_id = u.ID
-            ORDER BY r.report_time DESC
+            ORDER BY (r.status = 'pending') DESC, r.report_time DESC
             LIMIT 50
         ");
         
         ?>
-        <div class="wrap">
-            <h1>Şikayet Yönetimi</h1>
-            <p>Kullanıcılar tarafından şikayet edilen yorumları buradan yönetebilirsiniz.</p>
+        <div class="wrap ruh-admin-wrap">
+            <div class="ruh-admin-header" style="background:linear-gradient(135deg,#ef4444,#b91c1c);padding:24px 28px;border-radius:16px;color:#fff;margin-bottom:20px;">
+                <h1 style="margin:0;color:#fff;">Şikayet Yönetimi</h1>
+                <p style="margin:8px 0 0;opacity:.9;">Kullanıcılar tarafından şikayet edilen yorumları buradan yönetebilirsiniz.</p>
+            </div>
             
             <?php if (empty($reports)): ?>
                 <div class="notice notice-info">
@@ -208,26 +219,37 @@ class Ruh_Comment_Admin {
                                 <td><?php echo esc_html($report->comment_author ?: '-'); ?></td>
                                 <td><?php echo esc_html($report->reporter_name ?: 'Misafir'); ?></td>
                                 <td><?php echo esc_html($report->reason); ?></td>
-                                <td><?php echo esc_html(date_i18n('d.m.Y H:i', strtotime($report->created_at))); ?></td>
+                                <td><?php echo esc_html(date_i18n('d.m.Y H:i', strtotime($report->report_time))); ?></td>
                                 <td>
-                                    <?php if ($comment_exists): ?>
-                                        <span style="color:#00a32a;">✓ Aktif</span>
-                                    <?php else: ?>
-                                        <span style="color:#d63638;">✗ Silinmiş</span>
-                                    <?php endif; ?>
+                                    <?php
+                                    $status = $report->status ?: 'pending';
+                                    if (!$comment_exists) {
+                                        echo '<span style="color:#d63638;">✗ Silinmiş</span>';
+                                    } elseif ($status === 'dismissed') {
+                                        echo '<span style="color:#8c8f94;">Reddedildi</span>';
+                                    } elseif ($status === 'resolved') {
+                                        echo '<span style="color:#d63638;">Çözüldü</span>';
+                                    } else {
+                                        echo '<span style="color:#00a32a;">✓ Bekliyor</span>';
+                                    }
+                                    ?>
                                 </td>
                                 <td>
-                                    <?php if ($comment_exists): ?>
+                                    <?php if ($comment_exists && $status === 'pending'): ?>
                                         <form method="post" style="display:inline;">
-                                            <input type="hidden" name="report_id" value="<?php echo $report->id; ?>">
+                                            <?php wp_nonce_field('ruh_report_action', 'ruh_report_nonce'); ?>
+                                            <input type="hidden" name="report_id" value="<?php echo esc_attr($report->id); ?>">
                                             <button type="submit" name="report_action" value="dismiss" class="button">Reddet</button>
                                             <button type="submit" name="report_action" value="delete_comment" class="button button-primary" onclick="return confirm('Yorumu silmek istediğinizden emin misiniz?');">Yorumu Sil</button>
                                         </form>
-                                    <?php else: ?>
+                                    <?php elseif (!$comment_exists && $status === 'pending'): ?>
                                         <form method="post" style="display:inline;">
-                                            <input type="hidden" name="report_id" value="<?php echo $report->id; ?>">
+                                            <?php wp_nonce_field('ruh_report_action', 'ruh_report_nonce'); ?>
+                                            <input type="hidden" name="report_id" value="<?php echo esc_attr($report->id); ?>">
                                             <button type="submit" name="report_action" value="dismiss" class="button">Şikayeti Kaldır</button>
                                         </form>
+                                    <?php else: ?>
+                                        <span style="color:#999;">—</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -240,7 +262,7 @@ class Ruh_Comment_Admin {
     }
     
     public function handle_user_actions() {
-        if (!isset($_GET['page']) || $_GET['page'] !== 'ruh-comment-settings') return;
+        if (!isset($_GET['page']) || !in_array($_GET['page'], array('ruh-comment', 'ruh-comment-settings'), true)) return;
         if (!current_user_can('manage_options')) return;
         
         $action = isset($_GET['action']) ? $_GET['action'] : '';
@@ -250,7 +272,7 @@ class Ruh_Comment_Admin {
             if (wp_verify_nonce($_GET['_wpnonce'], 'ruh_unban_user')) {
                 $user_id = intval($_GET['user_id']);
                 delete_user_meta($user_id, 'ruh_ban_status');
-                wp_redirect(admin_url('admin.php?page=ruh-comment-settings&tab=users&message=unban_success'));
+                wp_redirect(admin_url('admin.php?page=ruh-comment&tab=users&message=unban_success'));
                 exit;
             }
         }
@@ -260,7 +282,7 @@ class Ruh_Comment_Admin {
             if (wp_verify_nonce($_GET['_wpnonce'], 'ruh_unmute_user')) {
                 $user_id = intval($_GET['user_id']);
                 delete_user_meta($user_id, 'ruh_timeout_until');
-                wp_redirect(admin_url('admin.php?page=ruh-comment-settings&tab=users&message=unmute_success'));
+                wp_redirect(admin_url('admin.php?page=ruh-comment&tab=users&message=unmute_success'));
                 exit;
             }
         }
@@ -274,7 +296,7 @@ class Ruh_Comment_Admin {
                     unset($ip_bans[$ip]);
                     update_option('ruh_banned_ips', $ip_bans);
                 }
-                wp_redirect(admin_url('admin.php?page=ruh-comment-settings&tab=users&message=unban_ip_success'));
+                wp_redirect(admin_url('admin.php?page=ruh-comment&tab=users&message=unban_ip_success'));
                 exit;
             }
         }
@@ -298,9 +320,9 @@ class Ruh_Comment_Admin {
                 'banned_by' => get_current_user_id()
             );
             update_option('ruh_banned_ips', $ip_bans);
-            wp_redirect(admin_url('admin.php?page=ruh-comment-settings&tab=users&message=ban_ip_success'));
+            wp_redirect(admin_url('admin.php?page=ruh-comment&tab=users&message=ban_ip_success'));
         } else {
-            wp_redirect(admin_url('admin.php?page=ruh-comment-settings&tab=users&message=invalid_ip'));
+            wp_redirect(admin_url('admin.php?page=ruh-comment&tab=users&message=invalid_ip'));
         }
         exit;
     }
@@ -314,23 +336,32 @@ class Ruh_Comment_Admin {
         // Admin JS
         wp_add_inline_script('jquery', '
             jQuery(document).ready(function($) {
-                // Tab navigation
-                $(".ruh-admin-tab").on("click", function(e) {
-                    e.preventDefault();
-                    var target = $(this).data("tab");
+                function ruhActivateTab(target) {
+                    if (!target || !$("#tab-" + target).length) return;
                     $(".ruh-admin-tab").removeClass("active");
-                    $(this).addClass("active");
+                    $(".ruh-admin-tab[data-tab=\"" + target + "\"]").addClass("active");
                     $(".ruh-tab-content").removeClass("active");
                     $("#tab-" + target).addClass("active");
+                    $(".ruh-submit-wrap").toggle(target !== "users");
+                    $("#ruh-active-tab").val(target);
+                    if (window.history && window.history.replaceState) {
+                        var url = new URL(window.location.href);
+                        url.searchParams.set("tab", target);
+                        window.history.replaceState({}, "", url);
+                        $("input[name=_wp_http_referer]").val(url.pathname + url.search);
+                    }
+                }
+                var params = new URLSearchParams(window.location.search);
+                var initialTab = params.get("tab");
+                if (initialTab) ruhActivateTab(initialTab);
+                $(".ruh-admin-tab").on("click", function(e) {
+                    e.preventDefault();
+                    ruhActivateTab($(this).data("tab"));
                 });
-                
-                // Tema seçimi
                 $(".ruh-theme-option input[type=radio]").on("change", function() {
                     $(".ruh-theme-option .ruh-theme-preview").css("border-color", "#ddd");
                     $(this).siblings(".ruh-theme-preview").css("border-color", "#667eea");
                 });
-                
-                // Tema kartına tıklama
                 $(".ruh-theme-option").on("click", function() {
                     $(this).find("input[type=radio]").prop("checked", true).trigger("change");
                 });
@@ -344,6 +375,17 @@ class Ruh_Comment_Admin {
         }
         
         $options = get_option('ruh_comment_options', array());
+        $user_messages = array(
+            'unban_success' => 'Kullanıcı engeli kaldırıldı.',
+            'unmute_success' => 'Kullanıcı susturması kaldırıldı.',
+            'unban_ip_success' => 'IP engeli kaldırıldı.',
+            'ban_ip_success' => 'IP adresi engellendi.',
+            'invalid_ip' => 'Geçersiz IP adresi.',
+        );
+        if (isset($_GET['message']) && isset($user_messages[$_GET['message']])) {
+            $notice_type = ($_GET['message'] === 'invalid_ip') ? 'error' : 'success';
+            add_settings_error('ruh_comment_messages', 'ruh_comment_user_message', $user_messages[$_GET['message']], $notice_type);
+        }
         ?>
         <div class="wrap ruh-admin-wrap">
             <div class="ruh-admin-header">
@@ -359,7 +401,7 @@ class Ruh_Comment_Admin {
                     </div>
                     <a href="https://ko-fi.com/solderet" target="_blank" rel="noopener noreferrer" class="ruh-kofi-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                            <path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.019c-.39-.excellent-.391-.390-.391-.390s-3.397-3.29-4.243-4.164c-.416-.434-.689-1.0 0-1.401.523-.294 1.067.032 1.67.535 1.021.867 1.714 2.034 1.714 2.034s2.564-3.018 4.637-3.633c.739-.221 1.531-.122 1.801.524.271.645-.361 1.5-.867 2.5z"/>
+                            <path d="M18,3H2V13A4,4 0 0,0 6,17H12A4,4 0 0,0 16,13V11H18A3,3 0 0,0 21,8V6A3,3 0 0,0 18,3M18,8H16V5H18A1,1 0 0,1 19,6V7A1,1 0 0,1 18,8M4,19H14V21H4V19Z"/>
                         </svg>
                         ☕ Bağış Yap &amp; Destek Ol
                     </a>
@@ -396,8 +438,9 @@ class Ruh_Comment_Admin {
                 </button>
             </div>
             
-            <form method="post" action="options.php" class="ruh-admin-form">
+            <form method="post" action="options.php" class="ruh-admin-form" id="ruh-settings-form">
                 <?php settings_fields('ruh_comment_options'); ?>
+                <input type="hidden" name="_ruh_active_tab" id="ruh-active-tab" value="<?php echo esc_attr(isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general'); ?>">
                 
                 <!-- Genel Tab -->
                 <div id="tab-general" class="ruh-tab-content active">
@@ -770,7 +813,7 @@ class Ruh_Comment_Admin {
                                             <td><strong><?php echo esc_html($user->display_name); ?></strong> (<?php echo esc_html($user->user_login); ?>)</td>
                                             <td><?php echo esc_html($user->user_email); ?></td>
                                             <td>
-                                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ruh-comment-settings&action=unban&user_id=' . $user->ID), 'ruh_unban_user'); ?>" class="button button-small">Engeli Kaldır</a>
+                                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ruh-comment&action=unban&user_id=' . $user->ID), 'ruh_unban_user'); ?>" class="button button-small">Engeli Kaldır</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -795,7 +838,7 @@ class Ruh_Comment_Admin {
                                             <td><?php echo esc_html($user->user_email); ?></td>
                                             <td><?php echo date_i18n('d.m.Y H:i', $timeout_until); ?></td>
                                             <td>
-                                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ruh-comment-settings&action=unmute&user_id=' . $user->ID), 'ruh_unmute_user'); ?>" class="button button-small">Susturmayı Kaldır</a>
+                                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ruh-comment&action=unmute&user_id=' . $user->ID), 'ruh_unmute_user'); ?>" class="button button-small">Susturmayı Kaldır</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -817,7 +860,7 @@ class Ruh_Comment_Admin {
                                             <td><code><?php echo esc_html($ip); ?></code></td>
                                             <td><?php echo isset($data['date']) ? date_i18n('d.m.Y H:i', $data['date']) : '-'; ?></td>
                                             <td>
-                                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ruh-comment-settings&action=unban_ip&ip=' . urlencode($ip)), 'ruh_unban_ip'); ?>" class="button button-small">IP Engelini Kaldır</a>
+                                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ruh-comment&action=unban_ip&ip=' . urlencode($ip)), 'ruh_unban_ip'); ?>" class="button button-small">IP Engelini Kaldır</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -845,12 +888,13 @@ class Ruh_Comment_Admin {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
-        .ruh-admin-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .ruh-admin-wrap .ruh-admin-header {
+            background: linear-gradient(135deg, #5b6eea 0%, #7c3aed 100%);
             color: white;
-            padding: 30px;
-            border-radius: 16px;
+            padding: 28px 30px;
+            border-radius: 18px;
             margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(91, 110, 234, 0.25);
         }
         
         .ruh-admin-header-top {
@@ -923,38 +967,43 @@ class Ruh_Comment_Admin {
         
         .ruh-admin-tabs {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 24px;
-            background: #f5f5f7;
-            padding: 8px;
-            border-radius: 12px;
+            background: #fff;
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid #ececf2;
+            box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
+            overflow-x: auto;
         }
         
         .ruh-admin-tab {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 20px;
+            padding: 10px 16px;
             background: transparent;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
         
         .ruh-admin-tab:hover {
-            background: white;
-            color: #333;
+            background: #f4f4ff;
+            color: #4338ca;
         }
         
         .ruh-admin-tab.active {
-            background: white;
-            color: #667eea;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.28);
         }
+        .ruh-admin-tab.active svg { color: #fff; }
         
         .ruh-admin-tab svg {
             width: 20px;
@@ -972,9 +1021,10 @@ class Ruh_Comment_Admin {
         .ruh-settings-card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
             overflow: hidden;
             margin-bottom: 20px;
+            border: 1px solid #eef0f6;
         }
         
         .ruh-card-header {
@@ -1126,6 +1176,10 @@ class Ruh_Comment_Admin {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            padding: 10px;
+            background: #f8f9fc;
+            border: 1px solid #eef0f6;
+            border-radius: 10px;
         }
         
         .ruh-emoji-item label {
@@ -1169,6 +1223,9 @@ class Ruh_Comment_Admin {
         
         .ruh-submit-wrap {
             margin-top: 24px;
+        }
+        .ruh-admin-wrap:has(#tab-users.active) .ruh-submit-wrap {
+            display: none;
         }
         
         .ruh-submit-wrap .button-primary {
@@ -1286,9 +1343,10 @@ class Ruh_Comment_Admin {
     }
     
     public function sanitize_settings($input) {
-        if (!is_array($input)) return array();
+        if (!is_array($input)) return get_option('ruh_comment_options', array());
         
-        $sanitized = array();
+        $sanitized = get_option('ruh_comment_options', array());
+        if (!is_array($sanitized)) $sanitized = array();
         
         // Checkbox fields
         $checkboxes = array('enable_reactions', 'enable_likes', 'enable_sorting', 'enable_badges', 'enable_reporting', 'enable_comment_rules');
@@ -1313,7 +1371,7 @@ class Ruh_Comment_Admin {
         // Emoji fields
         $emoji_keys = array('begendim', 'sinir_bozucu', 'mukemmel', 'sasirtici', 'sakin', 'bitti');
         $default_emojis = array('👍', '😡', '🥰', '😳', '🥺', '😔');
-        $default_labels = array('Begendim', 'Sinir Bozucu', 'Mukemmel', 'Sasirtici', 'Uzucu', 'Bitti');
+        $default_labels = array('Beğendim', 'Sinir Bozucu', 'Mükemmel', 'Şaşırtıcı', 'Üzücü', 'Bitti');
         foreach ($emoji_keys as $index => $key) {
             // Emoji
             $emoji_field = 'emoji_' . $key;

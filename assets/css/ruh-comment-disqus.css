@@ -17,7 +17,7 @@
 /* Ana Container */
 .comments-area.theme-disqus,
 .ruh-comments-section.theme-disqus {
-    background: #191919 !important;
+    background: transparent !important;
     padding: 20px !important;
     color: #c5c5c5 !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
